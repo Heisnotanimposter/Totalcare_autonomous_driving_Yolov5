@@ -1,0 +1,30 @@
+# Dataset configuration for Total Care Autonomous Driving System
+path: ./dataset # dataset root dir
+train: images/train
+val: images/val
+test: images/test
+
+# Number of classes
+nc: 19
+
+# Class names mapping
+names:
+  0: biker
+  1: car
+  2: pedestrian
+  3: trafficLight
+  4: trafficLight-Green
+  5: trafficLight-GreenLeft
+  6: trafficLight-Red
+  7: deer
+  8: roe_deer
+  9: elk
+  10: waterdeer
+  11: pothole
+  12: scooter
+  13: belt
+  14: no_belt
+  15: blocked_left
+  16: blocked_right
+  17: blocked_straight
+  18: free_path
