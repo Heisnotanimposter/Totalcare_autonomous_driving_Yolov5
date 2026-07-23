@@ -1,166 +1,191 @@
-# Total_Care
-# Yolo. v5 Object detection project
-# Participants: Seungwon Lee, Heejung Lim, Hyungwoo Lee
+# Total Care: Autonomous Driving Object Detection & Hazard Warning System
 
+[![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-1.8%2B-ee4c2c.svg)](https://pytorch.org/)
+[![Ultralytics](https://img.shields.io/badge/YOLO-v5%20%7C%20v9-00FFFF.svg)](https://github.com/ultralytics/ultralytics)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-<img width="563" alt="Screenshot 2024-03-20 at 12 16 35 PM" src="https://github.com/Heisnotanimposter/Totalcare_autonomous_driving_Yolov5/assets/97718938/7ba2f834-3694-454a-aafc-2c79ffb1b141">
+**Total Care** is an end-to-end computer vision and deep learning framework built on **YOLOv5** and **YOLOv9** designed for real-time autonomous vehicle safety, exterior hazard detection, and in-cabin occupant monitoring.
 
-![YOLO confidence](https://github.com/Heisnotanimposter/Totalcare_autonomous_driving_Yolov5/assets/97718938/caff33ef-7d53-431c-9760-77c2df696ddf)
-![YOLO lossval](https://github.com/Heisnotanimposter/Totalcare_autonomous_driving_Yolov5/assets/97718938/412cf962-48dd-44af-9e16-18e259b4ead9)
+---
 
-This repository contains code and instructions to train a YOLOv5 object detection model for [task description - e.g., traffic object detection, weather pattern identification].
+## 🎯 Definite Use Cases & Objectives
 
-## Requirements
+The **Total Care Safety Engine** solves critical perception and safety challenges in modern autonomous driving systems by monitoring both exterior road conditions and interior vehicle safety:
 
-* Python >= 3.6
-* `torch` >= 1.7.0
-* `ultralytics`
-* Other dependencies in `requirements.txt`
+| Use Case Domain | Functional Target | Detected Classes | Safety Impact |
+| :--- | :--- | :--- | :--- |
+| **Vulnerable Road Users (VRU)** | Pedestrians, Cyclists, Micro-mobility | `pedestrian`, `biker`, `scooter` | Prevents collisions with high-risk vulnerable road users |
+| **Traffic Perception** | Vehicle & Traffic Control Identification | `car`, `trafficLight`, `trafficLight-Green`, `trafficLight-GreenLeft`, `trafficLight-Red` | Enables automated stop/go compliance and lane tracking |
+| **Road Surface Hazards** | Physical Damage & Obstacles | `pothole`, `blocked_left`, `blocked_right`, `blocked_straight`, `free_path` | Triggers evasive steering / braking before hitting road damage |
+| **Wildlife Collision Prevention** | Animal Road-Crossing Warnings | `deer`, `roe_deer`, `elk`, `waterdeer` | Mitigates rural/highway animal collisions |
+| **In-Cabin Safety** | Driver & Occupant Compliance | `belt`, `no_belt` | Enforces seatbelt usage and triggers cabin safety alerts |
 
+---
 
-## Installation
+## 📂 System Directory Structure
 
-Contents
-About
-Requirements
-Setup
-Inference
-Results
-Known Issues
-Additional Notes
-About
+```gcode
+Totalcare_autonomous_driving_Yolov5/
+├── data_config.yaml           # Dataset path configuration & 19-class mappings
+├── requirements.txt           # Python dependencies (PyTorch, Ultralytics, OpenCV, etc.)
+├── README.md                  # System documentation & execution guide
+├── src/                       # Core python execution modules
+│   ├── __init__.py            # Package initializer
+│   ├── dataset_prep.py        # Dataset remapping, splitting & YAML config tool
+│   ├── train.py               # Unified training script for YOLOv5 & YOLOv9
+│   ├── detect.py              # Real-time inference & Hazard Alert Overlay Engine
+│   └── export.py              # Model export utility (ONNX, TensorRT, TorchScript)
+├── tests/                     # Baseline notebook experiments & verification
+│   ├── self_driving_object_detection_asset_baseline.ipynb
+│   └── yolo_pretrain_v5.ipynb
+└── Updates/                   # Historical project iterations & Colab notebooks
+    ├── 221129/                # Initial baseline experiments
+    ├── 221130/                # Class expansion iteration
+    ├── 221201/                # Alpha model release
+    └── 240427/                # YOLOv9 model architecture updates
+```
 
-This repository includes instructions, code, and pre-trained weights to implement a YOLOv5 object detection model for weather prediction.
+---
 
-Main Features
+## 🛠️ Environment Setup & Installation
 
-Can train on custom weather imagery
-Offers flexibility in choosing YOLOv5 versions
-Includes an inference example to test on new images
-Requirements
-Python >= 3.6
-torch >= 1.7.0 (pip install torch torchvision)
-ultralytics (pip install ultralytics)
-Other dependencies listed in requirements.txt (pip install -r requirements.txt)
-Setup
-Clone repository:
+### Option 1: Local Python Environment
+Ensure Python 3.8+ and PyTorch are installed.
 
-Bash
-git clone https://github.com/YourName/YOLOv5-weather-prediction
-Use code with caution.
-Download Data
+```bash
+# Clone the repository
+git clone https://github.com/Heisnotanimposter/Totalcare_autonomous_driving_Yolov5.git
+cd Totalcare_autonomous_driving_Yolov5
 
-Option 1: Public data: Source public weather datasets (e.g. search online, consider cloud types, weather conditions).
-Option 2: Custom data: If needed, collect and annotate your weather images. Popular annotation tools include:
-LabelImg: [https://github.com/tzutalin/labelImg]
-CVAT: [https://github.com/openvinotoolkit/cvat]
-Configure YOLOv5
+# (Optional) Create virtual environment
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-Create a data.yaml file in the project directory, specifying paths to your training, validation, and test sets, label names, etc. Example:
-YAML
-train: ./path/to/train
-val: ./path/to/val
-test: ./path/to/test
+# Install required dependencies
+pip install -r requirements.txt
+```
 
-nc: 3  # Number of classes (e.g., cloud types)
-names: ['cirrus', 'cumulus', 'stratus'] 
-Use code with caution.
-(Optional) Pre-trained Weights:
-If starting from pre-trained weights, download the .pt file and place it in the project directory.
+### Option 2: Google Colab Setup
+To run training or inference inside Google Colab:
+```python
+!git clone https://github.com/Heisnotanimposter/Totalcare_autonomous_driving_Yolov5.git
+%cd Totalcare_autonomous_driving_Yolov5
+!pip install -r requirements.txt
+```
 
-Inference
-To run inference on new images:
+---
 
-Bash
-python detect.py --source /path/to/image_or_folder --weights /path/to/weights.pt
-Use code with caution.
-Replace /path/to/image_or_folder with the path to your image or folder containing images.
-Replace /path/to/weights.pt with the path to your trained YOLOv5 model weights.
-See detect.py for additional options and arguments.
+## 🚀 How to Run - Step-by-Step Instructions
 
-Results
-The model will output detected objects in your images, along with bounding boxes and class labels. The accuracy of the model will depend on the quality of your dataset and your YOLOv5 settings.
+### Step 1: Prepare & Structure Dataset
+To convert raw image and label folders into standard YOLO dataset splits (`images/train`, `images/val`, `labels/train`, `labels/val`) and generate `data_config.yaml`:
 
-Example Output:
+```bash
+python3 src/dataset_prep.py \
+    --raw-dir ./raw_dataset \
+    --output-dir ./dataset \
+    --val-split 0.2 \
+    --test-split 0.1 \
+    --config-out ./data_config.yaml
+```
 
-image.jpg:
-  - cirrus (80% confidence) [x1, y1, x2, y2]
-  - cumulus (92% confidence) [x1, y1, x2, y2] 
-Known Issues
-Data Quality: Model performance is highly dependent on the quality and diversity of your training data.
-Overfitting: Ensure proper data splitting and regularization techniques to prevent overfitting to specific weather conditions in your training set.
-Label Imbalance: If your dataset has certain cloud types represented more frequently than others, address this imbalance with techniques such as data augmentation or weighted loss.
-Additional Notes
-For best results, pre-process your images (resizing, normalization) before feeding them to the model.
-Experiment with different YOLOv5 model architectures (e.g., YOLOv5s, YOLOv5m, YOLOv5l) for speed and performance trade-offs.
-Integrate the predictions from the YOLOv5 model with your overall weather forecasting system.
+---
 
-1. Directory Creation and Moving Files
+### Step 2: Train the Object Detection Model
+Train a model using either **YOLOv5** (`yolov5s.pt`, `yolov5m.pt`) or **YOLOv9** (`yolov9c.pt`) architecture:
 
-Bash
-!mkdir /content/dataset/
-!mv /content/* /content/dataset/
-Use code with caution.
-!mkdir /content/dataset/ This creates a directory called "dataset" within the "/content" directory. The ! at the beginning tells the notebook to run this line as a shell command.
-!mv /content/* /content/dataset/: This command attempts to move all files from the root of the /content directory into the newly created /content/dataset directory. However, you'll likely get an error because you cannot move a directory into itself.
-2. Importing and Image Path Handling
+```bash
+# Train YOLOv5s baseline (50 epochs, batch size 16, image resolution 416)
+python3 src/train.py \
+    --model yolov5s.pt \
+    --data ./data_config.yaml \
+    --epochs 50 \
+    --batch 16 \
+    --imgsz 416 \
+    --name total_care_v5s
 
-Python
-from glob import glob   
+# Train YOLOv9c model for enhanced accuracy
+python3 src/train.py \
+    --model yolov9c.pt \
+    --data ./data_config.yaml \
+    --epochs 50 \
+    --batch 16 \
+    --imgsz 416 \
+    --name total_care_v9c
+```
 
-img_path = glob('/content/dataset/export/images/*.jpg') 
-img_path[0:5] 
-print(len(img_path)) 
-Use code with caution.
-from glob import glob: Imports the glob function for file pattern matching.
-img_path = glob('/content/dataset/export/images/*.jpg'): Creates a list of file paths of all JPEG images (*.jpg) within the specified directory.
-img_path[0:5]: Displays the first five image paths in the list.
-print(len(img_path)): Prints the total number of images found.
-3. Splitting Data for Training and Validation
+**Training Logs & Output Weights:**
+- Checkpoints and training metrics (loss curves, mAP@0.5, PR curves) are automatically saved to `./runs/train/<run_name>/weights/best.pt`.
 
-Python
-from sklearn.model_selection import train_test_split
+---
 
-train_img_path, valid_img_path = train_test_split(img_path, test_size = 0.3)
-print(len(train_img_path), len(valid_img_path))
-Use code with caution.
-from sklearn.model_selection import train_test_split: Imports the function to split data.
-train_img_path, valid_img_path = train_test_split(...): Splits the img_path list into training (train_img_path) and validation (valid_img_path) sets with a 70/30 ratio (specified by test_size=0.3).
-print(...): Prints the lengths of the newly created training and validation sets.
-4. Creating List Files
+### Step 3: Run Inference & Hazard Warning Engine
+Run inference on single images, folders of images, or dashcam video streams. The `src/detect.py` script automatically applies the **Hazard Alert Overlay Engine** on top of detected bounding boxes.
 
-Python
-with open('/content/dataset/train.txt', 'w') as f:
-  f.write('\n'.join(train_img_path)+'\n')
+```bash
+# Run inference on a single image file
+python3 src/detect.py \
+    --weights ./runs/train/total_care_v5s/weights/best.pt \
+    --source ./test_image.jpg \
+    --conf 0.3 \
+    --save-dir ./runs/detect
 
-with open('/content/dataset/valid.txt', 'w') as f:
-  f.write('\n'.join(valid_img_path)+'\n')
-Use code with caution.
-with open(...)...: These blocks of code create two text files:
-train.txt: Contains the paths to all images in the training set (one path per line).
-valid.txt: Contains the paths to all images in the validation set.
-5. Preparing YOLOv5 Data Configuration (data.yaml)
+# Run inference on a folder of test images
+python3 src/detect.py \
+    --weights ./runs/train/total_care_v5s/weights/best.pt \
+    --source ./test_images/ \
+    --conf 0.25
 
-Bash
-!cat /content/dataset/data.yaml
-Use code with caution.
-!cat /content/dataset/data.yaml: This displays the contents of your 'data.yaml' file, which is essential for configuring YOLOv5 training.
-Python
-with open('/content/dataset/data.yaml', 'r') as f:
-  data = yaml.safe_load(f)
+# Run inference on dashcam video file
+python3 src/detect.py \
+    --weights ./runs/train/total_care_v5s/weights/best.pt \
+    --source ./dashcam_video.mp4 \
+    --save-dir ./runs/detect_video
+```
 
-data['train'] = '/content/dataset/train.txt' 
-data['val'] = '/content/dataset/valid.txt' 
+---
 
-with open('/content/dataset/data.yaml', 'w') as f:
-  yaml.dump(data, f)
+### Step 4: Export Model for Embedded Hardware (NVIDIA Jetson / ONNX Runtime)
+To deploy the trained model onto autonomous driving edge hardware:
 
-!cat /content/dataset/data.yaml  
-Use code with caution.
-Reading YAML: The code reads the existing data.yaml file and loads it into a Python dictionary named data.
-Modifying Paths: It updates the 'train' and 'val' keys of the dictionary with the paths to your newly created train.txt and valid.txt files.
-Writing YAML: The modified dictionary is written back to the data.yaml file.
-Verification: The updated data.yaml content is displayed.
+```bash
+# Export PyTorch weights (.pt) to ONNX format
+python3 src/export.py \
+    --weights ./runs/train/total_care_v5s/weights/best.pt \
+    --format onnx \
+    --imgsz 416
 
-contact
- - Projectleader : HyungwooLee 010-3917-0557 / - participant0: https://github.com/Heisnotanimposter / - participant1: https://github.com/heejjj
+# Export to TensorRT engine (for NVIDIA Jetson / Orin)
+python3 src/export.py \
+    --weights ./runs/train/total_care_v5s/weights/best.pt \
+    --format engine \
+    --imgsz 416
+```
+
+---
+
+## 🚨 Hazard Alert Overlay Engine Matrix
+
+When high-risk objects are detected, `src/detect.py` highlights the region and displays warning banners:
+
+| Detected Class | Bounding Box Color | On-Screen Visual Alert | Priority Level |
+| :--- | :--- | :--- | :--- |
+| `pothole` | 🔴 Red | `[CRITICAL] ROAD HAZARD: POTHOLE DETECTED` | High |
+| `no_belt` | 🔴 Red | `[SAFETY ALERT] UNBELTED OCCUPANT DETECTED` | High |
+| `trafficLight-Red` | 🔴 Red | `[TRAFFIC CONTROL] RED LIGHT AHEAD` | High |
+| `deer`, `roe_deer`, `elk`, `waterdeer` | 🟠 Orange | `[COLLISION RISK] WILDLIFE DETECTED` | High |
+| `pedestrian`, `biker`, `scooter` | 🟡 Yellow | `[VRU CAUTION] PEDESTRIAN / TWO-WHEELER` | Medium |
+| `car`, `trafficLight-Green`, `free_path` | 🟢 Green | Standard Detection Bounding Box | Normal |
+
+---
+
+## 👥 Contributors & Contact
+
+- **Project Lead:** Hyungwoo Lee (Contact: `010-3917-0557`)
+- **Participants:**
+  - Seungwon Lee ([@Heisnotanimposter](https://github.com/Heisnotanimposter))
+  - Heejung Lim ([@heejjj](https://github.com/heejjj))
+
+---
+*Developed for Autonomous Driving Safety & Computer Vision Research.*
