@@ -1,0 +1,535 @@
+[{"stream_name":"stdout","time":1.805104257,"data":"[INPUT TREE] ['/kaggle/input/datasets', '/kaggle/input/notebooks']\n"}
+,{"stream_name":"stdout","time":10.376537908,"data":"[FOUND TRAJECTORIES] {'0015': '/kaggle/input/notebooks/test013/totalcare-kitti-yolo-train-and-track/outputs/track_0015/trajectories.csv', '0019': '/kaggle/input/notebooks/test013/totalcare-kitti-yolo-train-and-track/outputs/track_0019/trajectories.csv'}\n"}
+,{"stream_name":"stdout","time":10.386556609,"data":"[CMD] /usr/bin/curl -L -C - --retry 5 --retry-delay 5 -o /tmp/world_model_prep/data_tracking_label_2.zip https://s3.eu-central-1.amazonaws.com/avg-kitti/data_tracking_label_2.zip\n"}
+,{"stream_name":"stderr","time":10.511670462,"data":"  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n"}
+,{"stream_name":"stderr","time":10.511702062,"data":"                                 Dload  Upload   Total   Spent    Left  Speed\n"}
+,{"stream_name":"stderr","time":12.687431151,"data":"\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\r 10 2206k   10  237k    0     0   154k      0  0:00:14  0:00:01  0:00:13  154k\r100 2206k  100 2206k    0     0  1013k      0  0:00:02  0:00:02 --:--:-- 1014k\n"}
+,{"stream_name":"stdout","time":12.695554834,"data":"[CMD] /usr/bin/curl -L -C - --retry 5 --retry-delay 5 -o /tmp/world_model_prep/data_tracking_calib.zip https://s3.eu-central-1.amazonaws.com/avg-kitti/data_tracking_calib.zip\n"}
+,{"stream_name":"stderr","time":12.701168328,"data":"  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n"}
+,{"stream_name":"stderr","time":12.701204048,"data":"                                 Dload  Upload   Total   Spent    Left  Speed\n"}
+,{"stream_name":"stderr","time":13.851534449,"data":"\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\r100 89829  100 89829    0     0  78086      0  0:00:01  0:00:01 --:--:-- 78112\n"}
+,{"stream_name":"stdout","time":13.854182986,"data":"[CMD] /usr/bin/curl -L -C - --retry 5 --retry-delay 5 -o /tmp/world_model_prep/data_tracking_oxts.zip https://s3.eu-central-1.amazonaws.com/avg-kitti/data_tracking_oxts.zip\n"}
+,{"stream_name":"stderr","time":13.859669232,"data":"  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n"}
+,{"stream_name":"stderr","time":13.859682492,"data":"                                 Dload  Upload   Total   Spent    Left  Speed\n"}
+,{"stream_name":"stderr","time":22.382063419,"data":"\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\r  1 8157k    1 86654    0     0  74819      0  0:01:51  0:00:01  0:01:50 74766\r  3 8157k    3  254k    0     0   113k      0  0:01:11  0:00:02  0:01:09  113k\r  4 8157k    4  390k    0     0   125k      0  0:01:04  0:00:03  0:01:01  125k\r  6 8157k    6  560k    0     0   133k      0  0:01:00  0:00:04  0:00:56  133k\r  8 8157k    8  730k    0     0   138k      0  0:00:58  0:00:05  0:00:53  145k\r 11 8157k   11  900k    0     0   146k      0  0:00:55  0:00:06  0:00:49  163k\r 14 8157k   14 1155k    0     0   160k      0  0:00:50  0:00:07  0:00:43  180k\r 30 8157k   30 2498k    0     0   308k      0  0:00:26  0:00:08  0:00:18  423k\r100 8157k  100 8157k    0     0   957k      0  0:00:08  0:00:08 --:--:-- 1753k\n"}
+,{"stream_name":"stdout","time":22.445343999,"data":"[FOUND TRAINING IMAGE_02] /kaggle/input/datasets/leducnhuan/kitti-tracking/kitti_tracking/training/image_02\n"}
+,{"stream_name":"stdout","time":48.633143858,"data":"[SEQ 0015] calib=/tmp/world_model_prep/calib/training/calib/0015.txt label=/tmp/world_model_prep/labels/training/label_02/0015.txt oxts=/tmp/world_model_prep/oxts/training/oxts/0015.txt\n"}
+,{"stream_name":"stdout","time":51.220482001,"data":"[WORLD STAGED 0015] {\n"}
+,{"stream_name":"stdout","time":51.220537671,"data":"  \"sequence_id\": \"0015\",\n"}
+,{"stream_name":"stdout","time":51.220542361,"data":"  \"frames_rendered\": 80,\n"}
+,{"stream_name":"stdout","time":51.220545771,"data":"  \"fps\": 10.0,\n"}
+,{"stream_name":"stdout","time":51.220548821,"data":"  \"duration_sec\": 8.0,\n"}
+,{"stream_name":"stdout","time":51.220552071,"data":"  \"calibrated\": true,\n"}
+,{"stream_name":"stdout","time":51.220554301,"data":"  \"ego_motion_compensated\": true,\n"}
+,{"stream_name":"stdout","time":51.220556291,"data":"  \"staged_demo\": true,\n"}
+,{"stream_name":"stdout","time":51.220558171,"data":"  \"video_path\": \"/kaggle/working/world_outputs/world_model_0015_staged/world_model_demo_0015.mp4\",\n"}
+,{"stream_name":"stdout","time":51.220560251,"data":"  \"timeline_path\": \"/kaggle/working/world_outputs/world_model_0015_staged/world_model_timeline_0015.json\",\n"}
+,{"stream_name":"stdout","time":51.220562271,"data":"  \"eval_metrics\": {\n"}
+,{"stream_name":"stdout","time":51.220564191,"data":"    \"depth_metrics\": {\n"}
+,{"stream_name":"stdout","time":51.220566051,"data":"      \"matched_samples\": 102,\n"}
+,{"stream_name":"stdout","time":51.220567961,"data":"      \"abs_rel\": 0.6432,\n"}
+,{"stream_name":"stdout","time":51.220569851,"data":"      \"rmse_m\": 22.9007\n"}
+,{"stream_name":"stdout","time":51.220571701,"data":"    },\n"}
+,{"stream_name":"stdout","time":51.220573511,"data":"    \"motion_prediction_metrics\": {\n"}
+,{"stream_name":"stdout","time":51.220575421,"data":"      \"matched_trajectories\": 93,\n"}
+,{"stream_name":"stdout","time":51.220577341,"data":"      \"ade_future_ego_m\": 14.5554,\n"}
+,{"stream_name":"stdout","time":51.220579231,"data":"      \"fde_future_ego_m\": 15.8474,\n"}
+,{"stream_name":"stdout","time":51.220581081,"data":"      \"ade_world_m\": 14.0978,\n"}
+,{"stream_name":"stdout","time":51.220582931,"data":"      \"fde_world_m\": 14.5404,\n"}
+,{"stream_name":"stdout","time":51.220584771,"data":"      \"per_horizon_future_ego_m\": {\n"}
+,{"stream_name":"stdout","time":51.220586671,"data":"        \"0.5\": 13.9387,\n"}
+,{"stream_name":"stdout","time":51.220588671,"data":"        \"1.0\": 9.0454,\n"}
+,{"stream_name":"stdout","time":51.220590631,"data":"        \"1.5\": 6.1219,\n"}
+,{"stream_name":"stdout","time":51.220592491,"data":"        \"2.0\": 7.058\n"}
+,{"stream_name":"stdout","time":51.220594361,"data":"      },\n"}
+,{"stream_name":"stdout","time":51.220596211,"data":"      \"per_horizon_world_m\": {\n"}
+,{"stream_name":"stdout","time":51.220598131,"data":"        \"0.5\": 13.9353,\n"}
+,{"stream_name":"stdout","time":51.220600001,"data":"        \"1.0\": 8.9767,\n"}
+,{"stream_name":"stdout","time":51.220601841,"data":"        \"1.5\": 5.554,\n"}
+,{"stream_name":"stdout","time":51.220604021,"data":"        \"2.0\": 5.3711\n"}
+,{"stream_name":"stdout","time":51.220605891,"data":"      }\n"}
+,{"stream_name":"stdout","time":51.220607711,"data":"    },\n"}
+,{"stream_name":"stdout","time":51.220609522,"data":"    \"uncertainty_calibration\": {\n"}
+,{"stream_name":"stdout","time":51.220611402,"data":"      \"samples\": 329,\n"}
+,{"stream_name":"stdout","time":51.220613291,"data":"      \"empirical_1sigma_coverage\": 0.2705,\n"}
+,{"stream_name":"stdout","time":51.220615171,"data":"      \"empirical_2sigma_coverage\": 0.465,\n"}
+,{"stream_name":"stdout","time":51.220617111,"data":"      \"theoretical_2d_gaussian\": {\n"}
+,{"stream_name":"stdout","time":51.220627371,"data":"        \"1sigma\": 0.3935,\n"}
+,{"stream_name":"stdout","time":51.220629462,"data":"        \"2sigma\": 0.8647\n"}
+,{"stream_name":"stdout","time":51.220631342,"data":"      }\n"}
+,{"stream_name":"stdout","time":51.220633131,"data":"    },\n"}
+,{"stream_name":"stdout","time":51.220634951,"data":"    \"note\": \"Evaluated against KITTI label_02 3D GT matched via IoU \u003e 0.4; World-frame uses OXTS Ego poses.\"\n"}
+,{"stream_name":"stdout","time":51.220637422,"data":"  }\n"}
+,{"stream_name":"stdout","time":51.220639262,"data":"}\n"}
+,{"stream_name":"stdout","time":62.08957931,"data":"[WORLD FULL 0015] {\n"}
+,{"stream_name":"stdout","time":62.08961385,"data":"  \"sequence_id\": \"0015\",\n"}
+,{"stream_name":"stdout","time":62.08961917,"data":"  \"frames_rendered\": 376,\n"}
+,{"stream_name":"stdout","time":62.08962292,"data":"  \"fps\": 10.0,\n"}
+,{"stream_name":"stdout","time":62.08962631,"data":"  \"duration_sec\": 37.6,\n"}
+,{"stream_name":"stdout","time":62.08962962,"data":"  \"calibrated\": true,\n"}
+,{"stream_name":"stdout","time":62.08963287,"data":"  \"ego_motion_compensated\": true,\n"}
+,{"stream_name":"stdout","time":62.08963606,"data":"  \"staged_demo\": false,\n"}
+,{"stream_name":"stdout","time":62.08963944,"data":"  \"video_path\": \"/kaggle/working/world_outputs/world_model_0015_full/world_model_demo_0015.mp4\",\n"}
+,{"stream_name":"stdout","time":62.08964362,"data":"  \"timeline_path\": \"/kaggle/working/world_outputs/world_model_0015_full/world_model_timeline_0015.json\",\n"}
+,{"stream_name":"stdout","time":62.08964715,"data":"  \"eval_metrics\": {\n"}
+,{"stream_name":"stdout","time":62.08965042,"data":"    \"depth_metrics\": {\n"}
+,{"stream_name":"stdout","time":62.08965348,"data":"      \"matched_samples\": 952,\n"}
+,{"stream_name":"stdout","time":62.0896568,"data":"      \"abs_rel\": 0.5207,\n"}
+,{"stream_name":"stdout","time":62.08965994,"data":"      \"rmse_m\": 12.484\n"}
+,{"stream_name":"stdout","time":62.08966315,"data":"    },\n"}
+,{"stream_name":"stdout","time":62.08966621,"data":"    \"motion_prediction_metrics\": {\n"}
+,{"stream_name":"stdout","time":62.0896694,"data":"      \"matched_trajectories\": 901,\n"}
+,{"stream_name":"stdout","time":62.0896726,"data":"      \"ade_future_ego_m\": 8.3848,\n"}
+,{"stream_name":"stdout","time":62.08967576,"data":"      \"fde_future_ego_m\": 8.8193,\n"}
+,{"stream_name":"stdout","time":62.0896789,"data":"      \"ade_world_m\": 8.3388,\n"}
+,{"stream_name":"stdout","time":62.08968207,"data":"      \"fde_world_m\": 8.6873,\n"}
+,{"stream_name":"stdout","time":62.08968566,"data":"      \"per_horizon_future_ego_m\": {\n"}
+,{"stream_name":"stdout","time":62.0896889,"data":"        \"0.5\": 8.18,\n"}
+,{"stream_name":"stdout","time":62.08969202,"data":"        \"1.0\": 7.6629,\n"}
+,{"stream_name":"stdout","time":62.08969519,"data":"        \"1.5\": 7.5363,\n"}
+,{"stream_name":"stdout","time":62.08969827,"data":"        \"2.0\": 8.0688\n"}
+,{"stream_name":"stdout","time":62.0897014,"data":"      },\n"}
+,{"stream_name":"stdout","time":62.08970448,"data":"      \"per_horizon_world_m\": {\n"}
+,{"stream_name":"stdout","time":62.08970761,"data":"        \"0.5\": 8.1792,\n"}
+,{"stream_name":"stdout","time":62.08971079,"data":"        \"1.0\": 7.6572,\n"}
+,{"stream_name":"stdout","time":62.08971397,"data":"        \"1.5\": 7.4838,\n"}
+,{"stream_name":"stdout","time":62.08971713,"data":"        \"2.0\": 7.9037\n"}
+,{"stream_name":"stdout","time":62.08972033,"data":"      }\n"}
+,{"stream_name":"stdout","time":62.08973926,"data":"    },\n"}
+,{"stream_name":"stdout","time":62.08974272,"data":"    \"uncertainty_calibration\": {\n"}
+,{"stream_name":"stdout","time":62.08974607,"data":"      \"samples\": 3301,\n"}
+,{"stream_name":"stdout","time":62.08974927,"data":"      \"empirical_1sigma_coverage\": 0.1451,\n"}
+,{"stream_name":"stdout","time":62.08975255,"data":"      \"empirical_2sigma_coverage\": 0.3602,\n"}
+,{"stream_name":"stdout","time":62.08975581,"data":"      \"theoretical_2d_gaussian\": {\n"}
+,{"stream_name":"stdout","time":62.08975902,"data":"        \"1sigma\": 0.3935,\n"}
+,{"stream_name":"stdout","time":62.0897622,"data":"        \"2sigma\": 0.8647\n"}
+,{"stream_name":"stdout","time":62.08976537,"data":"      }\n"}
+,{"stream_name":"stdout","time":62.08976843,"data":"    },\n"}
+,{"stream_name":"stdout","time":62.08977155,"data":"    \"note\": \"Evaluated against KITTI label_02 3D GT matched via IoU \u003e 0.4; World-frame uses OXTS Ego poses.\"\n"}
+,{"stream_name":"stdout","time":62.08977562,"data":"  }\n"}
+,{"stream_name":"stdout","time":62.08977868,"data":"}\n"}
+,{"stream_name":"stdout","time":66.174719263,"data":"[VALIDATION RQ1-RQ3 0015] {\n"}
+,{"stream_name":"stdout","time":66.174764523,"data":"  \"sequence_id\": \"0015\",\n"}
+,{"stream_name":"stdout","time":66.174770714,"data":"  \"frame_count\": 376,\n"}
+,{"stream_name":"stdout","time":66.174774194,"data":"  \"rq1_coordinate_and_ego_motion\": {\n"}
+,{"stream_name":"stdout","time":66.174777483,"data":"    \"ego_total_distance_m\": 71.61,\n"}
+,{"stream_name":"stdout","time":66.174780803,"data":"    \"max_roundtrip_transform_error_m\": 2.161e-14,\n"}
+,{"stream_name":"stdout","time":66.174784094,"data":"    \"stationary_gt_tracks_identified\": 5,\n"}
+,{"stream_name":"stdout","time":66.174787214,"data":"    \"stationary_object_samples\": 369,\n"}
+,{"stream_name":"stdout","time":66.174790263,"data":"    \"compensated_world_speed_on_stationary_mps\": {\n"}
+,{"stream_name":"stdout","time":66.174793894,"data":"      \"mean\": 0.618,\n"}
+,{"stream_name":"stdout","time":66.174796723,"data":"      \"median\": 0.016\n"}
+,{"stream_name":"stdout","time":66.174799443,"data":"    },\n"}
+,{"stream_name":"stdout","time":66.174801954,"data":"    \"uncompensated_ego_speed_on_stationary_mps\": {\n"}
+,{"stream_name":"stdout","time":66.174804683,"data":"      \"mean\": 1.409,\n"}
+,{"stream_name":"stdout","time":66.174807694,"data":"      \"median\": 0.008\n"}
+,{"stream_name":"stdout","time":66.174811174,"data":"    }\n"}
+,{"stream_name":"stdout","time":66.174813843,"data":"  },\n"}
+,{"stream_name":"stdout","time":66.174816494,"data":"  \"rq2_future_prediction_vs_observation\": {\n"}
+,{"stream_name":"stdout","time":66.174819194,"data":"    \"oxts_world_kalman_with_ctrv\": {\n"}
+,{"stream_name":"stdout","time":66.174821903,"data":"      \"depth_metrics\": {\n"}
+,{"stream_name":"stdout","time":66.174824863,"data":"        \"matched_samples\": 952,\n"}
+,{"stream_name":"stdout","time":66.174828003,"data":"        \"abs_rel\": 0.5207,\n"}
+,{"stream_name":"stdout","time":66.174831203,"data":"        \"rmse_m\": 12.484\n"}
+,{"stream_name":"stdout","time":66.174834403,"data":"      },\n"}
+,{"stream_name":"stdout","time":66.174837863,"data":"      \"motion_prediction_metrics\": {\n"}
+,{"stream_name":"stdout","time":66.174840683,"data":"        \"matched_trajectories\": 901,\n"}
+,{"stream_name":"stdout","time":66.174843563,"data":"        \"ade_future_ego_m\": 8.3848,\n"}
+,{"stream_name":"stdout","time":66.174846414,"data":"        \"fde_future_ego_m\": 8.8193,\n"}
+,{"stream_name":"stdout","time":66.174868593,"data":"        \"ade_world_m\": 8.3388,\n"}
+,{"stream_name":"stdout","time":66.174872284,"data":"        \"fde_world_m\": 8.6873,\n"}
+,{"stream_name":"stdout","time":66.174874604,"data":"        \"per_horizon_future_ego_m\": {\n"}
+,{"stream_name":"stdout","time":66.174876633,"data":"          \"0.5\": 8.18,\n"}
+,{"stream_name":"stdout","time":66.174878604,"data":"          \"1.0\": 7.6629,\n"}
+,{"stream_name":"stdout","time":66.174880493,"data":"          \"1.5\": 7.5363,\n"}
+,{"stream_name":"stdout","time":66.174882353,"data":"          \"2.0\": 8.0688\n"}
+,{"stream_name":"stdout","time":66.174884233,"data":"        },\n"}
+,{"stream_name":"stdout","time":66.174886033,"data":"        \"per_horizon_world_m\": {\n"}
+,{"stream_name":"stdout","time":66.174887904,"data":"          \"0.5\": 8.1792,\n"}
+,{"stream_name":"stdout","time":66.174890053,"data":"          \"1.0\": 7.6572,\n"}
+,{"stream_name":"stdout","time":66.174891884,"data":"          \"1.5\": 7.4838,\n"}
+,{"stream_name":"stdout","time":66.174893744,"data":"          \"2.0\": 7.9037\n"}
+,{"stream_name":"stdout","time":66.174896044,"data":"        }\n"}
+,{"stream_name":"stdout","time":66.174899444,"data":"      },\n"}
+,{"stream_name":"stdout","time":66.174902493,"data":"      \"uncertainty_calibration\": {\n"}
+,{"stream_name":"stdout","time":66.174905724,"data":"        \"samples\": 3301,\n"}
+,{"stream_name":"stdout","time":66.174908744,"data":"        \"empirical_1sigma_coverage\": 0.1451,\n"}
+,{"stream_name":"stdout","time":66.174912053,"data":"        \"empirical_2sigma_coverage\": 0.3602,\n"}
+,{"stream_name":"stdout","time":66.174915404,"data":"        \"theoretical_2d_gaussian\": {\n"}
+,{"stream_name":"stdout","time":66.174918764,"data":"          \"1sigma\": 0.3935,\n"}
+,{"stream_name":"stdout","time":66.174921884,"data":"          \"2sigma\": 0.8647\n"}
+,{"stream_name":"stdout","time":66.174924984,"data":"        }\n"}
+,{"stream_name":"stdout","time":66.174928444,"data":"      },\n"}
+,{"stream_name":"stdout","time":66.174931664,"data":"      \"note\": \"Evaluated against KITTI label_02 3D GT matched via IoU \u003e 0.4; World-frame uses OXTS Ego poses.\"\n"}
+,{"stream_name":"stdout","time":66.174935213,"data":"    },\n"}
+,{"stream_name":"stdout","time":66.174938533,"data":"    \"ego_relative_kalman_no_oxts\": {\n"}
+,{"stream_name":"stdout","time":66.174941964,"data":"      \"matched_trajectories\": 901,\n"}
+,{"stream_name":"stdout","time":66.174945084,"data":"      \"ade_future_ego_m\": 8.7443,\n"}
+,{"stream_name":"stdout","time":66.174948273,"data":"      \"fde_future_ego_m\": 9.3002,\n"}
+,{"stream_name":"stdout","time":66.174951584,"data":"      \"ade_world_m\": null,\n"}
+,{"stream_name":"stdout","time":66.174954964,"data":"      \"fde_world_m\": null,\n"}
+,{"stream_name":"stdout","time":66.174958064,"data":"      \"per_horizon_future_ego_m\": {\n"}
+,{"stream_name":"stdout","time":66.174961233,"data":"        \"0.5\": 8.3842,\n"}
+,{"stream_name":"stdout","time":66.174973844,"data":"        \"1.0\": 7.9703,\n"}
+,{"stream_name":"stdout","time":66.174976664,"data":"        \"1.5\": 7.9417,\n"}
+,{"stream_name":"stdout","time":66.174979373,"data":"        \"2.0\": 8.5472\n"}
+,{"stream_name":"stdout","time":66.174982244,"data":"      },\n"}
+,{"stream_name":"stdout","time":66.174985084,"data":"      \"per_horizon_world_m\": {\n"}
+,{"stream_name":"stdout","time":66.174988013,"data":"        \"0.5\": null,\n"}
+,{"stream_name":"stdout","time":66.174990864,"data":"        \"1.0\": null,\n"}
+,{"stream_name":"stdout","time":66.174998513,"data":"        \"1.5\": null,\n"}
+,{"stream_name":"stdout","time":66.175001524,"data":"        \"2.0\": null\n"}
+,{"stream_name":"stdout","time":66.175004304,"data":"      }\n"}
+,{"stream_name":"stdout","time":66.175007024,"data":"    },\n"}
+,{"stream_name":"stdout","time":66.175012243,"data":"    \"zero_velocity_baseline\": {\n"}
+,{"stream_name":"stdout","time":66.175015623,"data":"      \"matched_trajectories\": 901,\n"}
+,{"stream_name":"stdout","time":66.175018673,"data":"      \"ade_future_ego_m\": 10.195,\n"}
+,{"stream_name":"stdout","time":66.175022013,"data":"      \"fde_future_ego_m\": 11.4531,\n"}
+,{"stream_name":"stdout","time":66.175025273,"data":"      \"ade_world_m\": null,\n"}
+,{"stream_name":"stdout","time":66.175028563,"data":"      \"fde_world_m\": null,\n"}
+,{"stream_name":"stdout","time":66.175031603,"data":"      \"per_horizon_future_ego_m\": {\n"}
+,{"stream_name":"stdout","time":66.175034753,"data":"        \"0.5\": 8.9349,\n"}
+,{"stream_name":"stdout","time":66.175038043,"data":"        \"1.0\": 9.4386,\n"}
+,{"stream_name":"stdout","time":66.175041414,"data":"        \"1.5\": 10.1526,\n"}
+,{"stream_name":"stdout","time":66.175044234,"data":"        \"2.0\": 11.0906\n"}
+,{"stream_name":"stdout","time":66.175047083,"data":"      },\n"}
+,{"stream_name":"stdout","time":66.175049754,"data":"      \"per_horizon_world_m\": {\n"}
+,{"stream_name":"stdout","time":66.175052603,"data":"        \"0.5\": null,\n"}
+,{"stream_name":"stdout","time":66.175055363,"data":"        \"1.0\": null,\n"}
+,{"stream_name":"stdout","time":66.175058163,"data":"        \"1.5\": null,\n"}
+,{"stream_name":"stdout","time":66.175060894,"data":"        \"2.0\": null\n"}
+,{"stream_name":"stdout","time":66.175063674,"data":"      }\n"}
+,{"stream_name":"stdout","time":66.175066383,"data":"    },\n"}
+,{"stream_name":"stdout","time":66.175069063,"data":"    \"self_consistency_world_replay_error_m\": {\n"}
+,{"stream_name":"stdout","time":66.175071963,"data":"      \"0.5\": {\n"}
+,{"stream_name":"stdout","time":66.175074754,"data":"        \"samples\": 801,\n"}
+,{"stream_name":"stdout","time":66.175077534,"data":"        \"mean_error_m\": 1.5829\n"}
+,{"stream_name":"stdout","time":66.175080414,"data":"      },\n"}
+,{"stream_name":"stdout","time":66.175083114,"data":"      \"1.0\": {\n"}
+,{"stream_name":"stdout","time":66.175085883,"data":"        \"samples\": 747,\n"}
+,{"stream_name":"stdout","time":66.175088734,"data":"        \"mean_error_m\": 3.0557\n"}
+,{"stream_name":"stdout","time":66.175091603,"data":"      },\n"}
+,{"stream_name":"stdout","time":66.175094634,"data":"      \"1.5\": {\n"}
+,{"stream_name":"stdout","time":66.175097863,"data":"        \"samples\": 698,\n"}
+,{"stream_name":"stdout","time":66.175100683,"data":"        \"mean_error_m\": 4.5597\n"}
+,{"stream_name":"stdout","time":66.175103523,"data":"      },\n"}
+,{"stream_name":"stdout","time":66.175106814,"data":"      \"2.0\": {\n"}
+,{"stream_name":"stdout","time":66.175109934,"data":"        \"samples\": 657,\n"}
+,{"stream_name":"stdout","time":66.175113263,"data":"        \"mean_error_m\": 5.8739\n"}
+,{"stream_name":"stdout","time":66.175116603,"data":"      }\n"}
+,{"stream_name":"stdout","time":66.175119894,"data":"    }\n"}
+,{"stream_name":"stdout","time":66.175122834,"data":"  },\n"}
+,{"stream_name":"stdout","time":66.175126054,"data":"  \"rq3_uncertainty_causality_on_safety\": {\n"}
+,{"stream_name":"stdout","time":66.175129334,"data":"    \"arm_a_uncertainty_blind\": {\n"}
+,{"stream_name":"stdout","time":66.175137503,"data":"      \"frames\": 376,\n"}
+,{"stream_name":"stdout","time":66.175140803,"data":"      \"mean_risk_indicator\": 0.3076,\n"}
+,{"stream_name":"stdout","time":66.175144403,"data":"      \"max_risk_indicator\": 0.65,\n"}
+,{"stream_name":"stdout","time":66.175147523,"data":"      \"non_normal_intervention_rate\": 0.4176,\n"}
+,{"stream_name":"stdout","time":66.175150363,"data":"      \"decision_counts\": {\n"}
+,{"stream_name":"stdout","time":66.175153163,"data":"        \"Normal Driving\": 219,\n"}
+,{"stream_name":"stdout","time":66.175155974,"data":"        \"Caution\": 27,\n"}
+,{"stream_name":"stdout","time":66.175158763,"data":"        \"Speed Reduction\": 38,\n"}
+,{"stream_name":"stdout","time":66.175161614,"data":"        \"Braking Recommendation\": 92,\n"}
+,{"stream_name":"stdout","time":66.175164503,"data":"        \"Emergency Intervention\": 0\n"}
+,{"stream_name":"stdout","time":66.175167323,"data":"      }\n"}
+,{"stream_name":"stdout","time":66.175170083,"data":"    },\n"}
+,{"stream_name":"stdout","time":66.175172783,"data":"    \"arm_b_uncertainty_aware_nominal\": {\n"}
+,{"stream_name":"stdout","time":66.175175573,"data":"      \"frames\": 376,\n"}
+,{"stream_name":"stdout","time":66.175178373,"data":"      \"mean_risk_indicator\": 0.5189,\n"}
+,{"stream_name":"stdout","time":66.175181223,"data":"      \"max_risk_indicator\": 0.926,\n"}
+,{"stream_name":"stdout","time":66.175184053,"data":"      \"non_normal_intervention_rate\": 0.9043,\n"}
+,{"stream_name":"stdout","time":66.175186873,"data":"      \"decision_counts\": {\n"}
+,{"stream_name":"stdout","time":66.175189653,"data":"        \"Normal Driving\": 36,\n"}
+,{"stream_name":"stdout","time":66.175192523,"data":"        \"Caution\": 2,\n"}
+,{"stream_name":"stdout","time":66.175195343,"data":"        \"Speed Reduction\": 207,\n"}
+,{"stream_name":"stdout","time":66.175198183,"data":"        \"Braking Recommendation\": 121,\n"}
+,{"stream_name":"stdout","time":66.175201393,"data":"        \"Emergency Intervention\": 10\n"}
+,{"stream_name":"stdout","time":66.175204293,"data":"      }\n"}
+,{"stream_name":"stdout","time":66.175206943,"data":"    },\n"}
+,{"stream_name":"stdout","time":66.175209743,"data":"    \"arm_c_uncertainty_aware_degraded\": {\n"}
+,{"stream_name":"stdout","time":66.175212753,"data":"      \"frames\": 376,\n"}
+,{"stream_name":"stdout","time":66.175215713,"data":"      \"mean_risk_indicator\": 0.5428,\n"}
+,{"stream_name":"stdout","time":66.175218884,"data":"      \"max_risk_indicator\": 0.89,\n"}
+,{"stream_name":"stdout","time":66.175222193,"data":"      \"non_normal_intervention_rate\": 0.9096,\n"}
+,{"stream_name":"stdout","time":66.175225473,"data":"      \"decision_counts\": {\n"}
+,{"stream_name":"stdout","time":66.175228753,"data":"        \"Normal Driving\": 34,\n"}
+,{"stream_name":"stdout","time":66.175231984,"data":"        \"Caution\": 28,\n"}
+,{"stream_name":"stdout","time":66.175235393,"data":"        \"Speed Reduction\": 170,\n"}
+,{"stream_name":"stdout","time":66.175238673,"data":"        \"Braking Recommendation\": 135,\n"}
+,{"stream_name":"stdout","time":66.175242224,"data":"        \"Emergency Intervention\": 9\n"}
+,{"stream_name":"stdout","time":66.175246053,"data":"      }\n"}
+,{"stream_name":"stdout","time":66.175249304,"data":"    },\n"}
+,{"stream_name":"stdout","time":66.175252044,"data":"    \"causality_deltas\": {\n"}
+,{"stream_name":"stdout","time":66.175255493,"data":"      \"mean_risk_shift_aware_minus_blind\": 0.2113,\n"}
+,{"stream_name":"stdout","time":66.175258473,"data":"      \"mean_risk_shift_degraded_minus_nominal\": 0.0239,\n"}
+,{"stream_name":"stdout","time":66.175265704,"data":"      \"frames_escalated_aware_over_blind\": 248,\n"}
+,{"stream_name":"stdout","time":66.175268653,"data":"      \"frames_escalated_degraded_over_nominal\": 23,\n"}
+,{"stream_name":"stdout","time":66.175271553,"data":"      \"frames_risk_increased_degraded_over_nominal\": 254,\n"}
+,{"stream_name":"stdout","time":66.175274533,"data":"      \"total_frames\": 376\n"}
+,{"stream_name":"stdout","time":66.175277304,"data":"    }\n"}
+,{"stream_name":"stdout","time":66.175279984,"data":"  }\n"}
+,{"stream_name":"stdout","time":66.175282713,"data":"}\n"}
+,{"stream_name":"stdout","time":140.491080625,"data":"[SEQ 0019] calib=/tmp/world_model_prep/calib/training/calib/0019.txt label=/tmp/world_model_prep/labels/training/label_02/0019.txt oxts=/tmp/world_model_prep/oxts/training/oxts/0019.txt\n"}
+,{"stream_name":"stdout","time":143.04787922,"data":"[WORLD STAGED 0019] {\n"}
+,{"stream_name":"stdout","time":143.04790386,"data":"  \"sequence_id\": \"0019\",\n"}
+,{"stream_name":"stdout","time":143.047908849,"data":"  \"frames_rendered\": 80,\n"}
+,{"stream_name":"stdout","time":143.04791316,"data":"  \"fps\": 10.0,\n"}
+,{"stream_name":"stdout","time":143.047917729,"data":"  \"duration_sec\": 8.0,\n"}
+,{"stream_name":"stdout","time":143.0479224,"data":"  \"calibrated\": true,\n"}
+,{"stream_name":"stdout","time":143.04792639,"data":"  \"ego_motion_compensated\": true,\n"}
+,{"stream_name":"stdout","time":143.04793029,"data":"  \"staged_demo\": true,\n"}
+,{"stream_name":"stdout","time":143.04793431,"data":"  \"video_path\": \"/kaggle/working/world_outputs/world_model_0019_staged/world_model_demo_0019.mp4\",\n"}
+,{"stream_name":"stdout","time":143.04793861,"data":"  \"timeline_path\": \"/kaggle/working/world_outputs/world_model_0019_staged/world_model_timeline_0019.json\",\n"}
+,{"stream_name":"stdout","time":143.0479428,"data":"  \"eval_metrics\": {\n"}
+,{"stream_name":"stdout","time":143.04794674,"data":"    \"depth_metrics\": {\n"}
+,{"stream_name":"stdout","time":143.04795066,"data":"      \"matched_samples\": 188,\n"}
+,{"stream_name":"stdout","time":143.04795461,"data":"      \"abs_rel\": 0.3386,\n"}
+,{"stream_name":"stdout","time":143.04795851,"data":"      \"rmse_m\": 8.6554\n"}
+,{"stream_name":"stdout","time":143.04796254,"data":"    },\n"}
+,{"stream_name":"stdout","time":143.04796636,"data":"    \"motion_prediction_metrics\": {\n"}
+,{"stream_name":"stdout","time":143.04797032,"data":"      \"matched_trajectories\": 169,\n"}
+,{"stream_name":"stdout","time":143.04797418,"data":"      \"ade_future_ego_m\": 6.3983,\n"}
+,{"stream_name":"stdout","time":143.04797841,"data":"      \"fde_future_ego_m\": 8.1834,\n"}
+,{"stream_name":"stdout","time":143.04798224,"data":"      \"ade_world_m\": 5.9043,\n"}
+,{"stream_name":"stdout","time":143.04798627,"data":"      \"fde_world_m\": 7.1939,\n"}
+,{"stream_name":"stdout","time":143.04799023,"data":"      \"per_horizon_future_ego_m\": {\n"}
+,{"stream_name":"stdout","time":143.04799417,"data":"        \"0.5\": 4.9229,\n"}
+,{"stream_name":"stdout","time":143.04799817,"data":"        \"1.0\": 5.8869,\n"}
+,{"stream_name":"stdout","time":143.04800204,"data":"        \"1.5\": 7.7719,\n"}
+,{"stream_name":"stdout","time":143.04800598,"data":"        \"2.0\": 10.0173\n"}
+,{"stream_name":"stdout","time":143.0480104,"data":"      },\n"}
+,{"stream_name":"stdout","time":143.04801434,"data":"      \"per_horizon_world_m\": {\n"}
+,{"stream_name":"stdout","time":143.04801926,"data":"        \"0.5\": 4.8502,\n"}
+,{"stream_name":"stdout","time":143.04802362,"data":"        \"1.0\": 5.572,\n"}
+,{"stream_name":"stdout","time":143.04803801,"data":"        \"1.5\": 7.0197,\n"}
+,{"stream_name":"stdout","time":143.04804093,"data":"        \"2.0\": 8.8215\n"}
+,{"stream_name":"stdout","time":143.04804385,"data":"      }\n"}
+,{"stream_name":"stdout","time":143.04804653,"data":"    },\n"}
+,{"stream_name":"stdout","time":143.04804932,"data":"    \"uncertainty_calibration\": {\n"}
+,{"stream_name":"stdout","time":143.04805212,"data":"      \"samples\": 599,\n"}
+,{"stream_name":"stdout","time":143.04805494,"data":"      \"empirical_1sigma_coverage\": 0.207,\n"}
+,{"stream_name":"stdout","time":143.04805778,"data":"      \"empirical_2sigma_coverage\": 0.3823,\n"}
+,{"stream_name":"stdout","time":143.04806061,"data":"      \"theoretical_2d_gaussian\": {\n"}
+,{"stream_name":"stdout","time":143.04806355,"data":"        \"1sigma\": 0.3935,\n"}
+,{"stream_name":"stdout","time":143.04806635,"data":"        \"2sigma\": 0.8647\n"}
+,{"stream_name":"stdout","time":143.04806916,"data":"      }\n"}
+,{"stream_name":"stdout","time":143.04807186,"data":"    },\n"}
+,{"stream_name":"stdout","time":143.04807461,"data":"    \"note\": \"Evaluated against KITTI label_02 3D GT matched via IoU \u003e 0.4; World-frame uses OXTS Ego poses.\"\n"}
+,{"stream_name":"stdout","time":143.04807802,"data":"  }\n"}
+,{"stream_name":"stdout","time":143.04808065,"data":"}\n"}
+,{"stream_name":"stdout","time":176.181625283,"data":"[WORLD FULL 0019] {\n"}
+,{"stream_name":"stdout","time":176.181672663,"data":"  \"sequence_id\": \"0019\",\n"}
+,{"stream_name":"stdout","time":176.181679023,"data":"  \"frames_rendered\": 1059,\n"}
+,{"stream_name":"stdout","time":176.181683323,"data":"  \"fps\": 10.0,\n"}
+,{"stream_name":"stdout","time":176.181687543,"data":"  \"duration_sec\": 105.9,\n"}
+,{"stream_name":"stdout","time":176.181691963,"data":"  \"calibrated\": true,\n"}
+,{"stream_name":"stdout","time":176.181696334,"data":"  \"ego_motion_compensated\": true,\n"}
+,{"stream_name":"stdout","time":176.181701374,"data":"  \"staged_demo\": false,\n"}
+,{"stream_name":"stdout","time":176.181705894,"data":"  \"video_path\": \"/kaggle/working/world_outputs/world_model_0019_full/world_model_demo_0019.mp4\",\n"}
+,{"stream_name":"stdout","time":176.181710783,"data":"  \"timeline_path\": \"/kaggle/working/world_outputs/world_model_0019_full/world_model_timeline_0019.json\",\n"}
+,{"stream_name":"stdout","time":176.181715934,"data":"  \"eval_metrics\": {\n"}
+,{"stream_name":"stdout","time":176.181720323,"data":"    \"depth_metrics\": {\n"}
+,{"stream_name":"stdout","time":176.181724503,"data":"      \"matched_samples\": 2787,\n"}
+,{"stream_name":"stdout","time":176.181728874,"data":"      \"abs_rel\": 0.1803,\n"}
+,{"stream_name":"stdout","time":176.181733183,"data":"      \"rmse_m\": 4.2726\n"}
+,{"stream_name":"stdout","time":176.181737163,"data":"    },\n"}
+,{"stream_name":"stdout","time":176.181740913,"data":"    \"motion_prediction_metrics\": {\n"}
+,{"stream_name":"stdout","time":176.181744933,"data":"      \"matched_trajectories\": 2529,\n"}
+,{"stream_name":"stdout","time":176.181749003,"data":"      \"ade_future_ego_m\": 3.4873,\n"}
+,{"stream_name":"stdout","time":176.181752973,"data":"      \"fde_future_ego_m\": 4.4877,\n"}
+,{"stream_name":"stdout","time":176.181757013,"data":"      \"ade_world_m\": 3.3824,\n"}
+,{"stream_name":"stdout","time":176.181761093,"data":"      \"fde_world_m\": 4.2587,\n"}
+,{"stream_name":"stdout","time":176.181765153,"data":"      \"per_horizon_future_ego_m\": {\n"}
+,{"stream_name":"stdout","time":176.181769123,"data":"        \"0.5\": 2.5984,\n"}
+,{"stream_name":"stdout","time":176.181788064,"data":"        \"1.0\": 3.2538,\n"}
+,{"stream_name":"stdout","time":176.181791613,"data":"        \"1.5\": 4.0769,\n"}
+,{"stream_name":"stdout","time":176.181794513,"data":"        \"2.0\": 5.0282\n"}
+,{"stream_name":"stdout","time":176.181797333,"data":"      },\n"}
+,{"stream_name":"stdout","time":176.181800073,"data":"      \"per_horizon_world_m\": {\n"}
+,{"stream_name":"stdout","time":176.181802964,"data":"        \"0.5\": 2.5871,\n"}
+,{"stream_name":"stdout","time":176.181805944,"data":"        \"1.0\": 3.1997,\n"}
+,{"stream_name":"stdout","time":176.181808833,"data":"        \"1.5\": 3.9298,\n"}
+,{"stream_name":"stdout","time":176.181811644,"data":"        \"2.0\": 4.7636\n"}
+,{"stream_name":"stdout","time":176.181814433,"data":"      }\n"}
+,{"stream_name":"stdout","time":176.181817213,"data":"    },\n"}
+,{"stream_name":"stdout","time":176.181820144,"data":"    \"uncertainty_calibration\": {\n"}
+,{"stream_name":"stdout","time":176.181823033,"data":"      \"samples\": 9156,\n"}
+,{"stream_name":"stdout","time":176.181825853,"data":"      \"empirical_1sigma_coverage\": 0.4138,\n"}
+,{"stream_name":"stdout","time":176.181828813,"data":"      \"empirical_2sigma_coverage\": 0.6149,\n"}
+,{"stream_name":"stdout","time":176.181831693,"data":"      \"theoretical_2d_gaussian\": {\n"}
+,{"stream_name":"stdout","time":176.181835184,"data":"        \"1sigma\": 0.3935,\n"}
+,{"stream_name":"stdout","time":176.181838344,"data":"        \"2sigma\": 0.8647\n"}
+,{"stream_name":"stdout","time":176.181841113,"data":"      }\n"}
+,{"stream_name":"stdout","time":176.181843764,"data":"    },\n"}
+,{"stream_name":"stdout","time":176.181846353,"data":"    \"note\": \"Evaluated against KITTI label_02 3D GT matched via IoU \u003e 0.4; World-frame uses OXTS Ego poses.\"\n"}
+,{"stream_name":"stdout","time":176.181850233,"data":"  }\n"}
+,{"stream_name":"stdout","time":176.181852924,"data":"}\n"}
+,{"stream_name":"stdout","time":193.024350625,"data":"[VALIDATION RQ1-RQ3 0019] {\n"}
+,{"stream_name":"stdout","time":193.024386345,"data":"  \"sequence_id\": \"0019\",\n"}
+,{"stream_name":"stdout","time":193.024391125,"data":"  \"frame_count\": 1059,\n"}
+,{"stream_name":"stdout","time":193.024395065,"data":"  \"rq1_coordinate_and_ego_motion\": {\n"}
+,{"stream_name":"stdout","time":193.024398845,"data":"    \"ego_total_distance_m\": 238.1,\n"}
+,{"stream_name":"stdout","time":193.024402515,"data":"    \"max_roundtrip_transform_error_m\": 3.352e-14,\n"}
+,{"stream_name":"stdout","time":193.024405865,"data":"    \"stationary_gt_tracks_identified\": 36,\n"}
+,{"stream_name":"stdout","time":193.024409335,"data":"    \"stationary_object_samples\": 602,\n"}
+,{"stream_name":"stdout","time":193.024412765,"data":"    \"compensated_world_speed_on_stationary_mps\": {\n"}
+,{"stream_name":"stdout","time":193.024416205,"data":"      \"mean\": 2.35,\n"}
+,{"stream_name":"stdout","time":193.024419445,"data":"      \"median\": 1.587\n"}
+,{"stream_name":"stdout","time":193.024422585,"data":"    },\n"}
+,{"stream_name":"stdout","time":193.024425505,"data":"    \"uncompensated_ego_speed_on_stationary_mps\": {\n"}
+,{"stream_name":"stdout","time":193.024428785,"data":"      \"mean\": 3.37,\n"}
+,{"stream_name":"stdout","time":193.024431895,"data":"      \"median\": 2.707\n"}
+,{"stream_name":"stdout","time":193.024435145,"data":"    }\n"}
+,{"stream_name":"stdout","time":193.024438315,"data":"  },\n"}
+,{"stream_name":"stdout","time":193.024441215,"data":"  \"rq2_future_prediction_vs_observation\": {\n"}
+,{"stream_name":"stdout","time":193.024444245,"data":"    \"oxts_world_kalman_with_ctrv\": {\n"}
+,{"stream_name":"stdout","time":193.024507365,"data":"      \"depth_metrics\": {\n"}
+,{"stream_name":"stdout","time":193.024512705,"data":"        \"matched_samples\": 2787,\n"}
+,{"stream_name":"stdout","time":193.024516255,"data":"        \"abs_rel\": 0.1803,\n"}
+,{"stream_name":"stdout","time":193.024519925,"data":"        \"rmse_m\": 4.2726\n"}
+,{"stream_name":"stdout","time":193.024523405,"data":"      },\n"}
+,{"stream_name":"stdout","time":193.024526695,"data":"      \"motion_prediction_metrics\": {\n"}
+,{"stream_name":"stdout","time":193.024529765,"data":"        \"matched_trajectories\": 2529,\n"}
+,{"stream_name":"stdout","time":193.024532685,"data":"        \"ade_future_ego_m\": 3.4873,\n"}
+,{"stream_name":"stdout","time":193.024535635,"data":"        \"fde_future_ego_m\": 4.4877,\n"}
+,{"stream_name":"stdout","time":193.024538755,"data":"        \"ade_world_m\": 3.3824,\n"}
+,{"stream_name":"stdout","time":193.024541655,"data":"        \"fde_world_m\": 4.2587,\n"}
+,{"stream_name":"stdout","time":193.024544445,"data":"        \"per_horizon_future_ego_m\": {\n"}
+,{"stream_name":"stdout","time":193.024547425,"data":"          \"0.5\": 2.5984,\n"}
+,{"stream_name":"stdout","time":193.024550245,"data":"          \"1.0\": 3.2538,\n"}
+,{"stream_name":"stdout","time":193.024553075,"data":"          \"1.5\": 4.0769,\n"}
+,{"stream_name":"stdout","time":193.024555865,"data":"          \"2.0\": 5.0282\n"}
+,{"stream_name":"stdout","time":193.024558695,"data":"        },\n"}
+,{"stream_name":"stdout","time":193.024561425,"data":"        \"per_horizon_world_m\": {\n"}
+,{"stream_name":"stdout","time":193.024564265,"data":"          \"0.5\": 2.5871,\n"}
+,{"stream_name":"stdout","time":193.024567075,"data":"          \"1.0\": 3.1997,\n"}
+,{"stream_name":"stdout","time":193.024570185,"data":"          \"1.5\": 3.9298,\n"}
+,{"stream_name":"stdout","time":193.024573005,"data":"          \"2.0\": 4.7636\n"}
+,{"stream_name":"stdout","time":193.024575865,"data":"        }\n"}
+,{"stream_name":"stdout","time":193.024579085,"data":"      },\n"}
+,{"stream_name":"stdout","time":193.024581035,"data":"      \"uncertainty_calibration\": {\n"}
+,{"stream_name":"stdout","time":193.024582935,"data":"        \"samples\": 9156,\n"}
+,{"stream_name":"stdout","time":193.024584815,"data":"        \"empirical_1sigma_coverage\": 0.4138,\n"}
+,{"stream_name":"stdout","time":193.024586765,"data":"        \"empirical_2sigma_coverage\": 0.6149,\n"}
+,{"stream_name":"stdout","time":193.024589095,"data":"        \"theoretical_2d_gaussian\": {\n"}
+,{"stream_name":"stdout","time":193.024592435,"data":"          \"1sigma\": 0.3935,\n"}
+,{"stream_name":"stdout","time":193.024595765,"data":"          \"2sigma\": 0.8647\n"}
+,{"stream_name":"stdout","time":193.024598845,"data":"        }\n"}
+,{"stream_name":"stdout","time":193.024601955,"data":"      },\n"}
+,{"stream_name":"stdout","time":193.024605295,"data":"      \"note\": \"Evaluated against KITTI label_02 3D GT matched via IoU \u003e 0.4; World-frame uses OXTS Ego poses.\"\n"}
+,{"stream_name":"stdout","time":193.024609465,"data":"    },\n"}
+,{"stream_name":"stdout","time":193.024612885,"data":"    \"ego_relative_kalman_no_oxts\": {\n"}
+,{"stream_name":"stdout","time":193.024616245,"data":"      \"matched_trajectories\": 2529,\n"}
+,{"stream_name":"stdout","time":193.024619665,"data":"      \"ade_future_ego_m\": 3.6625,\n"}
+,{"stream_name":"stdout","time":193.024622675,"data":"      \"fde_future_ego_m\": 4.7413,\n"}
+,{"stream_name":"stdout","time":193.024625525,"data":"      \"ade_world_m\": null,\n"}
+,{"stream_name":"stdout","time":193.024633535,"data":"      \"fde_world_m\": null,\n"}
+,{"stream_name":"stdout","time":193.024636435,"data":"      \"per_horizon_future_ego_m\": {\n"}
+,{"stream_name":"stdout","time":193.024639375,"data":"        \"0.5\": 2.6884,\n"}
+,{"stream_name":"stdout","time":193.024645705,"data":"        \"1.0\": 3.4143,\n"}
+,{"stream_name":"stdout","time":193.024648675,"data":"        \"1.5\": 4.2926,\n"}
+,{"stream_name":"stdout","time":193.024651545,"data":"        \"2.0\": 5.283\n"}
+,{"stream_name":"stdout","time":193.024654375,"data":"      },\n"}
+,{"stream_name":"stdout","time":193.024657175,"data":"      \"per_horizon_world_m\": {\n"}
+,{"stream_name":"stdout","time":193.024660045,"data":"        \"0.5\": null,\n"}
+,{"stream_name":"stdout","time":193.024662855,"data":"        \"1.0\": null,\n"}
+,{"stream_name":"stdout","time":193.024665705,"data":"        \"1.5\": null,\n"}
+,{"stream_name":"stdout","time":193.024668475,"data":"        \"2.0\": null\n"}
+,{"stream_name":"stdout","time":193.024671275,"data":"      }\n"}
+,{"stream_name":"stdout","time":193.024674305,"data":"    },\n"}
+,{"stream_name":"stdout","time":193.024679315,"data":"    \"zero_velocity_baseline\": {\n"}
+,{"stream_name":"stdout","time":193.024682335,"data":"      \"matched_trajectories\": 2529,\n"}
+,{"stream_name":"stdout","time":193.024685525,"data":"      \"ade_future_ego_m\": 4.0831,\n"}
+,{"stream_name":"stdout","time":193.024689055,"data":"      \"fde_future_ego_m\": 5.2281,\n"}
+,{"stream_name":"stdout","time":193.024692335,"data":"      \"ade_world_m\": null,\n"}
+,{"stream_name":"stdout","time":193.024695455,"data":"      \"fde_world_m\": null,\n"}
+,{"stream_name":"stdout","time":193.024698605,"data":"      \"per_horizon_future_ego_m\": {\n"}
+,{"stream_name":"stdout","time":193.024701945,"data":"        \"0.5\": 2.9812,\n"}
+,{"stream_name":"stdout","time":193.024705295,"data":"        \"1.0\": 3.877,\n"}
+,{"stream_name":"stdout","time":193.024708475,"data":"        \"1.5\": 4.7486,\n"}
+,{"stream_name":"stdout","time":193.024711805,"data":"        \"2.0\": 5.4821\n"}
+,{"stream_name":"stdout","time":193.024714995,"data":"      },\n"}
+,{"stream_name":"stdout","time":193.024717715,"data":"      \"per_horizon_world_m\": {\n"}
+,{"stream_name":"stdout","time":193.024720995,"data":"        \"0.5\": null,\n"}
+,{"stream_name":"stdout","time":193.024724155,"data":"        \"1.0\": null,\n"}
+,{"stream_name":"stdout","time":193.024727315,"data":"        \"1.5\": null,\n"}
+,{"stream_name":"stdout","time":193.024735065,"data":"        \"2.0\": null\n"}
+,{"stream_name":"stdout","time":193.024738195,"data":"      }\n"}
+,{"stream_name":"stdout","time":193.024741255,"data":"    },\n"}
+,{"stream_name":"stdout","time":193.024744325,"data":"    \"self_consistency_world_replay_error_m\": {\n"}
+,{"stream_name":"stdout","time":193.024747405,"data":"      \"0.5\": {\n"}
+,{"stream_name":"stdout","time":193.024750385,"data":"        \"samples\": 1946,\n"}
+,{"stream_name":"stdout","time":193.024753425,"data":"        \"mean_error_m\": 1.2966\n"}
+,{"stream_name":"stdout","time":193.024756875,"data":"      },\n"}
+,{"stream_name":"stdout","time":193.024760025,"data":"      \"1.0\": {\n"}
+,{"stream_name":"stdout","time":193.024763725,"data":"        \"samples\": 1605,\n"}
+,{"stream_name":"stdout","time":193.024767225,"data":"        \"mean_error_m\": 2.7497\n"}
+,{"stream_name":"stdout","time":193.024770545,"data":"      },\n"}
+,{"stream_name":"stdout","time":193.024773685,"data":"      \"1.5\": {\n"}
+,{"stream_name":"stdout","time":193.024776925,"data":"        \"samples\": 1367,\n"}
+,{"stream_name":"stdout","time":193.024785105,"data":"        \"mean_error_m\": 4.2918\n"}
+,{"stream_name":"stdout","time":193.024788145,"data":"      },\n"}
+,{"stream_name":"stdout","time":193.024790855,"data":"      \"2.0\": {\n"}
+,{"stream_name":"stdout","time":193.024793865,"data":"        \"samples\": 1178,\n"}
+,{"stream_name":"stdout","time":193.024796875,"data":"        \"mean_error_m\": 5.8244\n"}
+,{"stream_name":"stdout","time":193.024799845,"data":"      }\n"}
+,{"stream_name":"stdout","time":193.024802575,"data":"    }\n"}
+,{"stream_name":"stdout","time":193.024805285,"data":"  },\n"}
+,{"stream_name":"stdout","time":193.024808115,"data":"  \"rq3_uncertainty_causality_on_safety\": {\n"}
+,{"stream_name":"stdout","time":193.024811045,"data":"    \"arm_a_uncertainty_blind\": {\n"}
+,{"stream_name":"stdout","time":193.024813915,"data":"      \"frames\": 1059,\n"}
+,{"stream_name":"stdout","time":193.024816745,"data":"      \"mean_risk_indicator\": 0.5325,\n"}
+,{"stream_name":"stdout","time":193.024819685,"data":"      \"max_risk_indicator\": 0.978,\n"}
+,{"stream_name":"stdout","time":193.024822715,"data":"      \"non_normal_intervention_rate\": 0.847,\n"}
+,{"stream_name":"stdout","time":193.024825635,"data":"      \"decision_counts\": {\n"}
+,{"stream_name":"stdout","time":193.024828865,"data":"        \"Normal Driving\": 162,\n"}
+,{"stream_name":"stdout","time":193.024831935,"data":"        \"Caution\": 100,\n"}
+,{"stream_name":"stdout","time":193.024835015,"data":"        \"Speed Reduction\": 136,\n"}
+,{"stream_name":"stdout","time":193.024838535,"data":"        \"Braking Recommendation\": 563,\n"}
+,{"stream_name":"stdout","time":193.024841855,"data":"        \"Emergency Intervention\": 98\n"}
+,{"stream_name":"stdout","time":193.024844945,"data":"      }\n"}
+,{"stream_name":"stdout","time":193.024848075,"data":"    },\n"}
+,{"stream_name":"stdout","time":193.024851215,"data":"    \"arm_b_uncertainty_aware_nominal\": {\n"}
+,{"stream_name":"stdout","time":193.024854795,"data":"      \"frames\": 1059,\n"}
+,{"stream_name":"stdout","time":193.024858175,"data":"      \"mean_risk_indicator\": 0.699,\n"}
+,{"stream_name":"stdout","time":193.024861695,"data":"      \"max_risk_indicator\": 1.0,\n"}
+,{"stream_name":"stdout","time":193.024864995,"data":"      \"non_normal_intervention_rate\": 0.8952,\n"}
+,{"stream_name":"stdout","time":193.024868025,"data":"      \"decision_counts\": {\n"}
+,{"stream_name":"stdout","time":193.024870905,"data":"        \"Normal Driving\": 111,\n"}
+,{"stream_name":"stdout","time":193.024873785,"data":"        \"Caution\": 16,\n"}
+,{"stream_name":"stdout","time":193.024876585,"data":"        \"Speed Reduction\": 51,\n"}
+,{"stream_name":"stdout","time":193.024879455,"data":"        \"Braking Recommendation\": 654,\n"}
+,{"stream_name":"stdout","time":193.024882375,"data":"        \"Emergency Intervention\": 227\n"}
+,{"stream_name":"stdout","time":193.024885255,"data":"      }\n"}
+,{"stream_name":"stdout","time":193.024887975,"data":"    },\n"}
+,{"stream_name":"stdout","time":193.024890655,"data":"    \"arm_c_uncertainty_aware_degraded\": {\n"}
+,{"stream_name":"stdout","time":193.024893565,"data":"      \"frames\": 1059,\n"}
+,{"stream_name":"stdout","time":193.024896375,"data":"      \"mean_risk_indicator\": 0.7003,\n"}
+,{"stream_name":"stdout","time":193.024899265,"data":"      \"max_risk_indicator\": 1.0,\n"}
+,{"stream_name":"stdout","time":193.024902165,"data":"      \"non_normal_intervention_rate\": 0.8914,\n"}
+,{"stream_name":"stdout","time":193.024905105,"data":"      \"decision_counts\": {\n"}
+,{"stream_name":"stdout","time":193.024912525,"data":"        \"Normal Driving\": 115,\n"}
+,{"stream_name":"stdout","time":193.024915445,"data":"        \"Caution\": 24,\n"}
+,{"stream_name":"stdout","time":193.024918855,"data":"        \"Speed Reduction\": 53,\n"}
+,{"stream_name":"stdout","time":193.024921715,"data":"        \"Braking Recommendation\": 625,\n"}
+,{"stream_name":"stdout","time":193.024924765,"data":"        \"Emergency Intervention\": 242\n"}
+,{"stream_name":"stdout","time":193.024927245,"data":"      }\n"}
+,{"stream_name":"stdout","time":193.024929055,"data":"    },\n"}
+,{"stream_name":"stdout","time":193.024930855,"data":"    \"causality_deltas\": {\n"}
+,{"stream_name":"stdout","time":193.024933765,"data":"      \"mean_risk_shift_aware_minus_blind\": 0.1665,\n"}
+,{"stream_name":"stdout","time":193.024935785,"data":"      \"mean_risk_shift_degraded_minus_nominal\": 0.0013,\n"}
+,{"stream_name":"stdout","time":193.024937735,"data":"      \"frames_escalated_aware_over_blind\": 377,\n"}
+,{"stream_name":"stdout","time":193.024939645,"data":"      \"frames_escalated_degraded_over_nominal\": 77,\n"}
+,{"stream_name":"stdout","time":193.024941575,"data":"      \"frames_risk_increased_degraded_over_nominal\": 592,\n"}
+,{"stream_name":"stdout","time":193.024943495,"data":"      \"total_frames\": 1059\n"}
+,{"stream_name":"stdout","time":193.024945385,"data":"    }\n"}
+,{"stream_name":"stdout","time":193.024947215,"data":"  }\n"}
+,{"stream_name":"stdout","time":193.024950045,"data":"}\n"}
+,{"stream_name":"stdout","time":193.024953345,"data":"[DONE] Stage 4-7 World Model \u0026 RQ1-RQ3 Validation outputs ready in /kaggle/working/world_outputs\n"}
+,{"stream_name":"stderr","time":195.384610079,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":195.384655069,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":195.78289074,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":195.78292356,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":197.65644315,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":198.791547855,"data":"[NbConvertApp] Writing 350664 bytes to __results__.html\n"}
+]

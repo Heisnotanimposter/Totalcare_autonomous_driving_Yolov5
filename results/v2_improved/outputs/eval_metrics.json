@@ -1,0 +1,27 @@
+{
+  "model_arch": "yolo11m.pt",
+  "imgsz": 960,
+  "oversample_rare_classes": true,
+  "val": {
+    "map50": 0.5235,
+    "map50_95": 0.306,
+    "precision": 0.717,
+    "recall": 0.4822,
+    "per_class_ap50": {
+      "Car": 0.8235,
+      "Pedestrian": 0.5871,
+      "Cyclist": 0.1598
+    }
+  },
+  "test": {
+    "map50": 0.4269,
+    "map50_95": 0.2145,
+    "precision": 0.6732,
+    "recall": 0.4037,
+    "per_class_ap50": {
+      "Car": 0.6662,
+      "Pedestrian": 0.3631,
+      "Cyclist": 0.2513
+    }
+  }
+}

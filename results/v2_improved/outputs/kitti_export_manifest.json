@@ -1,0 +1,174 @@
+{
+  "target_classes": [
+    "Car",
+    "Pedestrian",
+    "Cyclist"
+  ],
+  "pixel_mask_policy": "dontcare_and_distractors",
+  "mask_dontcare": true,
+  "mask_distractors": true,
+  "masked_distractors": [
+    "Person",
+    "Person_sitting",
+    "Van"
+  ],
+  "oversample_rare_classes": true,
+  "weighted_train_entries": 6974,
+  "coverage_warnings": [],
+  "splits": {
+    "train": {
+      "sequences": [
+        "0000",
+        "0001",
+        "0003",
+        "0004",
+        "0005",
+        "0006",
+        "0007",
+        "0008",
+        "0009",
+        "0010",
+        "0011",
+        "0014",
+        "0018",
+        "0020"
+      ],
+      "frames": 5568,
+      "frames_with_boxes": 4916,
+      "empty_frames": 652,
+      "empty_frame_ratio": 0.1171,
+      "boxes_by_cls": {
+        "Car": 23404,
+        "Pedestrian": 648,
+        "Cyclist": 367
+      },
+      "sequence_count_by_cls": {
+        "Car": 14,
+        "Pedestrian": 8,
+        "Cyclist": 4
+      },
+      "sequences_covering_cls": {
+        "Car": [
+          "0000",
+          "0001",
+          "0003",
+          "0004",
+          "0005",
+          "0006",
+          "0007",
+          "0008",
+          "0009",
+          "0010",
+          "0011",
+          "0014",
+          "0018",
+          "0020"
+        ],
+        "Pedestrian": [
+          "0000",
+          "0001",
+          "0004",
+          "0007",
+          "0009",
+          "0010",
+          "0011",
+          "0014"
+        ],
+        "Cyclist": [
+          "0000",
+          "0004",
+          "0005",
+          "0010"
+        ]
+      },
+      "missing_classes": [],
+      "dontcare_regions_masked": 11124,
+      "distractor_regions_masked": 2636
+    },
+    "val": {
+      "sequences": [
+        "0002",
+        "0012",
+        "0015",
+        "0017"
+      ],
+      "frames": 832,
+      "frames_with_boxes": 818,
+      "empty_frames": 14,
+      "empty_frame_ratio": 0.0168,
+      "boxes_by_cls": {
+        "Car": 2075,
+        "Pedestrian": 1777,
+        "Cyclist": 754
+      },
+      "sequence_count_by_cls": {
+        "Car": 3,
+        "Pedestrian": 4,
+        "Cyclist": 4
+      },
+      "sequences_covering_cls": {
+        "Car": [
+          "0002",
+          "0012",
+          "0015"
+        ],
+        "Pedestrian": [
+          "0002",
+          "0012",
+          "0015",
+          "0017"
+        ],
+        "Cyclist": [
+          "0002",
+          "0012",
+          "0015",
+          "0017"
+        ]
+      },
+      "missing_classes": [],
+      "dontcare_regions_masked": 2604,
+      "distractor_regions_masked": 110
+    },
+    "test": {
+      "sequences": [
+        "0013",
+        "0016",
+        "0019"
+      ],
+      "frames": 1608,
+      "frames_with_boxes": 1575,
+      "empty_frames": 33,
+      "empty_frame_ratio": 0.0205,
+      "boxes_by_cls": {
+        "Car": 1818,
+        "Pedestrian": 9044,
+        "Cyclist": 817
+      },
+      "sequence_count_by_cls": {
+        "Car": 3,
+        "Pedestrian": 3,
+        "Cyclist": 3
+      },
+      "sequences_covering_cls": {
+        "Car": [
+          "0013",
+          "0016",
+          "0019"
+        ],
+        "Pedestrian": [
+          "0013",
+          "0016",
+          "0019"
+        ],
+        "Cyclist": [
+          "0013",
+          "0016",
+          "0019"
+        ]
+      },
+      "missing_classes": [],
+      "dontcare_regions_masked": 4311,
+      "distractor_regions_masked": 1231
+    }
+  }
+}

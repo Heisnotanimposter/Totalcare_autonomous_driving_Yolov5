@@ -1,0 +1,193 @@
+\documentclass[10.5pt,a4paper]{article}
+\usepackage{kotex}
+\usepackage{geometry}
+\geometry{margin=18mm,top=20mm,bottom=20mm}
+\usepackage{fontspec}
+\setmainhangulfont{Apple SD Gothic Neo}[BoldFont={* Bold}]
+\setsanshangulfont{Apple SD Gothic Neo}[BoldFont={* Bold}]
+\setmonofont{Menlo}[Scale=0.82]
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,longtable,array}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue!60!black,urlcolor=blue!65!black}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\setcounter{secnumdepth}{0}
+\sloppy
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{gray}머신러닝·딥러닝 모델 Layer별 기술설명서 및 참고자료}
+\fancyhead[R]{\small\color{gray}KITTI Tracking Temporal World Model}
+\fancyfoot[C]{\small\thepage}
+\begin{document}
+\begin{center}
+{\LARGE\bfseries 머신러닝·딥러닝 모델 Layer별 기술설명서 및 참고자료}\\[6pt]
+{\normalsize\color{gray} 머신러닝·딥러닝 모델 Layer별 기술설명서 및 참고자료}\\[4pt]
+{\small\href{https://github.com/Heisnotanimposter/Totalcare_autonomous_driving_Yolov5}{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5}}
+\end{center}
+\vspace{4pt}
+\hrule
+\vspace{8pt}
+
+\textbf{Repository:} \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5}{Totalcare\_autonomous\_driving\_Yolov5}
+
+\textbf{대상 파이프라인:} \texttt{Stage 2 (YOLO11m + MobileSAM) $\rightarrow$ Stage 3 (ByteTrack) $\rightarrow$ Stage 4--7 (Temporal Ego-\allowbreak{}centric World Model \& Safety Shield)}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{1. 객체 검출기: \texttt{YOLO11m} (\texttt{results/\allowbreak{}v2\_\allowbreak{}improved/\allowbreak{}outputs/\allowbreak{}weights/\allowbreak{}best.\allowbreak{}pt})}
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{모델 규격 (Kaggle \texttt{2x Tesla T4} 학습 로그 실측치)}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{전체 구성}: \texttt{231 layers}, \texttt{20,\allowbreak{}055,\allowbreak{}321 parameters}, \texttt{68.\allowbreak{}3 GFLOPs} (추론 융합 Fused 기준 \texttt{125 layers}, \texttt{20,\allowbreak{}032,\allowbreak{}345 parameters}, \texttt{67.\allowbreak{}8 GFLOPs})
+\item \textbf{입력 해상도}: \texttt{960 $\times$ 960} RGB (\texttt{AMP FP16} 학습, \texttt{nc = 3}: \texttt{Car}, \texttt{Pedestrian}, \texttt{Cyclist})
+\item \textbf{Baseline (\texttt{v1 YOLOv8s}) 대비 차이}: \texttt{YOLOv8s} (\texttt{129 layers}, \texttt{11.\allowbreak{}14M params}, \texttt{28.\allowbreak{}6 GFLOPs}, \texttt{640px})에서 Backbone 효율화(\texttt{C2f $\rightarrow$ C3k2}) 및 Spatial Attention(\texttt{C2PSA}) 도입 + \texttt{960px} 고해상도 입력으로 소형·원거리 보행자/자전거 특징 손실을 개선.
+\end{itemize}
+\end{itemize}
+
+\subsection{1.1 \texttt{YOLO11m} 전체 24개 모듈 Layer별 상세 구조 (\texttt{Layer 0} -- \texttt{Layer 23})}
+
+아래 표는 Kaggle 학습 실행 시 Ultralytics \texttt{8.\allowbreak{}4.\allowbreak{}212} 엔진이 출력한 실제 네트워크 그래프(\texttt{logs/\allowbreak{}v2\_\allowbreak{}improved/\allowbreak{}totalcare-\allowbreak{}kitti-\allowbreak{}yolo-\allowbreak{}train-\allowbreak{}and-\allowbreak{}track.\allowbreak{}log})를 기준으로 정리한 Layer별 역할 명세입니다.
+
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.032\textwidth} >{\raggedright\arraybackslash}p{0.064\textwidth} >{\raggedright\arraybackslash}p{0.141\textwidth} >{\raggedright\arraybackslash}p{0.186\textwidth} >{\raggedright\arraybackslash}p{0.058\textwidth} >{\raggedright\arraybackslash}p{0.096\textwidth} >{\raggedright\arraybackslash}p{0.218\textwidth}}
+\toprule
+\textbf{Layer} & \textbf{입력(\texttt{from})} & \textbf{모듈 (\texttt{Ultralytics})} & \textbf{출력 채널 / 인자 (\texttt{args})} & \textbf{파라미터 수} & \textbf{소속 구간} & \textbf{Layer 기술적 역할} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Layer} & \textbf{입력(\texttt{from})} & \textbf{모듈 (\texttt{Ultralytics})} & \textbf{출력 채널 / 인자 (\texttt{args})} & \textbf{파라미터 수} & \textbf{소속 구간} & \textbf{Layer 기술적 역할} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{0} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Conv} & \texttt{[3,\allowbreak{} 64,\allowbreak{} 3,\allowbreak{} 2]} & \texttt{1,\allowbreak{}856} & Backbone (Stem) & \texttt{3$\times$3} Conv (\texttt{stride=2}) + BatchNorm + SiLU로 \texttt{960$\rightarrow$480} 다운샘플링(P1/2) 및 에지·질감 저수준 특징 추출 \\
+\textbf{1} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Conv} & \texttt{[64,\allowbreak{} 128,\allowbreak{} 3,\allowbreak{} 2]} & \texttt{73,\allowbreak{}984} & Backbone (Stage 1) & \texttt{3$\times$3} Conv (\texttt{stride=2})로 \texttt{480$\rightarrow$240} 축소(P2/4) 및 채널 확장 \\
+\textbf{2} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}C3k2} & \texttt{[128,\allowbreak{} 256,\allowbreak{} 1,\allowbreak{} True,\allowbreak{} 0.\allowbreak{}25]} & \texttt{111,\allowbreak{}872} & Backbone (Stage 1) & Cross-Stage Partial Bottleneck (\texttt{c3k=False}, \texttt{e=0.\allowbreak{}25}). 입력 채널 분할 후 작은 커널 Conv 병목과 Skip 결합으로 연산량 절감 \\
+\textbf{3} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Conv} & \texttt{[256,\allowbreak{} 256,\allowbreak{} 3,\allowbreak{} 2]} & \texttt{590,\allowbreak{}336} & Backbone (Stage 2) & \texttt{3$\times$3} Conv (\texttt{stride=2}), \texttt{240$\rightarrow$120} 축소(P3/8 --- 소형 객체 특징 맵 기준점) \\
+\textbf{4} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}C3k2} & \texttt{[256,\allowbreak{} 512,\allowbreak{} 1,\allowbreak{} True,\allowbreak{} 0.\allowbreak{}25]} & \texttt{444,\allowbreak{}928} & Backbone (Stage 2) & P3/8 특징 강화 블록. 원거리 \texttt{Pedestrian}/\texttt{Cyclist} 윤곽 특징 보존 \\
+\textbf{5} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Conv} & \texttt{[512,\allowbreak{} 512,\allowbreak{} 3,\allowbreak{} 2]} & \texttt{2,\allowbreak{}360,\allowbreak{}320} & Backbone (Stage 3) & \texttt{3$\times$3} Conv (\texttt{stride=2}), \texttt{120$\rightarrow$60} 축소(P4/16 --- 중형 객체 특징 맵) \\
+\textbf{6} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}C3k2} & \texttt{[512,\allowbreak{} 512,\allowbreak{} 1,\allowbreak{} True]} & \texttt{1,\allowbreak{}380,\allowbreak{}352} & Backbone (Stage 3) & \texttt{C3k} 블록 사용(\texttt{c3k=True}, 확장 깊이). 중거리 차량·자전거 형태 추상화 \\
+\textbf{7} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Conv} & \texttt{[512,\allowbreak{} 512,\allowbreak{} 3,\allowbreak{} 2]} & \texttt{2,\allowbreak{}360,\allowbreak{}320} & Backbone (Stage 4) & \texttt{3$\times$3} Conv (\texttt{stride=2}), \texttt{60$\rightarrow$30} 축소(P5/32 --- 대형 근거리 차량·전역 문맥) \\
+\textbf{8} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}C3k2} & \texttt{[512,\allowbreak{} 512,\allowbreak{} 1,\allowbreak{} True]} & \texttt{1,\allowbreak{}380,\allowbreak{}352} & Backbone (Stage 4) & 고수준 의미 특징 추출 \\
+\textbf{9} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}SPPF} & \texttt{[512,\allowbreak{} 512,\allowbreak{} 5]} & \texttt{656,\allowbreak{}896} & Backbone (Context) & Spatial Pyramid Pooling - Fast. \texttt{5$\times$5} MaxPool 직렬 3회 재사용으로 멀티스케일 수용 영역(Receptive Field) 통합 \\
+\textbf{10} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}C2PSA} & \texttt{[512,\allowbreak{} 512,\allowbreak{} 1]} & \texttt{990,\allowbreak{}976} & Backbone (Attention) & Cross-Stage Partial \textbf{Pyramid Squeeze / Spatial Attention}. Multi-head Self-Attention으로 가려진 차로 객체·장거리 문맥 가중치 집중 \\
+\textbf{11} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}Upsample} & \texttt{[None,\allowbreak{} 2,\allowbreak{} 'nearest']} & \texttt{0} & Neck (Top-Down FPN) & P5(\texttt{30$\times$30}) 특징을 P4(\texttt{60$\times$60}) 크기로 최근접 2배 업샘플링 \\
+\textbf{12} & \texttt{[-\allowbreak{}1,\allowbreak{} 6]} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Concat} & \texttt{dim=1} & \texttt{0} & Neck (Top-Down FPN) & Layer 11(상위 문맥)과 Layer 6(P4 공간 특징) 채널 병합(\texttt{512+512$\rightarrow$1024}) \\
+\textbf{13} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}C3k2} & \texttt{[1024,\allowbreak{} 512,\allowbreak{} 1,\allowbreak{} True]} & \texttt{1,\allowbreak{}642,\allowbreak{}496} & Neck (Top-Down FPN) & 병합된 P4 특징 정제 \\
+\textbf{14} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}Upsample} & \texttt{[None,\allowbreak{} 2,\allowbreak{} 'nearest']} & \texttt{0} & Neck (Top-Down FPN) & P4(\texttt{60$\times$60})를 P3(\texttt{120$\times$120}) 크기로 2배 업샘플링 \\
+\textbf{15} & \texttt{[-\allowbreak{}1,\allowbreak{} 4]} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Concat} & \texttt{dim=1} & \texttt{0} & Neck (Top-Down FPN) & Layer 14와 Layer 4(P3 고해상도 특징) 병합(\texttt{512+512$\rightarrow$1024}) \\
+\textbf{16} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}C3k2} & \texttt{[1024,\allowbreak{} 256,\allowbreak{} 1,\allowbreak{} True]} & \texttt{542,\allowbreak{}720} & Neck $\rightarrow$ \textbf{P3/8 출력} & 소형 객체(\texttt{Pedestrian}, 원거리 \texttt{Cyclist}) 최종 검출 특징 맵 출력 (\texttt{256ch}) \\
+\textbf{17} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Conv} & \texttt{[256,\allowbreak{} 256,\allowbreak{} 3,\allowbreak{} 2]} & \texttt{590,\allowbreak{}336} & Neck (Bottom-Up PAN) & Path Aggregation Network 하향 경로: P3(\texttt{120$\times$120}) $\rightarrow$ \texttt{60$\times$60} 다운샘플링 \\
+\textbf{18} & \texttt{[-\allowbreak{}1,\allowbreak{} 13]} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Concat} & \texttt{dim=1} & \texttt{0} & Neck (Bottom-Up PAN) & 위치 정밀도(Layer 17) + 의미 특징(Layer 13) 결합(\texttt{256+512$\rightarrow$768}) \\
+\textbf{19} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}C3k2} & \texttt{[768,\allowbreak{} 512,\allowbreak{} 1,\allowbreak{} True]} & \texttt{1,\allowbreak{}511,\allowbreak{}424} & Neck $\rightarrow$ \textbf{P4/16 출력} & 중형 객체 최종 검출 특징 맵 출력 (\texttt{512ch}) \\
+\textbf{20} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Conv} & \texttt{[512,\allowbreak{} 512,\allowbreak{} 3,\allowbreak{} 2]} & \texttt{2,\allowbreak{}360,\allowbreak{}320} & Neck (Bottom-Up PAN) & P4(\texttt{60$\times$60}) $\rightarrow$ \texttt{30$\times$30} 다운샘플링 \\
+\textbf{21} & \texttt{[-\allowbreak{}1,\allowbreak{} 10]} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Concat} & \texttt{dim=1} & \texttt{0} & Neck (Bottom-Up PAN) & P4 하향 특징 + Backbone C2PSA 출력(Layer 10) 결합(\texttt{512+512$\rightarrow$1024}) \\
+\textbf{22} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}C3k2} & \texttt{[1024,\allowbreak{} 512,\allowbreak{} 1,\allowbreak{} True]} & \texttt{1,\allowbreak{}642,\allowbreak{}496} & Neck $\rightarrow$ \textbf{P5/32 출력} & 근거리 대형 차량(\texttt{Car}) 최종 검출 특징 맵 출력 (\texttt{512ch}) \\
+\textbf{23} & \texttt{[16,\allowbreak{} 19,\allowbreak{} 22]} & \texttt{nn.\allowbreak{}modules.\allowbreak{}head.\allowbreak{}Detect} & \texttt{[nc=3,\allowbreak{} reg\_\allowbreak{}max=16,\allowbreak{} [256,\allowbreak{}512,\allowbreak{}512]]} & \texttt{1,\allowbreak{}413,\allowbreak{}337} & \textbf{Head (Decoupled)} & Anchor-Free 분리형 검출 헤드. 회귀 분기(\texttt{4$\times$16=64} DFL 분포 예측) + 분류 분기(\texttt{nc=3} Depthwise Separable Conv) \\
+\end{longtable}
+\end{footnotesize}
+
+
+\subsection{1.2 학습 손실 함수 및 최적화 Layer}
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Box Regression (\texttt{box=7.\allowbreak{}5}, \texttt{dfl=1.\allowbreak{}5})}: \textbf{CIoU Loss} (중심 거리·종횡비·겹침 면적 동시 최적화) + \textbf{Distribution Focal Loss (DFL, \texttt{reg\_\allowbreak{}max=16})} (바운딩 박스 네 변을 이산 확률 분포로 예측 후 기댓값 산출, \texttt{model.\allowbreak{}23.\allowbreak{}dfl.\allowbreak{}conv.\allowbreak{}weight} 고정 가중치 투영).
+\item \textbf{Classification (\texttt{cls=0.\allowbreak{}5})}: Class별 독립 \textbf{Binary Cross-Entropy (BCE with Logits)} + \textbf{Task-Aligned Assigner (TAL)} 양성/음성 앵커 동적 할당.
+\item \textbf{Cosine LR + MixUp + Close-Mosaic}: 3 epoch 선형 워밍업(\texttt{warmup\_\allowbreak{}bias\_\allowbreak{}lr=0.\allowbreak{}1}) 후 Cosine Annealing(\texttt{lrf=0.\allowbreak{}01}), 후반 10 epoch Mosaic 비활성화(\texttt{close\_\allowbreak{}mosaic=10})로 자연 영상 분포 정렬.
+\end{itemize}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{2. 인스턴스 세그멘테이션: \texttt{MobileSAM} (\texttt{src/\allowbreak{}track\_\allowbreak{}utils.\allowbreak{}py})}
+
+ByteTrack이 부여한 Track별 2D Bounding Box를 \textbf{Box Prompt}로 입력받아 픽셀 수준 객체 마스크를 생성하고, Stage 4 단안 깊이 추정의 지면 접지점(\texttt{mask\_\allowbreak{}bottom\_\allowbreak{}xy})과 점유율 가중치(\texttt{mask\_\allowbreak{}fill\_\allowbreak{}ratio})를 제공합니다.
+
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.212\textwidth} >{\raggedright\arraybackslash}p{0.212\textwidth} >{\raggedright\arraybackslash}p{0.212\textwidth} >{\raggedright\arraybackslash}p{0.212\textwidth}}
+\toprule
+\textbf{구성 모듈 (MobileSAM)} & \textbf{내부 Layer 메커니즘} & \textbf{입·출력 사양} & \textbf{파이프라인 내 기능} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{구성 모듈 (MobileSAM)} & \textbf{내부 Layer 메커니즘} & \textbf{입·출력 사양} & \textbf{파이프라인 내 기능} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{1. Image Encoder (\texttt{TinyViT})} & \texttt{PatchEmbed} (Conv$\times$2) $\rightarrow$ \textbf{Stage 1} (\texttt{MBConv} 블록, 지역 채널-공간 추출) $\rightarrow$ \textbf{Stage 2--4} (\texttt{Windowed Multi-\allowbreak{}Head Self-\allowbreak{}Attention} + \texttt{MLP} + Patch Merging Downsampling) $\rightarrow$ Neck (\texttt{1$\times$1} + \texttt{3$\times$3} Conv) & 입력 \texttt{BGR} 이미지 (\texttt{1242$\times$375}) $\rightarrow$ \texttt{64$\times$64$\times$256} Feature Embedding & ViT-H 대신 지식 증류(Decoupled Distillation)로 경량화된 \texttt{TinyViT} 백본(\texttt{38.\allowbreak{}8 MB}) 사용 \\
+\textbf{2. Prompt Encoder} & Box Prompt \texttt{[x1,\allowbreak{} y1,\allowbreak{} x2,\allowbreak{} y2]}의 좌상단·우하단 좌표에 \textbf{Random Fourier Positional Encoding} + 코너 타입 Learned Embedding 부여 & Bounding Box 좌표 $\rightarrow$ \texttt{(N,\allowbreak{} 2,\allowbreak{} 256)} Sparse Prompt Tokens & 객체 검출 박스를 공간적 프롬프트로 인코딩하여 배경 오검출 억제 \\
+\textbf{3. Two-Way Transformer Mask Decoder} & Sparse Prompt와 Image Embedding 간 \textbf{Cross-Attention} (\texttt{Prompt$\rightarrow$Image}, \texttt{Image$\rightarrow$Prompt}) 2블록 + MLP $\rightarrow$ \textbf{\texttt{ConvTranspose2d} (\texttt{4$\times$} Upsampling)} $\rightarrow$ Hypernetwork MLP Inner Product & Sparse Tokens + \texttt{64$\times$64$\times$256} $\rightarrow$ 인스턴스별 Binary Mask + Polygon Contour & \texttt{cv2.\allowbreak{}findContours}로 외곽선(\texttt{trajectories\_\allowbreak{}masks.\allowbreak{}json}), \texttt{mask\_\allowbreak{}fill\_\allowbreak{}ratio} 및 최하단 중심(\texttt{mask\_\allowbreak{}bottom\_\allowbreak{}x/\allowbreak{}y}) 추출 \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{3. 다중 객체 추적 Layer: \texttt{ByteTrack} (\texttt{src/\allowbreak{}track\_\allowbreak{}utils.\allowbreak{}py})}
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{상태 추정 필터 (Linear Kalman Filter)}: 이미지 평면 8차원 등속 상태 $\mathbf{x} = [c_x, c_y, a, h, \dot{c}_x, \dot{c}_y, \dot{a}, \dot{h}]^T$ (중심 좌표, 종횡비, 높이 및 변화율).
+\item \textbf{2단계 이분 매칭 (Two-Stage Hungarian Association)}:
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{High-Confidence Matching (\texttt{conf >= 0.\allowbreak{}5})}: 기존 활성 트랙과 고신뢰 검출 박스 간 IoU 비용 행렬에 \texttt{linear\_\allowbreak{}sum\_\allowbreak{}assignment} 적용.
+\item \textbf{Low-Confidence Recovery (\texttt{0.\allowbreak{}1 <= conf < 0.\allowbreak{}5})}: 부분 가려짐(\texttt{Occlusion})이나 역광으로 신뢰도가 하락한 잔여 검출을 미매칭 트랙에 재연결하여 ID Switch 감소.
+\end{enumerate}
+\item \textbf{시퀀스 격리 검증 (\texttt{compute\_\allowbreak{}track\_\allowbreak{}trajectories})}: 시퀀스 경계에서 트래커 상태를 초기화하고 \texttt{(sequence\_\allowbreak{}id,\allowbreak{} track\_\allowbreak{}id)} 복수 키로 관리하며, 시간 역전/중복 프레임/클래스 전환을 감사 리포트에 기록.
+\end{itemize}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{4. Temporal Ego-centric World Model \& Safety Shield Layer (\texttt{src/\allowbreak{}world\_\allowbreak{}model.\allowbreak{}py}, \texttt{src/\allowbreak{}world\_\allowbreak{}visualizer.\allowbreak{}py})}
+
+딥러닝 인식 출력을 물리 좌표계와 시간 연속성 모델로 통합하는 미분 가능·칼만 기반 후단 Layer 구조입니다.
+
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{P2 역분산 깊이 융합 Layer (\texttt{KittiCalibration.\allowbreak{}ground\_\allowbreak{}plane\_\allowbreak{}bev\_\allowbreak{}fusion})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item MobileSAM 전경 최하단 접지점(\texttt{mask\_\allowbreak{}bottom\_\allowbreak{}xy}, \texttt{mask\_\allowbreak{}fill\_\allowbreak{}ratio >= 0.\allowbreak{}25} 조건) 기반 평면 지면 투영($Y_{\text{ground}} = f_y h_{\text{cam}} / (v - c_y)$)과 클래스 높이 사전($H_c$) 기반 피치 불변 깊이($Y_{\text{height}} = f_y H_c / h_{\text{px}}$)를 각 분산 역수로 융합: $Y_{\text{fused}} = \frac{w_g Y_g + w_h Y_h}{w_g + w_h}$.
+\end{itemize}
+\item \textbf{OXTS \texttt{SE(2)} Ego-Motion 보상 및 CTRV Layer (\texttt{EgoPose2D}, \texttt{KittiOxtsOdometry})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item Mercator 투영 기반 \texttt{World-\allowbreak{}ENU} 변환으로 자차 병진·회전($\psi, v_f, w_z$) 성분을 제거하여 정지 객체의 허위 속도를 감쇄(\texttt{왕복 오차 < 4e-\allowbreak{}14 m}).
+\end{itemize}
+\item \textbf{4D World-ENU 선형 칼만 필터 Layer (\texttt{ObjectWorldTrack})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item 상태 $\mathbf{x}_w = [X_w, Y_w, v_{X,w}, v_{Y,w}]^T$, 백색 가속도 공정 잡음($\sigma_a = 1.1\text{ m/s}^2$), YOLO 신뢰도·MobileSAM 채움 비율에 반비례하는 회전 측정 공분산 $R_w$ 적용. 미래 시점(\texttt{+0.\allowbreak{}5s \textasciitilde{} +2.\allowbreak{}0s}) 공분산을 야코비안 $J=\text{diag}(s_x,-s_y)$로 BEV 픽셀 타원으로 투영.
+\end{itemize}
+\item \textbf{$C^1$ 연속 위험 포텐셜 + \texttt{CollisionRiskSmoother} Layer}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item 횡방향 공분산(\texttt{lateral\_\allowbreak{}uncertainty\_\allowbreak{}m}) 기반 차로 침범 여부, 접근 속도 게이팅(\texttt{approach\_\allowbreak{}w}), 보정 TTC, 확률적 soft-union $1 - \prod_i (1 - r_i)$로 프레임 위험도를 산출.
+\item 비대칭 EMA(\texttt{alpha\_\allowbreak{}up=0.\allowbreak{}36}, \texttt{alpha\_\allowbreak{}down=0.\allowbreak{}22}) $\rightarrow$ $|dR/dt|$ 슬루율 제한(\texttt{1.\allowbreak{}10/\allowbreak{}s}, \texttt{-\allowbreak{}0.\allowbreak{}85/\allowbreak{}s}) $\rightarrow$ 트랙별 EMA(\texttt{per\_\allowbreak{}track\_\allowbreak{}ema}) $\rightarrow$ TTC 연속 프레임 디바운싱(\texttt{low\_\allowbreak{}ttc\_\allowbreak{}streak}) 및 히스테리시스(\texttt{0.\allowbreak{}04})로 스파이크를 \texttt{100\%} 제거.
+\end{itemize}
+\end{enumerate}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{5. 참고자료 (References)}
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Ultralytics YOLO11 / YOLOv8}: Jocher, G., Chaurasia, A., \& Qiu, J. (2023--2025). \textit{Ultralytics YOLO (\texttt{YOLO11m}, \texttt{C3k2}, \texttt{C2PSA}, \texttt{YOLOv8})} --- https:\allowbreak{}/\allowbreak{}/\allowbreak{}docs.\allowbreak{}ultralytics.\allowbreak{}com/\allowbreak{}models/\allowbreak{}yolo11/\allowbreak{}
+\item \textbf{MobileSAM}: Zhang, C., Han, D., Qiao, Y., Kim, J. U., Bae, S.-H., Lee, S., \& Hong, C. S. (2023). \textit{Faster Segment Anything: Towards Lightweight SAM for Mobile Applications} (\texttt{arXiv:\allowbreak{}2306.\allowbreak{}14289}).\allowbreak{} --- https:\allowbreak{}/\allowbreak{}/\allowbreak{}arxiv.\allowbreak{}org/\allowbreak{}abs/\allowbreak{}2306.\allowbreak{}14289
+\item \textbf{Segment Anything (SAM)}: Kirillov, A., Mintun, E., Ravi, N., et al. (2023). \textit{Segment Anything} (\texttt{ICCV 2023}, \texttt{arXiv:\allowbreak{}2304.\allowbreak{}02643}).\allowbreak{} --- https:\allowbreak{}/\allowbreak{}/\allowbreak{}arxiv.\allowbreak{}org/\allowbreak{}abs/\allowbreak{}2304.\allowbreak{}02643
+\item \textbf{ByteTrack}: Zhang, Y., Sun, P., Jiang, Y., Yu, D., Weng, F., Yuan, Z., Luo, P., Liu, W., \& Wang, X. (2022). \textit{ByteTrack: Multi-Object Tracking by Associating Every Detection Box} (\texttt{ECCV 2022}).\allowbreak{} --- https:\allowbreak{}/\allowbreak{}/\allowbreak{}arxiv.\allowbreak{}org/\allowbreak{}abs/\allowbreak{}2110.\allowbreak{}06864
+\item \textbf{KITTI Object Tracking Benchmark}: Geiger, A., Lenz, P., \& Urtasun, R. (2012). \textit{Are we ready for Autonomous Driving? The KITTI Vision Benchmark Suite} (\texttt{CVPR 2012}).\allowbreak{} --- https:\allowbreak{}/\allowbreak{}/\allowbreak{}www.\allowbreak{}cvlibs.\allowbreak{}net/\allowbreak{}datasets/\allowbreak{}kitti/\allowbreak{}eval\_\allowbreak{}tracking.\allowbreak{}php
+\item \textbf{Kalman Filter \& CTRV Motion Modeling}: Kalman, R. E. (1960). \textit{A New Approach to Linear Filtering and Prediction Problems}; Schubert, R., et al. (2008). \textit{Comparison and Evaluation of Advanced Motion Models for Vehicle Tracking} (\texttt{FUSION 2008}).
+\item \textbf{DFL \& Task-Aligned Assigner}: Li, X., et al. (2020). \textit{Generalized Focal Loss: Learning Qualified and Distributed Bounding Boxes for Dense Object Detection} (\texttt{NeurIPS 2020}); Feng, C., et al. (2021). \textit{TOOD: Task-aligned One-stage Object Detection} (\texttt{ICCV 2021}).
+\end{enumerate}
+\end{document}

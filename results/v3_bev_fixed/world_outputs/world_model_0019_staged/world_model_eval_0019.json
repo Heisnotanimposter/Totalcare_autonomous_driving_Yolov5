@@ -1,0 +1,36 @@
+{
+  "depth_metrics": {
+    "matched_samples": 169,
+    "abs_rel": 0.1175,
+    "rmse_m": 1.2192
+  },
+  "motion_prediction_metrics": {
+    "matched_trajectories": 143,
+    "ade_future_ego_m": 2.7782,
+    "fde_future_ego_m": 4.3842,
+    "ade_world_m": 2.1165,
+    "fde_world_m": 2.9856,
+    "per_horizon_future_ego_m": {
+      "0.5": 1.3626,
+      "1.0": 2.3084,
+      "1.5": 3.749,
+      "2.0": 5.4681
+    },
+    "per_horizon_world_m": {
+      "0.5": 1.2766,
+      "1.0": 1.8951,
+      "1.5": 2.6992,
+      "2.0": 3.7271
+    }
+  },
+  "uncertainty_calibration": {
+    "samples": 488,
+    "empirical_1sigma_coverage": 0.5389,
+    "empirical_2sigma_coverage": 0.7807,
+    "theoretical_2d_gaussian": {
+      "1sigma": 0.3935,
+      "2sigma": 0.8647
+    }
+  },
+  "note": "Evaluated against KITTI label_02 3D GT matched via IoU > 0.4; World-frame uses OXTS Ego poses."
+}

@@ -1,0 +1,374 @@
+{
+  "0015": {
+    "sequence_id": "0015",
+    "frame_count": 376,
+    "rq1_coordinate_and_ego_motion": {
+      "ego_total_distance_m": 71.61,
+      "max_roundtrip_transform_error_m": 2.161e-14,
+      "stationary_gt_tracks_identified": 5,
+      "stationary_object_samples": 450,
+      "compensated_world_speed_on_stationary_mps": {
+        "mean": 0.264,
+        "median": 0.042
+      },
+      "uncompensated_ego_speed_on_stationary_mps": {
+        "mean": 1.591,
+        "median": 0.008
+      }
+    },
+    "rq2_future_prediction_vs_observation": {
+      "oxts_world_kalman_with_ctrv": {
+        "depth_metrics": {
+          "matched_samples": 1231,
+          "abs_rel": 0.272,
+          "rmse_m": 2.756
+        },
+        "motion_prediction_metrics": {
+          "matched_trajectories": 1168,
+          "ade_future_ego_m": 3.4999,
+          "fde_future_ego_m": 4.5694,
+          "ade_world_m": 3.3808,
+          "fde_world_m": 4.2978,
+          "per_horizon_future_ego_m": {
+            "0.5": 2.5937,
+            "1.0": 3.0879,
+            "1.5": 3.7727,
+            "2.0": 4.6284
+          },
+          "per_horizon_world_m": {
+            "0.5": 2.5854,
+            "1.0": 3.0277,
+            "1.5": 3.6114,
+            "2.0": 4.3095
+          }
+        },
+        "uncertainty_calibration": {
+          "samples": 4269,
+          "empirical_1sigma_coverage": 0.4584,
+          "empirical_2sigma_coverage": 0.6941,
+          "theoretical_2d_gaussian": {
+            "1sigma": 0.3935,
+            "2sigma": 0.8647
+          }
+        },
+        "note": "Evaluated against KITTI label_02 3D GT matched via IoU > 0.4; World-frame uses OXTS Ego poses."
+      },
+      "ego_relative_kalman_no_oxts": {
+        "matched_trajectories": 1168,
+        "ade_future_ego_m": 4.0951,
+        "fde_future_ego_m": 5.4253,
+        "ade_world_m": null,
+        "fde_world_m": null,
+        "per_horizon_future_ego_m": {
+          "0.5": 2.8949,
+          "1.0": 3.6645,
+          "1.5": 4.607,
+          "2.0": 5.5961
+        },
+        "per_horizon_world_m": {
+          "0.5": null,
+          "1.0": null,
+          "1.5": null,
+          "2.0": null
+        }
+      },
+      "zero_velocity_baseline": {
+        "matched_trajectories": 1168,
+        "ade_future_ego_m": 5.0642,
+        "fde_future_ego_m": 6.9595,
+        "ade_world_m": null,
+        "fde_world_m": null,
+        "per_horizon_future_ego_m": {
+          "0.5": 3.1994,
+          "1.0": 4.5554,
+          "1.5": 5.8904,
+          "2.0": 7.0652
+        },
+        "per_horizon_world_m": {
+          "0.5": null,
+          "1.0": null,
+          "1.5": null,
+          "2.0": null
+        }
+      },
+      "self_consistency_world_replay_error_m": {
+        "0.5": {
+          "samples": 1085,
+          "mean_error_m": 0.8366
+        },
+        "1.0": {
+          "samples": 996,
+          "mean_error_m": 1.5716
+        },
+        "1.5": {
+          "samples": 922,
+          "mean_error_m": 2.3338
+        },
+        "2.0": {
+          "samples": 863,
+          "mean_error_m": 3.0903
+        }
+      }
+    },
+    "rq3_uncertainty_causality_on_safety": {
+      "arm_a_uncertainty_blind": {
+        "frames": 376,
+        "mean_risk_indicator": 0.4637,
+        "max_risk_indicator": 0.932,
+        "non_normal_intervention_rate": 0.7314,
+        "decision_counts": {
+          "Normal Driving": 101,
+          "Caution": 92,
+          "Speed Reduction": 60,
+          "Braking Recommendation": 64,
+          "Emergency Intervention": 59
+        }
+      },
+      "arm_b_uncertainty_aware_nominal": {
+        "frames": 376,
+        "mean_risk_indicator": 0.6498,
+        "max_risk_indicator": 1.0,
+        "non_normal_intervention_rate": 0.9521,
+        "decision_counts": {
+          "Normal Driving": 18,
+          "Caution": 10,
+          "Speed Reduction": 175,
+          "Braking Recommendation": 69,
+          "Emergency Intervention": 104
+        }
+      },
+      "arm_c_uncertainty_aware_degraded": {
+        "frames": 376,
+        "mean_risk_indicator": 0.6898,
+        "max_risk_indicator": 1.0,
+        "non_normal_intervention_rate": 0.9628,
+        "decision_counts": {
+          "Normal Driving": 14,
+          "Caution": 12,
+          "Speed Reduction": 163,
+          "Braking Recommendation": 79,
+          "Emergency Intervention": 108
+        }
+      },
+      "causality_deltas": {
+        "mean_risk_shift_aware_minus_blind": 0.1861,
+        "mean_risk_shift_degraded_minus_nominal": 0.04,
+        "frames_escalated_aware_over_blind": 258,
+        "frames_escalated_degraded_over_nominal": 33,
+        "frames_risk_increased_degraded_over_nominal": 334,
+        "total_frames": 376
+      }
+    },
+    "rq4_collision_detector_gradient_smoothing": {
+      "unsmoothed": {
+        "mean_abs_grad_per_sec": 0.1656,
+        "p95_abs_grad_per_sec": 0.743,
+        "max_abs_grad_per_sec": 2.25,
+        "spike_count_gt_1p5_per_sec": 3,
+        "decision_flip_count": 24,
+        "mean_risk": 0.6391
+      },
+      "gradient_smoothed": {
+        "mean_abs_grad_per_sec": 0.129,
+        "p95_abs_grad_per_sec": 0.413,
+        "max_abs_grad_per_sec": 1.04,
+        "spike_count_gt_1p5_per_sec": 0,
+        "decision_flip_count": 18,
+        "mean_risk": 0.6498
+      },
+      "reduction": {
+        "mean_grad_reduction_pct": 22.1,
+        "p95_grad_reduction_pct": 44.41,
+        "max_grad_reduction_pct": 53.78,
+        "spike_reduction_pct": 100.0,
+        "decision_flip_reduction_pct": 25.0
+      }
+    }
+  },
+  "0019": {
+    "sequence_id": "0019",
+    "frame_count": 1059,
+    "rq1_coordinate_and_ego_motion": {
+      "ego_total_distance_m": 238.1,
+      "max_roundtrip_transform_error_m": 3.352e-14,
+      "stationary_gt_tracks_identified": 36,
+      "stationary_object_samples": 882,
+      "compensated_world_speed_on_stationary_mps": {
+        "mean": 0.834,
+        "median": 0.587
+      },
+      "uncompensated_ego_speed_on_stationary_mps": {
+        "mean": 1.95,
+        "median": 1.611
+      }
+    },
+    "rq2_future_prediction_vs_observation": {
+      "oxts_world_kalman_with_ctrv": {
+        "depth_metrics": {
+          "matched_samples": 3136,
+          "abs_rel": 0.156,
+          "rmse_m": 3.3568
+        },
+        "motion_prediction_metrics": {
+          "matched_trajectories": 2885,
+          "ade_future_ego_m": 2.7907,
+          "fde_future_ego_m": 3.2671,
+          "ade_world_m": 2.7345,
+          "fde_world_m": 3.1171,
+          "per_horizon_future_ego_m": {
+            "0.5": 2.4001,
+            "1.0": 2.667,
+            "1.5": 3.0786,
+            "2.0": 3.5821
+          },
+          "per_horizon_world_m": {
+            "0.5": 2.4109,
+            "1.0": 2.6506,
+            "1.5": 2.9971,
+            "2.0": 3.4173
+          }
+        },
+        "uncertainty_calibration": {
+          "samples": 10528,
+          "empirical_1sigma_coverage": 0.5808,
+          "empirical_2sigma_coverage": 0.75,
+          "theoretical_2d_gaussian": {
+            "1sigma": 0.3935,
+            "2sigma": 0.8647
+          }
+        },
+        "note": "Evaluated against KITTI label_02 3D GT matched via IoU > 0.4; World-frame uses OXTS Ego poses."
+      },
+      "ego_relative_kalman_no_oxts": {
+        "matched_trajectories": 2885,
+        "ade_future_ego_m": 2.9343,
+        "fde_future_ego_m": 3.5472,
+        "ade_world_m": null,
+        "fde_world_m": null,
+        "per_horizon_future_ego_m": {
+          "0.5": 2.4185,
+          "1.0": 2.7692,
+          "1.5": 3.2647,
+          "2.0": 3.8386
+        },
+        "per_horizon_world_m": {
+          "0.5": null,
+          "1.0": null,
+          "1.5": null,
+          "2.0": null
+        }
+      },
+      "zero_velocity_baseline": {
+        "matched_trajectories": 2885,
+        "ade_future_ego_m": 3.2038,
+        "fde_future_ego_m": 4.1745,
+        "ade_world_m": null,
+        "fde_world_m": null,
+        "per_horizon_future_ego_m": {
+          "0.5": 2.3852,
+          "1.0": 2.9128,
+          "1.5": 3.5962,
+          "2.0": 4.2473
+        },
+        "per_horizon_world_m": {
+          "0.5": null,
+          "1.0": null,
+          "1.5": null,
+          "2.0": null
+        }
+      },
+      "self_consistency_world_replay_error_m": {
+        "0.5": {
+          "samples": 2565,
+          "mean_error_m": 0.626
+        },
+        "1.0": {
+          "samples": 2200,
+          "mean_error_m": 1.2223
+        },
+        "1.5": {
+          "samples": 1865,
+          "mean_error_m": 1.8128
+        },
+        "2.0": {
+          "samples": 1602,
+          "mean_error_m": 2.439
+        }
+      }
+    },
+    "rq3_uncertainty_causality_on_safety": {
+      "arm_a_uncertainty_blind": {
+        "frames": 1059,
+        "mean_risk_indicator": 0.7518,
+        "max_risk_indicator": 0.986,
+        "non_normal_intervention_rate": 0.9585,
+        "decision_counts": {
+          "Normal Driving": 44,
+          "Caution": 17,
+          "Speed Reduction": 126,
+          "Braking Recommendation": 493,
+          "Emergency Intervention": 379
+        }
+      },
+      "arm_b_uncertainty_aware_nominal": {
+        "frames": 1059,
+        "mean_risk_indicator": 0.9053,
+        "max_risk_indicator": 1.0,
+        "non_normal_intervention_rate": 0.9868,
+        "decision_counts": {
+          "Normal Driving": 14,
+          "Caution": 21,
+          "Speed Reduction": 25,
+          "Braking Recommendation": 150,
+          "Emergency Intervention": 849
+        }
+      },
+      "arm_c_uncertainty_aware_degraded": {
+        "frames": 1059,
+        "mean_risk_indicator": 0.9107,
+        "max_risk_indicator": 1.0,
+        "non_normal_intervention_rate": 0.9745,
+        "decision_counts": {
+          "Normal Driving": 27,
+          "Caution": 15,
+          "Speed Reduction": 17,
+          "Braking Recommendation": 134,
+          "Emergency Intervention": 866
+        }
+      },
+      "causality_deltas": {
+        "mean_risk_shift_aware_minus_blind": 0.1535,
+        "mean_risk_shift_degraded_minus_nominal": 0.0054,
+        "frames_escalated_aware_over_blind": 609,
+        "frames_escalated_degraded_over_nominal": 40,
+        "frames_risk_increased_degraded_over_nominal": 595,
+        "total_frames": 1059
+      }
+    },
+    "rq4_collision_detector_gradient_smoothing": {
+      "unsmoothed": {
+        "mean_abs_grad_per_sec": 0.2236,
+        "p95_abs_grad_per_sec": 0.9,
+        "max_abs_grad_per_sec": 10.0,
+        "spike_count_gt_1p5_per_sec": 23,
+        "decision_flip_count": 74,
+        "mean_risk": 0.8901
+      },
+      "gradient_smoothed": {
+        "mean_abs_grad_per_sec": 0.1188,
+        "p95_abs_grad_per_sec": 0.52,
+        "max_abs_grad_per_sec": 1.25,
+        "spike_count_gt_1p5_per_sec": 0,
+        "decision_flip_count": 40,
+        "mean_risk": 0.9053
+      },
+      "reduction": {
+        "mean_grad_reduction_pct": 46.87,
+        "p95_grad_reduction_pct": 42.22,
+        "max_grad_reduction_pct": 87.5,
+        "spike_reduction_pct": 100.0,
+        "decision_flip_reduction_pct": 45.95
+      }
+    }
+  }
+}

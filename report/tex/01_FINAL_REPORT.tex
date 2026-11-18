@@ -1,0 +1,258 @@
+\documentclass[10.5pt,a4paper]{article}
+\usepackage{kotex}
+\usepackage{geometry}
+\geometry{margin=18mm,top=20mm,bottom=20mm}
+\usepackage{fontspec}
+\setmainhangulfont{Apple SD Gothic Neo}[BoldFont={* Bold}]
+\setsanshangulfont{Apple SD Gothic Neo}[BoldFont={* Bold}]
+\setmonofont{Menlo}[Scale=0.82]
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,longtable,array}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue!60!black,urlcolor=blue!65!black}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\setcounter{secnumdepth}{0}
+\sloppy
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{gray}프로젝트 최종 결과 보고서: Camera-Centric Temporal Ego-centric World Model}
+\fancyhead[R]{\small\color{gray}KITTI Tracking Temporal World Model}
+\fancyfoot[C]{\small\thepage}
+\begin{document}
+\begin{center}
+{\LARGE\bfseries 프로젝트 최종 결과 보고서: Camera-Centric Temporal Ego-centric World Model}\\[6pt]
+{\normalsize\color{gray} 최종 결과 보고서 및 기본 평가표 점검}\\[4pt]
+{\small\href{https://github.com/Heisnotanimposter/Totalcare_autonomous_driving_Yolov5}{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5}}
+\end{center}
+\vspace{4pt}
+\hrule
+\vspace{8pt}
+
+\textbf{GitHub 저장소:} https:\allowbreak{}/\allowbreak{}/\allowbreak{}github.\allowbreak{}com/\allowbreak{}Heisnotanimposter/\allowbreak{}Totalcare\_\allowbreak{}autonomous\_\allowbreak{}driving\_\allowbreak{}Yolov5
+
+\textbf{데이터셋:} KITTI Object Tracking (\texttt{training/\allowbreak{}image\_\allowbreak{}02}, \texttt{training/\allowbreak{}label\_\allowbreak{}02}, \texttt{calib}, \texttt{oxts})
+
+\textbf{실행 환경:} Kaggle CLI GPU (\texttt{2$\times$ Nvidia Tesla T4}, \texttt{Ultralytics 8.\allowbreak{}4.\allowbreak{}212}, \texttt{PyTorch 2.\allowbreak{}11.\allowbreak{}0+cu130}) + Google Colab CLI 연동
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{0. 기본 평가표 7개 항목 자체 점검 및 문서 매핑}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.361\textwidth} >{\raggedright\arraybackslash}p{0.096\textwidth} >{\raggedright\arraybackslash}p{0.409\textwidth}}
+\toprule
+\textbf{평가 항목} & \textbf{충족 여부} & \textbf{근거 및 저장소 내 위치} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{평가 항목} & \textbf{충족 여부} & \textbf{근거 및 저장소 내 위치} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{1. 데이터 수집 (3개 부류 이상, 100개 이상 이미지)} & \textbf{충족} & \texttt{KITTI Tracking} 21개 시퀀스(\texttt{0000}--\texttt{0020}), 총 \textbf{\texttt{8,\allowbreak{}008}장} RGB 이미지, \textbf{\texttt{3}개 부류} (\texttt{Car}, \texttt{Pedestrian}, \texttt{Cyclist}). \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/dataset\_audit.md}{\texttt{dataset\_\allowbreak{}audit.\allowbreak{}md}} \\
+\textbf{2. 객체 감지 및 추적 결과 5초 이상 동영상 제작} & \textbf{충족} & 좌우 분할 World Model 시연 영상 (\texttt{0015} staged \texttt{8.\allowbreak{}0초} / full \textbf{\texttt{37.\allowbreak{}6초}}, \texttt{0019} staged \texttt{8.\allowbreak{}0초} / full \textbf{\texttt{105.\allowbreak{}9초}}) + 2D ByteTrack·SAM 추적 영상. \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v3\_bev\_fixed/world\_outputs/world\_model\_0015\_full/world\_model\_demo\_0015.mp4}{\texttt{world\_\allowbreak{}model\_\allowbreak{}demo\_\allowbreak{}0015.\allowbreak{}mp4}} \\
+\textbf{3. 깃허브에 학습 모델과 시연 영상 저장 및 공개} & \textbf{커밋·푸시 대기} & 학습 모델 \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v2\_improved/outputs/weights/best.pt}{\texttt{best.\allowbreak{}pt}} (\texttt{38.\allowbreak{}62 MB}) 및 최종 \texttt{v3} 시연 영상 4종이 GitHub 100MB 제한 이내로 정리됨 (\texttt{.\allowbreak{}gitignore} 정비 완료) \\
+\textbf{4. 내용을 결과 보고서에 포함} & \textbf{충족} & 본 보고서(1\textasciitilde{}5절)에 데이터 정제, 검출/세그멘테이션/추적, World Model \& 안전 판단 전체 포함 \\
+\textbf{5. 결과 보고서에 학습 과정 및 성능 벤치마크 포함} & \textbf{충족} & 제2--3절에 \texttt{v1 $\rightarrow$ v2 $\rightarrow$ v3} 학습 하이퍼파라미터, Epoch별 수렴 지표(\texttt{results.\allowbreak{}csv}), Detection/Tracking/Depth/Prediction/RQ1--RQ4 벤치마크 수록 \\
+\textbf{6. 깃허브 링크 및 설명 포함} & \textbf{충족} & 상단 및 제4절에 저장소 URL, 디렉터리 구조, 재현 명령, 산출물 직접 경로 명시 \\
+\textbf{7. 머신러닝 Layer별 기술설명서 및 참고자료 첨부} & \textbf{충족} & \texttt{YOLO11m} 전체 24개 모듈(\texttt{231 layers}), \texttt{MobileSAM}, \texttt{ByteTrack}, \texttt{World Model} Layer 상세 및 학술 참고자료 별첨 $\rightarrow$ \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/ML\_LAYER\_SPEC.md}{\texttt{ML\_\allowbreak{}LAYER\_\allowbreak{}SPEC.\allowbreak{}md}} \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{1. 데이터 수집 및 시퀀스 비독립 전처리 (\texttt{Stage 1})}
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{원천 데이터 규모}: \texttt{KITTI Tracking} 21개 시퀀스(\texttt{0000}\textasciitilde{}\texttt{0020}), 총 \textbf{\texttt{8,\allowbreak{}008}장} (\texttt{1242$\times$375} 등 4종 해상도, \texttt{10 Hz}, 무결성 검증 \texttt{ZipFile.\allowbreak{}testzip()} / \texttt{PIL.\allowbreak{}Image.\allowbreak{}verify()} 결손·손상 \texttt{0건}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v2\_improved/outputs/kitti\_step2\_audit.json}{\texttt{kitti\_\allowbreak{}step2\_\allowbreak{}audit.\allowbreak{}json}}).
+\item \textbf{타겟 부류(3개 클래스) 및 시퀀스 비독립 분할(Sequence-Disjoint Split)}: 동일 주행 시퀀스의 프레임이 Train/Val/Test에 섞이지 않도록 시퀀스 단위로 엄격 분리(\href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v2\_improved/outputs/kitti\_export\_manifest.json}{\texttt{kitti\_\allowbreak{}export\_\allowbreak{}manifest.\allowbreak{}json}}).
+\end{itemize}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.047\textwidth} >{\raggedright\arraybackslash}p{0.047\textwidth} >{\raggedright\arraybackslash}p{0.047\textwidth} >{\raggedright\arraybackslash}p{0.076\textwidth} >{\raggedright\arraybackslash}p{0.142\textwidth} >{\raggedright\arraybackslash}p{0.113\textwidth} >{\raggedright\arraybackslash}p{0.321\textwidth}}
+\toprule
+\textbf{Split} & \textbf{시퀀스 수} & \textbf{프레임 수} & \textbf{\texttt{Car} 박스 수} & \textbf{\texttt{Pedestrian} 박스 수} & \textbf{\texttt{Cyclist} 박스 수} & \textbf{비고} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Split} & \textbf{시퀀스 수} & \textbf{프레임 수} & \textbf{\texttt{Car} 박스 수} & \textbf{\texttt{Pedestrian} 박스 수} & \textbf{\texttt{Cyclist} 박스 수} & \textbf{비고} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{Train} & 14 & \texttt{5,\allowbreak{}568} & \texttt{23,\allowbreak{}404} & \texttt{648} & \texttt{367} & 희소 클래스 오버샘플링(\texttt{train\_\allowbreak{}weighted.\allowbreak{}txt}: \texttt{6,\allowbreak{}974} entries) \\
+\textbf{Val} & 4 & \texttt{832} & \texttt{2,\allowbreak{}075} & \texttt{1,\allowbreak{}777} & \texttt{754} & \texttt{0002,\allowbreak{} 0012,\allowbreak{} 0015,\allowbreak{} 0017} \\
+\textbf{Test} & 3 & \texttt{1,\allowbreak{}608} & \texttt{1,\allowbreak{}818} & \texttt{9,\allowbreak{}044} & \texttt{817} & \texttt{0013,\allowbreak{} 0016,\allowbreak{} 0019} (완전 미학습 주행) \\
+\textbf{합계} & \textbf{21} & \textbf{\texttt{8,\allowbreak{}008}} & \textbf{\texttt{27,\allowbreak{}297}} & \textbf{\texttt{11,\allowbreak{}469}} & \textbf{\texttt{1,\allowbreak{}938}} & 총 \texttt{40,\allowbreak{}704} 타겟 객체 + \texttt{DontCare}/\texttt{Distractor} 마스킹 \\
+\end{longtable}
+\end{footnotesize}
+
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{오류 경사 방지 마스킹}: 학습·평가 간 정합성을 위해 \texttt{DontCare} 및 인접 혼동 부류(\texttt{Van}, \texttt{Person}, \texttt{Person\_\allowbreak{}sitting}) 영역을 회색 픽셀(\texttt{114})로 마스킹하여 잘못된 False-Negative 페널티를 차단했습니다.
+\end{itemize}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{2. 학습 과정 및 개선 이력 (\texttt{v1 Baseline $\rightarrow$ v2 Improved $\rightarrow$ v3 BEV Fixed})}
+
+\subsection{2.1 모델 학습 설정 및 아키텍처 진화}
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{\texttt{v1} Baseline (\texttt{YOLOv8s @ 640px})}: \texttt{epochs=30}, \texttt{batch=16}, \texttt{129 layers /\allowbreak{} 11.\allowbreak{}14M params /\allowbreak{} 28.\allowbreak{}6 GFLOPs}.
+\item \textbf{\texttt{v2} Improved (\texttt{YOLO11m @ 960px} + Rare-Class Oversampling + \texttt{MobileSAM})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item 해상도를 \texttt{640 $\rightarrow$ 960}으로 상향하고 \texttt{C3k2 + C2PSA} 공간 어텐션 기반 \texttt{YOLO11m} (\texttt{231 layers /\allowbreak{} 20.\allowbreak{}06M params /\allowbreak{} 68.\allowbreak{}3 GFLOPs}) 채택.
+\item Train split에 한정해 \texttt{Cyclist} / \texttt{Pedestrian} 포함 프레임을 가중 샘플링(\texttt{6,\allowbreak{}974} entries) 적용, \texttt{cos\_\allowbreak{}lr=True}, \texttt{mixup=0.\allowbreak{}1}, \texttt{close\_\allowbreak{}mosaic=10}, \texttt{patience=12} 설정으로 \textbf{\texttt{2$\times$ Tesla T4}}에서 DDP 학습 수행 (\texttt{24 epoch} 조기 종료, Best Checkpoint = \textbf{\texttt{Epoch 12}}, 약 108분 소요).
+\item 추론 후단에 \texttt{mobile\_\allowbreak{}sam.\allowbreak{}pt} (\texttt{38.\allowbreak{}8 MB}) Box-Prompt 세그멘테이션을 결합하여 객체 마스크 및 지면 접지점(\texttt{mask\_\allowbreak{}bottom\_\allowbreak{}xy}) 추출.
+\end{itemize}
+\item \textbf{\texttt{v3} BEV 시각·오경보 개선 (\texttt{world\_\allowbreak{}model.\allowbreak{}py}, \texttt{world\_\allowbreak{}visualizer.\allowbreak{}py})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item 오른쪽 BEV 패널에서 종방향 깊이 불확실성이 횡방향 차로와 타원을 2배 이상 왜곡·확대시키던 문제 수정(픽셀 야코비안 투영 $J=\text{diag}(s_x,-s_y)$, 횡방향 공분산 분리, 접근 속도 게이팅 \texttt{approach\_\allowbreak{}w}, 트랙별 EMA 스무딩).
+\end{itemize}
+\end{enumerate}
+
+\subsection{2.2 \texttt{v2 YOLO11m @ 960} Epoch별 학습 수렴 추이 (\href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v2\_improved/outputs/train\_results/results.csv}{\texttt{results.\allowbreak{}csv}})}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.038\textwidth} >{\raggedright\arraybackslash}p{0.053\textwidth} >{\raggedright\arraybackslash}p{0.098\textwidth} >{\raggedright\arraybackslash}p{0.098\textwidth} >{\raggedright\arraybackslash}p{0.098\textwidth} >{\raggedright\arraybackslash}p{0.098\textwidth} >{\raggedright\arraybackslash}p{0.075\textwidth} >{\raggedright\arraybackslash}p{0.083\textwidth} >{\raggedright\arraybackslash}p{0.120\textwidth}}
+\toprule
+\textbf{Epoch} & \textbf{누적 시간 (s)} & \textbf{\texttt{train/\allowbreak{}box\_\allowbreak{}loss}} & \textbf{\texttt{train/\allowbreak{}cls\_\allowbreak{}loss}} & \textbf{\texttt{train/\allowbreak{}dfl\_\allowbreak{}loss}} & \textbf{Val \texttt{Precision}} & \textbf{Val \texttt{Recall}} & \textbf{Val \texttt{mAP@0.\allowbreak{}5}} & \textbf{Val \texttt{mAP@0.\allowbreak{}5:\allowbreak{}0.\allowbreak{}95}} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Epoch} & \textbf{누적 시간 (s)} & \textbf{\texttt{train/\allowbreak{}box\_\allowbreak{}loss}} & \textbf{\texttt{train/\allowbreak{}cls\_\allowbreak{}loss}} & \textbf{\texttt{train/\allowbreak{}dfl\_\allowbreak{}loss}} & \textbf{Val \texttt{Precision}} & \textbf{Val \texttt{Recall}} & \textbf{Val \texttt{mAP@0.\allowbreak{}5}} & \textbf{Val \texttt{mAP@0.\allowbreak{}5:\allowbreak{}0.\allowbreak{}95}} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{1} & 214.4 & 1.1077 & 0.8017 & 1.0848 & 0.4067 & 0.4114 & 0.4074 & 0.2240 \\
+\textbf{5} & 1097.3 & 0.9687 & 0.6330 & 1.0241 & 0.5063 & 0.4627 & 0.4516 & 0.2611 \\
+\textbf{10} & 2197.2 & 0.8181 & 0.5107 & 0.9597 & 0.6701 & 0.4487 & 0.4886 & 0.2894 \\
+\textbf{12 (Best)} & 2637.2 & 0.7793 & 0.4813 & 0.9431 & \textbf{0.7166} & \textbf{0.4814} & \textbf{0.5231} & \textbf{0.3059} \\
+\textbf{19} & 4179.2 & 0.6791 & 0.4135 & 0.9019 & 0.7905 & 0.4846 & 0.5297 & 0.2985 \\
+\textbf{24 (Stop)} & 5278.9 & 0.6194 & 0.3725 & 0.8823 & 0.6714 & 0.4341 & 0.4539 & 0.2738 \\
+\end{longtable}
+\end{footnotesize}
+
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item 학습 곡선 및 혼동 행렬 플롯: \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v2\_improved/outputs/train\_results/results.png}{\texttt{results.\allowbreak{}png}}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v2\_improved/outputs/train\_results/confusion\_matrix\_normalized.png}{\texttt{confusion\_\allowbreak{}matrix\_\allowbreak{}normalized.\allowbreak{}png}}
+\end{itemize}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{3. 정량적 성능 벤치마크}
+
+\subsection{3.1 Stage 2 객체 검출 성능 (\texttt{v1} vs \texttt{v2}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v2\_improved/outputs/eval\_metrics.json}{\texttt{eval\_\allowbreak{}metrics.\allowbreak{}json}})}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.222\textwidth} >{\raggedright\arraybackslash}p{0.198\textwidth} >{\raggedright\arraybackslash}p{0.198\textwidth} >{\raggedright\arraybackslash}p{0.231\textwidth}}
+\toprule
+\textbf{Split / Metric} & \textbf{\texttt{v1} (\texttt{YOLOv8s @ 640})} & \textbf{\texttt{v2} (\texttt{YOLO11m @ 960})} & \textbf{개선폭 (\texttt{$\Delta$})} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Split / Metric} & \textbf{\texttt{v1} (\texttt{YOLOv8s @ 640})} & \textbf{\texttt{v2} (\texttt{YOLO11m @ 960})} & \textbf{개선폭 (\texttt{$\Delta$})} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{Val \texttt{mAP@0.\allowbreak{}5} / \texttt{mAP@0.\allowbreak{}5:\allowbreak{}0.\allowbreak{}95}} & \texttt{0.\allowbreak{}4521 /\allowbreak{} 0.\allowbreak{}2471} & \textbf{\texttt{0.\allowbreak{}5235 /\allowbreak{} 0.\allowbreak{}3060}} & \textbf{\texttt{+0.\allowbreak{}0714 (+15.\allowbreak{}8\%)}} / \texttt{+0.\allowbreak{}0589} \\
+\textbf{Val \texttt{Precision /\allowbreak{} Recall}} & \texttt{0.\allowbreak{}6026 /\allowbreak{} 0.\allowbreak{}4230} & \textbf{\texttt{0.\allowbreak{}7170 /\allowbreak{} 0.\allowbreak{}4822}} & \texttt{+0.\allowbreak{}1144} / \texttt{+0.\allowbreak{}0592} \\
+\textbf{Val AP50 (\texttt{Car /\allowbreak{} Ped /\allowbreak{} Cyc})} & \texttt{0.\allowbreak{}7501 /\allowbreak{} 0.\allowbreak{}5141 /\allowbreak{} 0.\allowbreak{}0922} & \textbf{\texttt{0.\allowbreak{}8235 /\allowbreak{} 0.\allowbreak{}5871 /\allowbreak{} 0.\allowbreak{}1598}} & \texttt{+0.\allowbreak{}0734 /\allowbreak{} +0.\allowbreak{}0730 /\allowbreak{} +0.\allowbreak{}0676 (+73.\allowbreak{}3\%)} \\
+\textbf{Test \texttt{mAP@0.\allowbreak{}5} / \texttt{mAP@0.\allowbreak{}5:\allowbreak{}0.\allowbreak{}95}} & \texttt{0.\allowbreak{}3652 /\allowbreak{} 0.\allowbreak{}1695} & \textbf{\texttt{0.\allowbreak{}4269 /\allowbreak{} 0.\allowbreak{}2145}} & \textbf{\texttt{+0.\allowbreak{}0617 (+16.\allowbreak{}9\%)}} / \texttt{+0.\allowbreak{}0450} \\
+\textbf{Test AP50 (\texttt{Car /\allowbreak{} Ped /\allowbreak{} Cyc})} & \texttt{0.\allowbreak{}6294 /\allowbreak{} 0.\allowbreak{}3497 /\allowbreak{} 0.\allowbreak{}1165} & \textbf{\texttt{0.\allowbreak{}6662 /\allowbreak{} 0.\allowbreak{}3631 /\allowbreak{} 0.\allowbreak{}2513}} & \texttt{+0.\allowbreak{}0368 /\allowbreak{} +0.\allowbreak{}0134 /\allowbreak{}} \textbf{\texttt{+0.\allowbreak{}1348 (+115.\allowbreak{}7\%)}} \\
+\end{longtable}
+\end{footnotesize}
+
+
+\subsection{3.2 Stage 3 추적·인스턴스 마스킹 및 Stage 4--7 World Model (RQ1--RQ4) (\href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v3\_bev\_fixed/world\_outputs/validation\_0015.json}{\texttt{validation\_\allowbreak{}0015.\allowbreak{}json}}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v3\_bev\_fixed/world\_outputs/validation\_0019.json}{\texttt{validation\_\allowbreak{}0019.\allowbreak{}json}})}
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{MobileSAM 마스킹}: 시퀀스 \texttt{0015} (376f) \textbf{\texttt{1,\allowbreak{}370}개} 인스턴스(\texttt{41}개 트랙), 시퀀스 \texttt{0019} (1059f) \textbf{\texttt{3,\allowbreak{}788}개} 인스턴스(\texttt{203}개 트랙) 추출 (\href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v2\_improved/outputs/tracking\_summary.json}{\texttt{tracking\_\allowbreak{}summary.\allowbreak{}json}}).
+\item \textbf{연구 질문(RQ1--RQ4) 검증 요약 (\texttt{v3\_\allowbreak{}bev\_\allowbreak{}fixed})}:
+\end{itemize}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.219\textwidth} >{\raggedright\arraybackslash}p{0.324\textwidth} >{\raggedright\arraybackslash}p{0.324\textwidth}}
+\toprule
+\textbf{검증 항목} & \textbf{시퀀스 \texttt{0015} (376 frames, \texttt{37.\allowbreak{}6초})} & \textbf{시퀀스 \texttt{0019} (1059 frames, \texttt{105.\allowbreak{}9초})} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{검증 항목} & \textbf{시퀀스 \texttt{0015} (376 frames, \texttt{37.\allowbreak{}6초})} & \textbf{시퀀스 \texttt{0019} (1059 frames, \texttt{105.\allowbreak{}9초})} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{RQ1 좌표·자차 보정 (\texttt{Ego$\leftrightarrow$World} 오차 / 정지체 World 속도)} & \texttt{2.\allowbreak{}161e-\allowbreak{}14 m} / \textbf{\texttt{0.\allowbreak{}227 m/\allowbreak{}s}} (비보정 \texttt{1.\allowbreak{}358 m/\allowbreak{}s}) & \texttt{3.\allowbreak{}352e-\allowbreak{}14 m} / \textbf{\texttt{0.\allowbreak{}756 m/\allowbreak{}s}} (비보정 \texttt{1.\allowbreak{}849 m/\allowbreak{}s}) \\
+\textbf{RQ2 미래 예측 (\texttt{OXTS+CTRV} ADE/FDE vs Zero-Vel)} & \textbf{\texttt{3.\allowbreak{}6052 /\allowbreak{} 4.\allowbreak{}6872 m}} (vs Zero-Vel \texttt{5.\allowbreak{}2465 /\allowbreak{} 7.\allowbreak{}1198 m}) & \textbf{\texttt{2.\allowbreak{}7890 /\allowbreak{} 3.\allowbreak{}2453 m}} (vs Zero-Vel \texttt{3.\allowbreak{}2491 /\allowbreak{} 4.\allowbreak{}2215 m}) \\
+\textbf{RQ2 2D 공분산 \texttt{1$\sigma$} 커버리지 (이론 \texttt{0.\allowbreak{}3935})} & \textbf{\texttt{0.\allowbreak{}3939}} (이론치와 \texttt{0.\allowbreak{}0004} 차이) & \textbf{\texttt{0.\allowbreak{}4863}} \\
+\textbf{RQ3 불확실성 인과성 (\texttt{Arm A Blind $\rightarrow$ B Nominal $\rightarrow$ C Degraded})} & \textbf{\texttt{0.\allowbreak{}2220 $\rightarrow$ 0.\allowbreak{}2791 $\rightarrow$ 0.\allowbreak{}2792}} (\texttt{77 /\allowbreak{} 18}프레임 단계 상승) & \textbf{\texttt{0.\allowbreak{}5242 $\rightarrow$ 0.\allowbreak{}6290 $\rightarrow$ 0.\allowbreak{}6396}} (\texttt{521 /\allowbreak{} 121}프레임 단계 상승) \\
+\textbf{RQ4 Gradient Smoothing (\texttt{max |dR/\allowbreak{}dt|} / 스파이크 / 플립)} & \texttt{5.\allowbreak{}29 $\rightarrow$ 1.\allowbreak{}10 /\allowbreak{}s (-\allowbreak{}79.\allowbreak{}2\%)}, \texttt{>1.\allowbreak{}5/\allowbreak{}s} \textbf{\texttt{5 $\rightarrow$ 0 (-\allowbreak{}100\%)}}, 플립 \texttt{34 $\rightarrow$ 22} & \texttt{5.\allowbreak{}76 $\rightarrow$ 1.\allowbreak{}10 /\allowbreak{}s (-\allowbreak{}80.\allowbreak{}9\%)}, \texttt{>1.\allowbreak{}5/\allowbreak{}s} \textbf{\texttt{42 $\rightarrow$ 0 (-\allowbreak{}100\%)}}, 플립 \texttt{140 $\rightarrow$ 78} \\
+\textbf{\texttt{v2 $\rightarrow$ v3} 안전상황 오경보 억제 (\texttt{Arm B} 평균 Risk / Emergency)} & \texttt{0.\allowbreak{}6498 $\rightarrow$ 0.\allowbreak{}2791} (\textbf{\texttt{-\allowbreak{}57.\allowbreak{}0\%}}), Emergency \texttt{104 $\rightarrow$ 16} (\textbf{\texttt{-\allowbreak{}84.\allowbreak{}6\%}}) & \texttt{0.\allowbreak{}9053 $\rightarrow$ 0.\allowbreak{}6290} (\textbf{\texttt{-\allowbreak{}30.\allowbreak{}5\%}}), Emergency \texttt{849 $\rightarrow$ 216} (\textbf{\texttt{-\allowbreak{}74.\allowbreak{}6\%}}) \\
+\end{longtable}
+\end{footnotesize}
+
+
+\subsection{3.3 시연 영상 및 주요 프레임 확인}
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \texttt{Left Panel}: 원본 카메라 영상 + 검출 2D Box + \texttt{Car}/\texttt{Pedestrian}/\texttt{Cyclist} 라벨 + Track ID + Confidence + \textbf{MobileSAM 인스턴스 폴리곤 마스크}.
+\item \texttt{Right Panel}: Ego-centric BEV (\texttt{X} 좌우 / \texttt{Y} 전후), 자차 계획 궤적(CTRV), 과거 궤적(감쇠), 미래 예측 점선(\texttt{+0.\allowbreak{}5s\textasciitilde{}+2.\allowbreak{}0s}), 야코비안 보정 \texttt{1-\allowbreak{}sigma} 불확실성 타원, 폐색(Occluded) 부채꼴 및 후방 Unknown 음영, 소형 \texttt{CONFLICT} 링, 스무딩된 Safety Shield 권고 배너.
+\item 대표 검증 키프레임: \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v3\_bev\_fixed/world\_outputs/world\_model\_0015\_staged/keyframes/seq\_0015\_frame\_000045\_stage5.png}{\texttt{seq\_\allowbreak{}0015\_\allowbreak{}frame\_\allowbreak{}000045\_\allowbreak{}stage5.\allowbreak{}png}}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v3\_bev\_fixed/world\_outputs/world\_model\_0015\_staged/keyframes/seq\_0015\_frame\_000055\_stage5.png}{\texttt{seq\_\allowbreak{}0015\_\allowbreak{}frame\_\allowbreak{}000055\_\allowbreak{}stage5.\allowbreak{}png}}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v3\_bev\_fixed/world\_outputs/world\_model\_0019\_staged/keyframes/seq\_0019\_frame\_000055\_stage5.png}{\texttt{seq\_\allowbreak{}0019\_\allowbreak{}frame\_\allowbreak{}000055\_\allowbreak{}stage5.\allowbreak{}png}}
+\end{itemize}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{4. GitHub 저장소 안내 및 주요 산출물 링크}
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{공식 GitHub 저장소:} https:\allowbreak{}/\allowbreak{}/\allowbreak{}github.\allowbreak{}com/\allowbreak{}Heisnotanimposter/\allowbreak{}Totalcare\_\allowbreak{}autonomous\_\allowbreak{}driving\_\allowbreak{}Yolov5
+\item \textbf{핵심 소스 코드}: \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/src/kitti\_prep.py}{\texttt{src/\allowbreak{}kitti\_\allowbreak{}prep.\allowbreak{}py}}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/src/track\_utils.py}{\texttt{src/\allowbreak{}track\_\allowbreak{}utils.\allowbreak{}py}}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/src/world\_model.py}{\texttt{src/\allowbreak{}world\_\allowbreak{}model.\allowbreak{}py}}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/src/world\_visualizer.py}{\texttt{src/\allowbreak{}world\_\allowbreak{}visualizer.\allowbreak{}py}}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/src/validation\_experiments.py}{\texttt{src/\allowbreak{}validation\_\allowbreak{}experiments.\allowbreak{}py}}
+\item \textbf{학습된 최종 가중치}: \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v2\_improved/outputs/weights/best.pt}{\texttt{best.\allowbreak{}pt}} (\texttt{YOLO11m @ 960}, \texttt{38.\allowbreak{}62 MB})
+\item \textbf{시연 동영상 (5초 이상)}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item Val 시퀀스 \texttt{0015} (8초 단계별 / 37.6초 전체): \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v3\_bev\_fixed/world\_outputs/world\_model\_0015\_staged/world\_model\_demo\_0015.mp4}{\texttt{staged MP4}} / \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v3\_bev\_fixed/world\_outputs/world\_model\_0015\_full/world\_model\_demo\_0015.mp4}{\texttt{full MP4}}
+\item Test 시퀀스 \texttt{0019} (8초 단계별 / 105.9초 전체): \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v3\_bev\_fixed/world\_outputs/world\_model\_0019\_staged/world\_model\_demo\_0019.mp4}{\texttt{staged MP4}} / \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v3\_bev\_fixed/world\_outputs/world\_model\_0019\_full/world\_model\_demo\_0019.mp4}{\texttt{full MP4}}
+\end{itemize}
+\item \textbf{원격 GPU 재현 커널}: \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/kaggle/train\_track\_kitti.py}{\texttt{kaggle/\allowbreak{}train\_\allowbreak{}track\_\allowbreak{}kitti.\allowbreak{}py}}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/kaggle\_world\_model/run\_world\_model\_kaggle.py}{\texttt{kaggle\_\allowbreak{}world\_\allowbreak{}model/\allowbreak{}run\_\allowbreak{}world\_\allowbreak{}model\_\allowbreak{}kaggle.\allowbreak{}py}}
+\end{itemize}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{5. ML Layer별 기술설명서 및 참고자료 (요약)}
+
+전체 딥러닝·칼만·제어 레이어 명세 및 학술 문헌 목록은 별첨 기술설명서 \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/ML\_LAYER\_SPEC.md}{\texttt{ML\_\allowbreak{}LAYER\_\allowbreak{}SPEC.\allowbreak{}md}} 에 수록되어 있습니다.
+
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{\texttt{YOLO11m} (\texttt{231 layers}, \texttt{20.\allowbreak{}06M params}, \texttt{68.\allowbreak{}3 GFLOPs})}: Backbone (\texttt{Conv} Stem $\rightarrow$ \texttt{C3k2} CSP Bottleneck $\rightarrow$ \texttt{SPPF} $\rightarrow$ \texttt{C2PSA} Spatial Attention), Neck (\texttt{PAN-\allowbreak{}FPN}), Head (\texttt{Decoupled Anchor-\allowbreak{}Free Detect} + \texttt{DFL} + \texttt{CIoU} + \texttt{BCE}).
+\item \textbf{\texttt{MobileSAM} (\texttt{38.\allowbreak{}8 MB})}: Knowledge-Distilled \texttt{TinyViT} Image Encoder (\texttt{MBConv} + \texttt{Windowed Self-\allowbreak{}Attention}), Box Prompt Positional Encoder, Two-Way Cross-Attention Mask Decoder + \texttt{4$\times$} Transposed Conv.
+\item \textbf{\texttt{ByteTrack}}: 8D Constant-Velocity BBox Kalman Filter + 2단계 Hungarian Bipartite Matching (\texttt{High-\allowbreak{}Conf} + \texttt{Low-\allowbreak{}Conf} 가려짐 복구).
+\item \textbf{Temporal World Model \& Safety Shield}: \texttt{P2} 역분산 깊이 융합 + OXTS \texttt{SE(2)} 보상 + 4D World-ENU 칼만 필터 + 야코비안 BEV 공분산 타원 투영 + $C^1$ 위험 포텐셜 \& \texttt{CollisionRiskSmoother} 슬루율/히스테리시스 평활화.
+\end{enumerate}
+\end{document}

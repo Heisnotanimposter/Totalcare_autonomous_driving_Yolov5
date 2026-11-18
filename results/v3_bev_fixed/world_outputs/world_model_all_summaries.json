@@ -1,0 +1,194 @@
+{
+  "0015_staged": {
+    "sequence_id": "0015",
+    "frames_rendered": 80,
+    "fps": 10.0,
+    "duration_sec": 8.0,
+    "calibrated": true,
+    "ego_motion_compensated": true,
+    "mask_backend": "mobile_sam.pt",
+    "staged_demo": true,
+    "video_path": "/kaggle/working/world_outputs/world_model_0015_staged/world_model_demo_0015.mp4",
+    "timeline_path": "/kaggle/working/world_outputs/world_model_0015_staged/world_model_timeline_0015.json",
+    "eval_metrics": {
+      "depth_metrics": {
+        "matched_samples": 212,
+        "abs_rel": 0.0751,
+        "rmse_m": 2.1097
+      },
+      "motion_prediction_metrics": {
+        "matched_trajectories": 175,
+        "ade_future_ego_m": 2.9802,
+        "fde_future_ego_m": 4.2988,
+        "ade_world_m": 2.1881,
+        "fde_world_m": 2.4996,
+        "per_horizon_future_ego_m": {
+          "0.5": 1.9579,
+          "1.0": 2.3253,
+          "1.5": 3.0328,
+          "2.0": 4.2743
+        },
+        "per_horizon_world_m": {
+          "0.5": 1.8982,
+          "1.0": 1.9302,
+          "1.5": 1.9284,
+          "2.0": 2.1257
+        }
+      },
+      "uncertainty_calibration": {
+        "samples": 634,
+        "empirical_1sigma_coverage": 0.6183,
+        "empirical_2sigma_coverage": 0.858,
+        "theoretical_2d_gaussian": {
+          "1sigma": 0.3935,
+          "2sigma": 0.8647
+        }
+      },
+      "note": "Evaluated against KITTI label_02 3D GT matched via IoU > 0.4; World-frame uses OXTS Ego poses."
+    }
+  },
+  "0015_full": {
+    "sequence_id": "0015",
+    "frames_rendered": 376,
+    "fps": 10.0,
+    "duration_sec": 37.6,
+    "calibrated": true,
+    "ego_motion_compensated": true,
+    "mask_backend": "mobile_sam.pt",
+    "staged_demo": false,
+    "video_path": "/kaggle/working/world_outputs/world_model_0015_full/world_model_demo_0015.mp4",
+    "timeline_path": "/kaggle/working/world_outputs/world_model_0015_full/world_model_timeline_0015.json",
+    "eval_metrics": {
+      "depth_metrics": {
+        "matched_samples": 1231,
+        "abs_rel": 0.2625,
+        "rmse_m": 2.7767
+      },
+      "motion_prediction_metrics": {
+        "matched_trajectories": 1145,
+        "ade_future_ego_m": 3.5611,
+        "fde_future_ego_m": 4.6418,
+        "ade_world_m": 3.4457,
+        "fde_world_m": 4.3765,
+        "per_horizon_future_ego_m": {
+          "0.5": 2.6178,
+          "1.0": 3.1425,
+          "1.5": 3.8539,
+          "2.0": 4.7083
+        },
+        "per_horizon_world_m": {
+          "0.5": 2.6104,
+          "1.0": 3.0867,
+          "1.5": 3.6969,
+          "2.0": 4.3956
+        }
+      },
+      "uncertainty_calibration": {
+        "samples": 4186,
+        "empirical_1sigma_coverage": 0.3939,
+        "empirical_2sigma_coverage": 0.5791,
+        "theoretical_2d_gaussian": {
+          "1sigma": 0.3935,
+          "2sigma": 0.8647
+        }
+      },
+      "note": "Evaluated against KITTI label_02 3D GT matched via IoU > 0.4; World-frame uses OXTS Ego poses."
+    }
+  },
+  "0019_staged": {
+    "sequence_id": "0019",
+    "frames_rendered": 80,
+    "fps": 10.0,
+    "duration_sec": 8.0,
+    "calibrated": true,
+    "ego_motion_compensated": true,
+    "mask_backend": "mobile_sam.pt",
+    "staged_demo": true,
+    "video_path": "/kaggle/working/world_outputs/world_model_0019_staged/world_model_demo_0019.mp4",
+    "timeline_path": "/kaggle/working/world_outputs/world_model_0019_staged/world_model_timeline_0019.json",
+    "eval_metrics": {
+      "depth_metrics": {
+        "matched_samples": 169,
+        "abs_rel": 0.1175,
+        "rmse_m": 1.2192
+      },
+      "motion_prediction_metrics": {
+        "matched_trajectories": 143,
+        "ade_future_ego_m": 2.7782,
+        "fde_future_ego_m": 4.3842,
+        "ade_world_m": 2.1165,
+        "fde_world_m": 2.9856,
+        "per_horizon_future_ego_m": {
+          "0.5": 1.3626,
+          "1.0": 2.3084,
+          "1.5": 3.749,
+          "2.0": 5.4681
+        },
+        "per_horizon_world_m": {
+          "0.5": 1.2766,
+          "1.0": 1.8951,
+          "1.5": 2.6992,
+          "2.0": 3.7271
+        }
+      },
+      "uncertainty_calibration": {
+        "samples": 488,
+        "empirical_1sigma_coverage": 0.5389,
+        "empirical_2sigma_coverage": 0.7807,
+        "theoretical_2d_gaussian": {
+          "1sigma": 0.3935,
+          "2sigma": 0.8647
+        }
+      },
+      "note": "Evaluated against KITTI label_02 3D GT matched via IoU > 0.4; World-frame uses OXTS Ego poses."
+    }
+  },
+  "0019_full": {
+    "sequence_id": "0019",
+    "frames_rendered": 1059,
+    "fps": 10.0,
+    "duration_sec": 105.9,
+    "calibrated": true,
+    "ego_motion_compensated": true,
+    "mask_backend": "mobile_sam.pt",
+    "staged_demo": false,
+    "video_path": "/kaggle/working/world_outputs/world_model_0019_full/world_model_demo_0019.mp4",
+    "timeline_path": "/kaggle/working/world_outputs/world_model_0019_full/world_model_timeline_0019.json",
+    "eval_metrics": {
+      "depth_metrics": {
+        "matched_samples": 3136,
+        "abs_rel": 0.1548,
+        "rmse_m": 3.3442
+      },
+      "motion_prediction_metrics": {
+        "matched_trajectories": 2757,
+        "ade_future_ego_m": 2.79,
+        "fde_future_ego_m": 3.2465,
+        "ade_world_m": 2.7303,
+        "fde_world_m": 3.0876,
+        "per_horizon_future_ego_m": {
+          "0.5": 2.4169,
+          "1.0": 2.6775,
+          "1.5": 3.0877,
+          "2.0": 3.5734
+        },
+        "per_horizon_world_m": {
+          "0.5": 2.4284,
+          "1.0": 2.6599,
+          "1.5": 2.9979,
+          "2.0": 3.4007
+        }
+      },
+      "uncertainty_calibration": {
+        "samples": 10062,
+        "empirical_1sigma_coverage": 0.4859,
+        "empirical_2sigma_coverage": 0.6825,
+        "theoretical_2d_gaussian": {
+          "1sigma": 0.3935,
+          "2sigma": 0.8647
+        }
+      },
+      "note": "Evaluated against KITTI label_02 3D GT matched via IoU > 0.4; World-frame uses OXTS Ego poses."
+    }
+  }
+}

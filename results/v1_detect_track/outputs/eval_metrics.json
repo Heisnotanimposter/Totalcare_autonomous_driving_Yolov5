@@ -1,0 +1,24 @@
+{
+  "val": {
+    "map50": 0.4521,
+    "map50_95": 0.2471,
+    "precision": 0.6026,
+    "recall": 0.423,
+    "per_class_ap50": {
+      "Car": 0.7501,
+      "Pedestrian": 0.5141,
+      "Cyclist": 0.0922
+    }
+  },
+  "test": {
+    "map50": 0.3652,
+    "map50_95": 0.1695,
+    "precision": 0.5272,
+    "recall": 0.3585,
+    "per_class_ap50": {
+      "Car": 0.6294,
+      "Pedestrian": 0.3497,
+      "Cyclist": 0.1165
+    }
+  }
+}
