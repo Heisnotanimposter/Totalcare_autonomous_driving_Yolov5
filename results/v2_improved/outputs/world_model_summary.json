@@ -1,0 +1,98 @@
+{
+  "0015": {
+    "sequence_id": "0015",
+    "frames_rendered": 80,
+    "fps": 10.0,
+    "duration_sec": 8.0,
+    "calibrated": true,
+    "ego_motion_compensated": true,
+    "mask_backend": "mobile_sam.pt",
+    "staged_demo": true,
+    "video_path": "/kaggle/working/outputs/world_model_0015/world_model_demo_0015.mp4",
+    "timeline_path": "/kaggle/working/outputs/world_model_0015/world_model_timeline_0015.json",
+    "eval_metrics": {
+      "depth_metrics": {
+        "matched_samples": 212,
+        "abs_rel": 0.0756,
+        "rmse_m": 2.105
+      },
+      "motion_prediction_metrics": {
+        "matched_trajectories": 188,
+        "ade_future_ego_m": 3.2069,
+        "fde_future_ego_m": 4.599,
+        "ade_world_m": 2.4399,
+        "fde_world_m": 2.8633,
+        "per_horizon_future_ego_m": {
+          "0.5": 2.1031,
+          "1.0": 2.5747,
+          "1.5": 3.2825,
+          "2.0": 4.5363
+        },
+        "per_horizon_world_m": {
+          "0.5": 2.0432,
+          "1.0": 2.1843,
+          "1.5": 2.2183,
+          "2.0": 2.4762
+        }
+      },
+      "uncertainty_calibration": {
+        "samples": 682,
+        "empirical_1sigma_coverage": 0.7082,
+        "empirical_2sigma_coverage": 0.9238,
+        "theoretical_2d_gaussian": {
+          "1sigma": 0.3935,
+          "2sigma": 0.8647
+        }
+      },
+      "note": "Evaluated against KITTI label_02 3D GT matched via IoU > 0.4; World-frame uses OXTS Ego poses."
+    }
+  },
+  "0019": {
+    "sequence_id": "0019",
+    "frames_rendered": 80,
+    "fps": 10.0,
+    "duration_sec": 8.0,
+    "calibrated": true,
+    "ego_motion_compensated": true,
+    "mask_backend": "mobile_sam.pt",
+    "staged_demo": true,
+    "video_path": "/kaggle/working/outputs/world_model_0019/world_model_demo_0019.mp4",
+    "timeline_path": "/kaggle/working/outputs/world_model_0019/world_model_timeline_0019.json",
+    "eval_metrics": {
+      "depth_metrics": {
+        "matched_samples": 169,
+        "abs_rel": 0.1188,
+        "rmse_m": 1.1825
+      },
+      "motion_prediction_metrics": {
+        "matched_trajectories": 153,
+        "ade_future_ego_m": 2.4992,
+        "fde_future_ego_m": 3.9425,
+        "ade_world_m": 1.9068,
+        "fde_world_m": 2.6812,
+        "per_horizon_future_ego_m": {
+          "0.5": 1.2692,
+          "1.0": 2.01,
+          "1.5": 3.2512,
+          "2.0": 4.7967
+        },
+        "per_horizon_world_m": {
+          "0.5": 1.1901,
+          "1.0": 1.6484,
+          "1.5": 2.3316,
+          "2.0": 3.1773
+        }
+      },
+      "uncertainty_calibration": {
+        "samples": 521,
+        "empirical_1sigma_coverage": 0.6545,
+        "empirical_2sigma_coverage": 0.881,
+        "theoretical_2d_gaussian": {
+          "1sigma": 0.3935,
+          "2sigma": 0.8647
+        }
+      },
+      "note": "Evaluated against KITTI label_02 3D GT matched via IoU > 0.4; World-frame uses OXTS Ego poses."
+    }
+  }
+}

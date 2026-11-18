@@ -1,0 +1,480 @@
+{
+  "0015": {
+    "frames_processed": 376,
+    "fps": 10.0,
+    "video_duration_sec": 37.6,
+    "observation_span_sec": 37.5,
+    "total_records": 1338,
+    "valid_tracked_records": 1338,
+    "untracked_detection_records": 0,
+    "unique_track_ids_in_clip": 36,
+    "validation_issues": {
+      "out_of_order_events": [],
+      "duplicate_frame_events": [],
+      "class_inconsistency_events": [
+        {
+          "track_id": 92,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 128,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 136,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 156,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 168,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 178,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 233,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        }
+      ]
+    },
+    "kitti_export": {
+      "path": "/kaggle/working/outputs/track_0015/kitti_preds/0015.txt",
+      "prediction_scope": "2d_bbox_and_track_id_only_3d_fields_are_placeholders",
+      "written_rows": 1338,
+      "skipped_unmapped_classes": {}
+    },
+    "video_path": "/kaggle/working/outputs/track_0015/tracking_demo.mp4"
+  },
+  "0019": {
+    "frames_processed": 1059,
+    "fps": 10.0,
+    "video_duration_sec": 105.9,
+    "observation_span_sec": 105.8,
+    "total_records": 3207,
+    "valid_tracked_records": 3207,
+    "untracked_detection_records": 0,
+    "unique_track_ids_in_clip": 195,
+    "validation_issues": {
+      "out_of_order_events": [],
+      "duplicate_frame_events": [],
+      "class_inconsistency_events": [
+        {
+          "track_id": 5,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 10,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 11,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 65,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 92,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 117,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 141,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 156,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 173,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 185,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 194,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 198,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 213,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 255,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 262,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 308,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 320,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 326,
+          "classes_seen": [
+            "Car",
+            "Cyclist"
+          ]
+        },
+        {
+          "track_id": 338,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 374,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 397,
+          "classes_seen": [
+            "Car",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 403,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 412,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 416,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 426,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 435,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 461,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 474,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 500,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 519,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 538,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 560,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 571,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 585,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 594,
+          "classes_seen": [
+            "Car",
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 662,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 711,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 748,
+          "classes_seen": [
+            "Car",
+            "Cyclist"
+          ]
+        },
+        {
+          "track_id": 769,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 783,
+          "classes_seen": [
+            "Car",
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 786,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 801,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 816,
+          "classes_seen": [
+            "Car",
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 834,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 846,
+          "classes_seen": [
+            "Car",
+            "Cyclist"
+          ]
+        },
+        {
+          "track_id": 851,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 864,
+          "classes_seen": [
+            "Car",
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 873,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 952,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 953,
+          "classes_seen": [
+            "Car",
+            "Cyclist"
+          ]
+        },
+        {
+          "track_id": 965,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 969,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 972,
+          "classes_seen": [
+            "Cyclist",
+            "Pedestrian"
+          ]
+        },
+        {
+          "track_id": 1099,
+          "classes_seen": [
+            "Car",
+            "Cyclist",
+            "Pedestrian"
+          ]
+        }
+      ]
+    },
+    "kitti_export": {
+      "path": "/kaggle/working/outputs/track_0019/kitti_preds/0019.txt",
+      "prediction_scope": "2d_bbox_and_track_id_only_3d_fields_are_placeholders",
+      "written_rows": 3207,
+      "skipped_unmapped_classes": {}
+    },
+    "video_path": "/kaggle/working/outputs/track_0019/tracking_demo.mp4"
+  }
+}

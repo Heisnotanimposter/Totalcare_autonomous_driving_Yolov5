@@ -1,0 +1,20 @@
+{
+  "id": "test013/totalcare-kitti-world-model-demo",
+  "title": "TotalCare KITTI World Model Demo",
+  "code_file": "run_world_model_kaggle.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": "true",
+  "enable_gpu": "false",
+  "enable_tpu": "false",
+  "enable_internet": "true",
+  "dataset_sources": [
+    "leducnhuan/kitti-tracking"
+  ],
+  "competition_sources": [],
+  "kernel_sources": [
+    "test013/totalcare-kitti-yolo-train-and-track"
+  ],
+  "model_sources": []
+}
+

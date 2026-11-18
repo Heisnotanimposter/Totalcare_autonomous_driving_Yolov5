@@ -1,0 +1,17 @@
+{
+  "id": "test013/totalcare-kitti-yolo-train-and-track",
+  "title": "TotalCare KITTI YOLO Train and Track",
+  "code_file": "train_track_kitti.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": "true",
+  "enable_gpu": "true",
+  "enable_tpu": "false",
+  "enable_internet": "true",
+  "dataset_sources": [
+    "leducnhuan/kitti-tracking"
+  ],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": []
+}

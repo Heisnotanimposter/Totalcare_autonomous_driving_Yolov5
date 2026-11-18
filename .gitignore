@@ -1,0 +1,26 @@
+# Python / OS noise
+__pycache__/
+*.py[cod]
+.DS_Store
+*.tmp
+
+# Pretrained base checkpoints & redundant intermediate weights (keep trained v2 best.pt!)
+yolov5*.pt
+yolov8*.pt
+yolo11*.pt
+mobile_sam.pt
+results/v2_improved/outputs/weights/last.pt
+results/v2_improved/outputs/track_0015/trajectories_masks.json
+results/v2_improved/outputs/track_0019/trajectories_masks.json
+
+# Legacy / superseded heavy binaries (latest demos live in results/v3_bev_fixed/world_outputs/)
+results/v1_detect_track/*.pt
+results/v1_detect_track/outputs/weights/
+results/v1_detect_track/outputs/track_*/
+results/world_model/
+results/v2_improved/*.pt
+results/v2_improved/outputs/track_0019/tracking_demo.mp4
+results/v2_improved/outputs/world_model_*/
+
+# Large raw frame-by-frame timeline dumps (>15MB JSON; metrics & keyframes remain tracked)
+results/v3_bev_fixed/world_outputs/**/world_model_timeline_*.json

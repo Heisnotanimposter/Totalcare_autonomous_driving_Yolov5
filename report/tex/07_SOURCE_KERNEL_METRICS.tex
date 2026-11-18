@@ -1,0 +1,152 @@
+\documentclass[10.5pt,a4paper]{article}
+\usepackage{kotex}
+\usepackage{geometry}
+\geometry{margin=18mm,top=20mm,bottom=20mm}
+\usepackage{fontspec}
+\setmainhangulfont{Apple SD Gothic Neo}[BoldFont={* Bold}]
+\setsanshangulfont{Apple SD Gothic Neo}[BoldFont={* Bold}]
+\setmonofont{Menlo}[Scale=0.82]
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,longtable,array}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue!60!black,urlcolor=blue!65!black}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\setcounter{secnumdepth}{0}
+\sloppy
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{gray}소스·커널·보고서·지표 통합 명세 (Appendix)}
+\fancyhead[R]{\small\color{gray}KITTI Tracking Temporal World Model}
+\fancyfoot[C]{\small\thepage}
+\begin{document}
+\begin{center}
+{\LARGE\bfseries 소스·커널·보고서·지표 통합 명세 (Appendix)}\\[6pt]
+{\normalsize\color{gray} 소스·커널·보고서·지표 통합 색인 (Appendix)}\\[4pt]
+{\small\href{https://github.com/Heisnotanimposter/Totalcare_autonomous_driving_Yolov5}{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5}}
+\end{center}
+\vspace{4pt}
+\hrule
+\vspace{8pt}
+
+본 부록은 저장소 전체의 \textbf{소스 코드(\texttt{src/\allowbreak{}})}, \textbf{원격 GPU/CPU 커널(\texttt{kaggle/\allowbreak{}}, \texttt{kaggle\_\allowbreak{}world\_\allowbreak{}model/\allowbreak{}}, \texttt{colab/\allowbreak{}})}, \textbf{설계·평가 보고서(Markdown/LaTeX/PDF)}, \textbf{정량 지표 및 시연 산출물(\texttt{results/\allowbreak{}}, \texttt{logs/\allowbreak{}})} 을 한눈에 추적할 수 있도록 정리한 종합 색인입니다.
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{1. 소스 코드 모듈 (\texttt{src/\allowbreak{}})}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.403\textwidth} >{\raggedright\arraybackslash}p{0.059\textwidth} >{\raggedright\arraybackslash}p{0.403\textwidth}}
+\toprule
+\textbf{파일} & \textbf{라인 수} & \textbf{핵심 역할 및 구현 내용} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{파일} & \textbf{라인 수} & \textbf{핵심 역할 및 구현 내용} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\texttt{src/\allowbreak{}kitti\_\allowbreak{}prep.\allowbreak{}py} & 624 & KITTI Zip/디렉터리 CRC 및 이미지 디코드 무결성 검증, 시퀀스 비독립 14/4/3 분할, \texttt{DontCare}+Distractor(\texttt{Van}, \texttt{Person}, \texttt{Person\_\allowbreak{}sitting}) 114 픽셀 마스킹, Train 전용 희소 클래스 오버샘플링(\texttt{train\_\allowbreak{}weighted.\allowbreak{}txt}, \texttt{6,\allowbreak{}974} entries) \\
+\texttt{src/\allowbreak{}track\_\allowbreak{}utils.\allowbreak{}py} & 620 & ByteTrack (\texttt{imgsz=960}, \texttt{conf=0.\allowbreak{}25}) 다중 객체 추적, \texttt{MobileSAM} (\texttt{mobile\_\allowbreak{}sam.\allowbreak{}pt}) Box-Prompt 인스턴스 세그멘테이션(\texttt{trajectories\_\allowbreak{}masks.\allowbreak{}json}), 접지점(\texttt{mask\_\allowbreak{}bottom\_\allowbreak{}xy}) 추출, KITTI 18-column TrackEval 포맷 출력 \\
+\texttt{src/\allowbreak{}world\_\allowbreak{}model.\allowbreak{}py} & 1,235 & \texttt{P2} 역분산 깊이 융합(\texttt{ground\_\allowbreak{}plane\_\allowbreak{}bev\_\allowbreak{}fusion}), \texttt{EgoPose2D} \texttt{SE(2)} OXTS ENU 보상 \& CTRV 경로 예측, 4D World-ENU 선형 칼만 필터(\texttt{+0.\allowbreak{}5s\textasciitilde{}+2.\allowbreak{}0s}), \texttt{Observed/\allowbreak{}Inferred/\allowbreak{}Occluded/\allowbreak{}Unknown} 상태 머신, 횡방향 공분산 기반 차로 위험도 및 \texttt{CollisionRiskSmoother} (\texttt{|dR/\allowbreak{}dt|} 슬루율 제한 + TTC 디바운싱 + 히스테리시스) \\
+\texttt{src/\allowbreak{}world\_\allowbreak{}visualizer.\allowbreak{}py} & 710 & \texttt{1360$\times$632} 좌우 분할 영상 렌더러 (\texttt{Left:\allowbreak{} Camera + MobileSAM Masks} | \texttt{Right:\allowbreak{} BEV Inferred World}), \texttt{cov\_\allowbreak{}to\_\allowbreak{}pixel\_\allowbreak{}ellipse} 야코비안 $J=\text{diag}(s_x,-s_y)$ 타원 투영, 5초 단계별(\texttt{-\allowbreak{}-\allowbreak{}staged-\allowbreak{}demo}) 및 전체 프레임(\texttt{-\allowbreak{}-\allowbreak{}full-\allowbreak{}overlay}) MP4·키프레임 출력 \\
+\texttt{src/\allowbreak{}validation\_\allowbreak{}experiments.\allowbreak{}py} & 499 & \textbf{RQ1}(좌표 왕복 및 정지 객체 Ego-motion 보상), \textbf{RQ2}(미래 예측 \texttt{OXTS+CTRV} vs \texttt{No-\allowbreak{}OXTS} vs \texttt{Zero-\allowbreak{}Vel} 및 2D 마할라노비스 커버리지), \textbf{RQ3}(불확실성 인과성 \texttt{Arm A/\allowbreak{}B/\allowbreak{}C}), \textbf{RQ4}(Gradient Smoothing 스파이크·플립 감소율) 자동 검증 \\
+\texttt{src/\allowbreak{}dataset\_\allowbreak{}prep.\allowbreak{}py}, \texttt{src/\allowbreak{}detect.\allowbreak{}py}, \texttt{src/\allowbreak{}train.\allowbreak{}py}, \texttt{src/\allowbreak{}export.\allowbreak{}py} & 377 & 기본 대시캠 9부류 YOLO 데이터 변환, 추론/위험 배너 시각화, YOLOv5/Ultralytics 학습·ONNX/TensorRT 내보내기 유틸리티 \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{2. 원격 GPU 훈련·실행 커널 (\texttt{kaggle/\allowbreak{}}, \texttt{kaggle\_\allowbreak{}world\_\allowbreak{}model/\allowbreak{}}, \texttt{colab/\allowbreak{}})}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.300\textwidth} >{\raggedright\arraybackslash}p{0.035\textwidth} >{\raggedright\arraybackslash}p{0.212\textwidth} >{\raggedright\arraybackslash}p{0.300\textwidth}}
+\toprule
+\textbf{커널 / 노트북} & \textbf{라인 수} & \textbf{실행 환경} & \textbf{수행 단계 및 출력} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{커널 / 노트북} & \textbf{라인 수} & \textbf{실행 환경} & \textbf{수행 단계 및 출력} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\texttt{kaggle/\allowbreak{}train\_\allowbreak{}track\_\allowbreak{}kitti.\allowbreak{}py} & 342 & Kaggle \texttt{2$\times$ Tesla T4} (15GB$\times$2) & \texttt{test013/\allowbreak{}totalcare-\allowbreak{}kitti-\allowbreak{}yolo-\allowbreak{}train-\allowbreak{}and-\allowbreak{}track} (v2 \texttt{COMPLETE}): Audit $\rightarrow$ YOLO Export $\rightarrow$ \texttt{YOLO11m @ 960} DDP 학습(24ep, \textasciitilde{}108분) $\rightarrow$ Val/Test 평가 $\rightarrow$ \texttt{0015}/\texttt{0019} ByteTrack + MobileSAM 추출 $\rightarrow$ World Model 1차 검증 \\
+\texttt{kaggle\_\allowbreak{}world\_\allowbreak{}model/\allowbreak{}run\_\allowbreak{}world\_\allowbreak{}model\_\allowbreak{}kaggle.\allowbreak{}py} & 205 & Kaggle CPU (\texttt{kernel\_\allowbreak{}sources} 연동) & \texttt{test013/\allowbreak{}totalcare-\allowbreak{}kitti-\allowbreak{}world-\allowbreak{}model-\allowbreak{}demo} (v7 \texttt{COMPLETE}): v2 \texttt{trajectories.\allowbreak{}csv} + \texttt{trajectories\_\allowbreak{}masks.\allowbreak{}json} 마운트 $\rightarrow$ \texttt{v3} BEV 야코비안 타원 \& 오경보 억제 패치 재렌더링(4종 MP4) $\rightarrow$ RQ1--RQ4 최종 재검증 \\
+\texttt{colab/\allowbreak{}01\_\allowbreak{}kitti\_\allowbreak{}colab\_\allowbreak{}audit\_\allowbreak{}and\_\allowbreak{}prep.\allowbreak{}ipynb} & 139 & Google Colab CLI / Drive & \texttt{/\allowbreak{}content/\allowbreak{}drive/\allowbreak{}MyDrive/\allowbreak{}KITTI\_\allowbreak{}Tracking/\allowbreak{}} 경로 유지형 Stage 1 감사 및 YOLO Export 노트북 \\
+\texttt{colab/\allowbreak{}02\_\allowbreak{}traffic\_\allowbreak{}detect\_\allowbreak{}track\_\allowbreak{}colab.\allowbreak{}ipynb} & 112 & Google Colab GPU & Colab 환경 \texttt{YOLO} 학습 및 \texttt{ByteTrack} 추적 실행 노트북 \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{3. 보고서 및 기술 문서 (\texttt{FINAL\_\allowbreak{}REPORT}, \texttt{ML\_\allowbreak{}LAYER\_\allowbreak{}SPEC} 외)}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.308\textwidth} >{\raggedright\arraybackslash}p{0.059\textwidth} >{\raggedright\arraybackslash}p{0.499\textwidth}}
+\toprule
+\textbf{문서} & \textbf{라인 수} & \textbf{내용 요약} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{문서} & \textbf{라인 수} & \textbf{내용 요약} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\texttt{FINAL\_\allowbreak{}REPORT.\allowbreak{}md} & 117 & 기본 평가표 7개 항목(데이터, 5초+ 영상, GitHub 공개, 보고서, 벤치마크, 링크, Layer 설명서) 1:1 매핑 최종 보고서 \\
+\texttt{ML\_\allowbreak{}LAYER\_\allowbreak{}SPEC.\allowbreak{}md} & 99 & \texttt{YOLO11m} 24개 모듈(\texttt{Layer 0\textasciitilde{}23}), \texttt{MobileSAM}, \texttt{ByteTrack}, \texttt{World Model \& Safety Shield} Layer별 상세 및 7편 학술 참고자료 \\
+\texttt{architecture.\allowbreak{}md} & 105 & 7단계 시스템 아키텍처, \texttt{P2} 카메라$\leftrightarrow$Ego 좌표 수식, \texttt{Past$\rightarrow$Present$\rightarrow$Future} 상태 전이 및 \texttt{CollisionRiskSmoother} 설계 \\
+\texttt{dataset\_\allowbreak{}audit.\allowbreak{}md} & 47 & KITTI \texttt{8,\allowbreak{}008}장 무결성 검증, \texttt{DontCare}/Distractor 마스킹 및 14/4/3 시퀀스 비독립 분할 명세 \\
+\texttt{experiment\_\allowbreak{}plan.\allowbreak{}md} & 138 & 연구 가설(H1--H3), 베이스라인(B0--B2), \texttt{v1$\rightarrow$v2$\rightarrow$v3} 정량 비교 및 RQ1--RQ4 실측 결과 기록 \\
+\texttt{visualization\_\allowbreak{}spec.\allowbreak{}md} & 54 & \texttt{1360$\times$632} 좌우 분할 화면 인코딩 규격 및 5초 단계별(\texttt{0--5s+}) 시연 타임라인 \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{4. 핵심 정량 지표 및 산출물 아카이브 (\texttt{results/\allowbreak{}}, \texttt{logs/\allowbreak{}})}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.204\textwidth} >{\raggedright\arraybackslash}p{0.331\textwidth} >{\raggedright\arraybackslash}p{0.331\textwidth}}
+\toprule
+\textbf{구분} & \textbf{아티팩트 경로} & \textbf{핵심 수치 요약} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{구분} & \textbf{아티팩트 경로} & \textbf{핵심 수치 요약} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{Stage 2 검출 모델 (\texttt{v2})} & \texttt{results/\allowbreak{}v2\_\allowbreak{}improved/\allowbreak{}outputs/\allowbreak{}weights/\allowbreak{}best.\allowbreak{}pt} (\texttt{38.\allowbreak{}62 MB}) & \texttt{YOLO11m @ 960} (\texttt{231 layers}, \texttt{20.\allowbreak{}06M params}), \textbf{Val \texttt{mAP@0.\allowbreak{}5 = 0.\allowbreak{}5235}} (\texttt{+15.\allowbreak{}8\%} vs \texttt{v1 0.\allowbreak{}4521}), \textbf{Test \texttt{mAP@0.\allowbreak{}5 = 0.\allowbreak{}4269}} (\texttt{Cyclist Test AP50 +115.\allowbreak{}7\%}) \\
+\textbf{Stage 3 SAM+ByteTrack} & \texttt{results/\allowbreak{}v2\_\allowbreak{}improved/\allowbreak{}outputs/\allowbreak{}tracking\_\allowbreak{}summary.\allowbreak{}json} & \texttt{mobile\_\allowbreak{}sam.\allowbreak{}pt} 인스턴스 마스크: \texttt{0015} \textbf{\texttt{1,\allowbreak{}370}건}(\texttt{41} 트랙), \texttt{0019} \textbf{\texttt{3,\allowbreak{}788}건}(\texttt{203} 트랙) \\
+\textbf{Stage 4--7 최종 시연 (\texttt{v3})} & \texttt{results/\allowbreak{}v3\_\allowbreak{}bev\_\allowbreak{}fixed/\allowbreak{}world\_\allowbreak{}outputs/\allowbreak{}world\_\allowbreak{}model\_\allowbreak{}*} & \texttt{0015}(\texttt{37.\allowbreak{}6s}, \texttt{11.\allowbreak{}58 MB}) / \texttt{0019}(\texttt{105.\allowbreak{}9s}, \texttt{53.\allowbreak{}48 MB}) + 각 \texttt{8.\allowbreak{}0s} staged MP4 \& 키프레임 \\
+\textbf{RQ1--RQ4 최종 검증 (\texttt{v3})} & \texttt{results/\allowbreak{}v3\_\allowbreak{}bev\_\allowbreak{}fixed/\allowbreak{}world\_\allowbreak{}outputs/\allowbreak{}validation\_\allowbreak{}0015.\allowbreak{}json}, \texttt{validation\_\allowbreak{}0019.\allowbreak{}json} & \textbf{RQ1} \texttt{2.\allowbreak{}161e-\allowbreak{}14 m} / 정지체 \texttt{0.\allowbreak{}227 m/\allowbreak{}s}; \textbf{RQ2} \texttt{0015} ADE \texttt{3.\allowbreak{}6052 m} (\texttt{1$\sigma$ 0.\allowbreak{}3939}); \textbf{RQ3} \texttt{A<B<C} 단조성(\texttt{0.\allowbreak{}2220<0.\allowbreak{}2791<0.\allowbreak{}2792}, \texttt{0.\allowbreak{}5242<0.\allowbreak{}6290<0.\allowbreak{}6396}); \textbf{RQ4} \texttt{>1.\allowbreak{}5/\allowbreak{}s} 스파이크 \textbf{\texttt{100\%} 제거}, \texttt{v3} 오경보 Risk \texttt{-\allowbreak{}57.\allowbreak{}0\%}(0015) / \texttt{-\allowbreak{}30.\allowbreak{}5\%}(0019) \\
+\textbf{실행 로그} & \texttt{logs/\allowbreak{}v1\_\allowbreak{}detect\_\allowbreak{}track/\allowbreak{}}, \texttt{logs/\allowbreak{}v2\_\allowbreak{}improved/\allowbreak{}}, \texttt{logs/\allowbreak{}v3\_\allowbreak{}bev\_\allowbreak{}fixed/\allowbreak{}} & Kaggle DDP 학습(\texttt{231 layers} 요약 포함) 및 World Model 재렌더링 전체 콘솔 로그 보관 \\
+\end{longtable}
+\end{footnotesize}
+
+\end{document}

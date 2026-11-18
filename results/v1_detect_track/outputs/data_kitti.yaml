@@ -1,0 +1,9 @@
+path: /tmp/totalcare_kitti/kitti_yolo
+train: images/train
+val: images/val
+test: images/test
+nc: 3
+names:
+  0: Car
+  1: Pedestrian
+  2: Cyclist

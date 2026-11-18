@@ -1,0 +1,251 @@
+{
+  "image_zip_corrupt_member": null,
+  "total_training_images": 8008,
+  "expected_seqmap_frames": 8008,
+  "missing_image_count": 0,
+  "extra_image_count": 0,
+  "duplicate_image_frame_count": 0,
+  "unreadable_image_count": 0,
+  "label_frame_without_image_count": 0,
+  "unreadable_entries_sample": [],
+  "verify_all_images": true,
+  "sampled_resolutions": {
+    "1242x375_RGB": 4937,
+    "1224x370_RGB": 836,
+    "1238x374_RGB": 1398,
+    "1241x376_RGB": 837
+  },
+  "per_sequence": {
+    "0000": {
+      "image_count": 154,
+      "label_span_len": 154,
+      "labeled_frames": 154,
+      "missing_image_count": 0,
+      "extra_image_count": 0,
+      "duplicate_image_frame_count": 0,
+      "label_frame_without_image_count": 0,
+      "missing_images_in_span": [],
+      "extra_images_beyond_label_max": []
+    },
+    "0001": {
+      "image_count": 447,
+      "label_span_len": 447,
+      "labeled_frames": 447,
+      "missing_image_count": 0,
+      "extra_image_count": 0,
+      "duplicate_image_frame_count": 0,
+      "label_frame_without_image_count": 0,
+      "missing_images_in_span": [],
+      "extra_images_beyond_label_max": []
+    },
+    "0002": {
+      "image_count": 233,
+      "label_span_len": 233,
+      "labeled_frames": 233,
+      "missing_image_count": 0,
+      "extra_image_count": 0,
+      "duplicate_image_frame_count": 0,
+      "label_frame_without_image_count": 0,
+      "missing_images_in_span": [],
+      "extra_images_beyond_label_max": []
+    },
+    "0003": {
+      "image_count": 144,
+      "label_span_len": 144,
+      "labeled_frames": 144,
+      "missing_image_count": 0,
+      "extra_image_count": 0,
+      "duplicate_image_frame_count": 0,
+      "label_frame_without_image_count": 0,
+      "missing_images_in_span": [],
+      "extra_images_beyond_label_max": []
+    },
+    "0004": {
+      "image_count": 314,
+      "label_span_len": 314,
+      "labeled_frames": 314,
+      "missing_image_count": 0,
+      "extra_image_count": 0,
+      "duplicate_image_frame_count": 0,
+      "label_frame_without_image_count": 0,
+      "missing_images_in_span": [],
+      "extra_images_beyond_label_max": []
+    },
+    "0005": {
+      "image_count": 297,
+      "label_span_len": 297,
+      "labeled_frames": 297,
+      "missing_image_count": 0,
+      "extra_image_count": 0,
+      "duplicate_image_frame_count": 0,
+      "label_frame_without_image_count": 0,
+      "missing_images_in_span": [],
+      "extra_images_beyond_label_max": []
+    },
+    "0006": {
+      "image_count": 270,
+      "label_span_len": 270,
+      "labeled_frames": 269,
+      "missing_image_count": 0,
+      "extra_image_count": 0,
+      "duplicate_image_frame_count": 0,
+      "label_frame_without_image_count": 0,
+      "missing_images_in_span": [],
+      "extra_images_beyond_label_max": []
+    },
+    "0007": {
+      "image_count": 800,
+      "label_span_len": 800,
+      "labeled_frames": 736,
+      "missing_image_count": 0,
+      "extra_image_count": 0,
+      "duplicate_image_frame_count": 0,
+      "label_frame_without_image_count": 0,
+      "missing_images_in_span": [],
+      "extra_images_beyond_label_max": []
+    },
+    "0008": {
+      "image_count": 390,
+      "label_span_len": 390,
+      "labeled_frames": 390,
+      "missing_image_count": 0,
+      "extra_image_count": 0,
+      "duplicate_image_frame_count": 0,
+      "label_frame_without_image_count": 0,
+      "missing_images_in_span": [],
+      "extra_images_beyond_label_max": []
+    },
+    "0009": {
+      "image_count": 803,
+      "label_span_len": 803,
+      "labeled_frames": 784,
+      "missing_image_count": 0,
+      "extra_image_count": 0,
+      "duplicate_image_frame_count": 0,
+      "label_frame_without_image_count": 0,
+      "missing_images_in_span": [],
+      "extra_images_beyond_label_max": []
+    },
+    "0010": {
+      "image_count": 294,
+      "label_span_len": 294,
+      "labeled_frames": 294,
+      "missing_image_count": 0,
+      "extra_image_count": 0,
+      "duplicate_image_frame_count": 0,
+      "label_frame_without_image_count": 0,
+      "missing_images_in_span": [],
+      "extra_images_beyond_label_max": []
+    },
+    "0011": {
+      "image_count": 373,
+      "label_span_len": 373,
+      "labeled_frames": 373,
+      "missing_image_count": 0,
+      "extra_image_count": 0,
+      "duplicate_image_frame_count": 0,
+      "label_frame_without_image_count": 0,
+      "missing_images_in_span": [],
+      "extra_images_beyond_label_max": []
+    },
+    "0012": {
+      "image_count": 78,
+      "label_span_len": 78,
+      "labeled_frames": 78,
+      "missing_image_count": 0,
+      "extra_image_count": 0,
+      "duplicate_image_frame_count": 0,
+      "label_frame_without_image_count": 0,
+      "missing_images_in_span": [],
+      "extra_images_beyond_label_max": []
+    },
+    "0013": {
+      "image_count": 340,
+      "label_span_len": 340,
+      "labeled_frames": 340,
+      "missing_image_count": 0,
+      "extra_image_count": 0,
+      "duplicate_image_frame_count": 0,
+      "label_frame_without_image_count": 0,
+      "missing_images_in_span": [],
+      "extra_images_beyond_label_max": []
+    },
+    "0014": {
+      "image_count": 106,
+      "label_span_len": 106,
+      "labeled_frames": 106,
+      "missing_image_count": 0,
+      "extra_image_count": 0,
+      "duplicate_image_frame_count": 0,
+      "label_frame_without_image_count": 0,
+      "missing_images_in_span": [],
+      "extra_images_beyond_label_max": []
+    },
+    "0015": {
+      "image_count": 376,
+      "label_span_len": 376,
+      "labeled_frames": 376,
+      "missing_image_count": 0,
+      "extra_image_count": 0,
+      "duplicate_image_frame_count": 0,
+      "label_frame_without_image_count": 0,
+      "missing_images_in_span": [],
+      "extra_images_beyond_label_max": []
+    },
+    "0016": {
+      "image_count": 209,
+      "label_span_len": 209,
+      "labeled_frames": 209,
+      "missing_image_count": 0,
+      "extra_image_count": 0,
+      "duplicate_image_frame_count": 0,
+      "label_frame_without_image_count": 0,
+      "missing_images_in_span": [],
+      "extra_images_beyond_label_max": []
+    },
+    "0017": {
+      "image_count": 145,
+      "label_span_len": 145,
+      "labeled_frames": 145,
+      "missing_image_count": 0,
+      "extra_image_count": 0,
+      "duplicate_image_frame_count": 0,
+      "label_frame_without_image_count": 0,
+      "missing_images_in_span": [],
+      "extra_images_beyond_label_max": []
+    },
+    "0018": {
+      "image_count": 339,
+      "label_span_len": 339,
+      "labeled_frames": 339,
+      "missing_image_count": 0,
+      "extra_image_count": 0,
+      "duplicate_image_frame_count": 0,
+      "label_frame_without_image_count": 0,
+      "missing_images_in_span": [],
+      "extra_images_beyond_label_max": []
+    },
+    "0019": {
+      "image_count": 1059,
+      "label_span_len": 1059,
+      "labeled_frames": 1059,
+      "missing_image_count": 0,
+      "extra_image_count": 0,
+      "duplicate_image_frame_count": 0,
+      "label_frame_without_image_count": 0,
+      "missing_images_in_span": [],
+      "extra_images_beyond_label_max": []
+    },
+    "0020": {
+      "image_count": 837,
+      "label_span_len": 837,
+      "labeled_frames": 837,
+      "missing_image_count": 0,
+      "extra_image_count": 0,
+      "duplicate_image_frame_count": 0,
+      "label_frame_without_image_count": 0,
+      "missing_images_in_span": [],
+      "extra_images_beyond_label_max": []
+    }
+  }
+}
