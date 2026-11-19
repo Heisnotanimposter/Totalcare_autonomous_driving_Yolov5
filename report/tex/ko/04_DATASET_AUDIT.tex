@@ -1,0 +1,118 @@
+\documentclass[10.5pt,a4paper]{article}
+\usepackage{geometry}
+\geometry{margin=18mm,top=20mm,bottom=20mm}
+\usepackage{kotex}
+\usepackage{fontspec}
+\setmainhangulfont{Apple SD Gothic Neo}[BoldFont={* Bold}]
+\setsanshangulfont{Apple SD Gothic Neo}[BoldFont={* Bold}]
+\setmonofont{Menlo}[Scale=0.82]
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,longtable,array}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue!60!black,urlcolor=blue!65!black}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\setcounter{secnumdepth}{0}
+\sloppy
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{gray}데이터셋 무결성 감사: KITTI Tracking (`image\_02` 및 `label\_02`)}
+\fancyhead[R]{\small\color{gray}KITTI Tracking Temporal World Model}
+\fancyfoot[C]{\small\thepage}
+\begin{document}
+\begin{center}
+{\LARGE\bfseries 데이터셋 무결성 감사: KITTI Tracking (`image\_02` 및 `label\_02`)}\\[6pt]
+{\normalsize\color{gray} 데이터셋 무결성 감사: KITTI Tracking (`image\_02` 및 `label\_02`)}\\[4pt]
+{\small\href{https://github.com/Heisnotanimposter/Totalcare_autonomous_driving_Yolov5}{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5}}
+\end{center}
+\vspace{4pt}
+\hrule
+\vspace{8pt}
+
+\section{1. 데이터셋 구조}
+
+본 인식 및 시계열 World Model 파이프라인은 \textbf{KITTI Object Tracking} 학습 벤치마크를 사용합니다:
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{이미지}: \texttt{training/\allowbreak{}image\_\allowbreak{}02/\allowbreak{}<seq>/\allowbreak{}<frame>.\allowbreak{}png} (\texttt{data\_\allowbreak{}tracking\_\allowbreak{}image\_\allowbreak{}2.\allowbreak{}zip}, \texttt{14.\allowbreak{}73 GiB}, \texttt{10 Hz} 연속 RGB 프레임)
+\item \textbf{라벨}: \texttt{training/\allowbreak{}label\_\allowbreak{}02/\allowbreak{}<seq>.\allowbreak{}txt} (\texttt{data\_\allowbreak{}tracking\_\allowbreak{}label\_\allowbreak{}2.\allowbreak{}zip}, \texttt{2.\allowbreak{}15 MiB}, 17-column 형식)
+\item \textbf{캘리브레이션}: \texttt{training/\allowbreak{}calib/\allowbreak{}<seq>.\allowbreak{}txt} (\texttt{data\_\allowbreak{}tracking\_\allowbreak{}calib.\allowbreak{}zip}, 지면 자차 좌표 변환용 \texttt{P2} 카메라 투영 행렬 포함)
+\end{itemize}
+
+Colab 워크플로우(\href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/untitled63.py}{untitled63.py}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/colab/01\_kitti\_colab\_audit\_and\_prep.ipynb}{01\_kitti\_colab\_audit\_and\_prep.ipynb})에서 유지되는 표준 Google Drive 경로:
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \texttt{/\allowbreak{}content/\allowbreak{}drive/\allowbreak{}MyDrive/\allowbreak{}KITTI\_\allowbreak{}Tracking/\allowbreak{}}
+\end{itemize}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{2. 무결성 검증 프로토콜}
+
+\href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/src/kitti\_prep.py}{src/kitti\_prep.py} (\texttt{audit\_\allowbreak{}images\_\allowbreak{}and\_\allowbreak{}labels})에 구현되고 \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/untitled63.py}{untitled63.py}에서 초기 감사를 수행했습니다:
+
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{아카이브 CRC 및 이미지 디코드 검증}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \texttt{ZipFile.\allowbreak{}testzip()}으로 손상된 압축 항목이 0건임을 확인합니다.
+\item \texttt{PIL.\allowbreak{}Image.\allowbreak{}verify()}로 \texttt{21}개 시퀀스(\texttt{0000}--\texttt{0020}) 전체 \texttt{8,\allowbreak{}008}장 학습 프레임의 이미지 가독성을 전수 검사합니다.
+\end{itemize}
+\item \textbf{이미지-라벨 1:1 정합성 검사}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \texttt{training/\allowbreak{}image\_\allowbreak{}02/\allowbreak{}}의 모든 시퀀스 ID가 \texttt{training/\allowbreak{}label\_\allowbreak{}02/\allowbreak{}}와 일치하는지 확인합니다.
+\item \texttt{missing\_\allowbreak{}image\_\allowbreak{}count}, \texttt{extra\_\allowbreak{}image\_\allowbreak{}count}, \texttt{duplicate\_\allowbreak{}image\_\allowbreak{}frame\_\allowbreak{}count}, \texttt{label\_\allowbreak{}frame\_\allowbreak{}without\_\allowbreak{}image\_\allowbreak{}count}를 집계합니다.
+\item 주석 객체가 0개인 프레임(빈 라벨 프레임)도 YOLO 변환 시 유효한 음성(Negative) 프레임으로 보존합니다.
+\end{itemize}
+\item \textbf{라벨 행(Row) 유효성 검증}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item 행당 17개 필드, 유한 실수값, \texttt{x2 > x1}, \texttt{y2 > y1} 조건을 강제합니다.
+\end{itemize}
+\item \textbf{시퀀스 단위 Track ID 격리}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item KITTI \texttt{track\_\allowbreak{}id}는 시퀀스마다 0부터 초기화되므로 항상 복합 키 \texttt{(sequence\_\allowbreak{}id,\allowbreak{} track\_\allowbreak{}id)}로 처리합니다.
+\end{itemize}
+\item \textbf{DontCare 및 Distractor 마스킹}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item 타겟 부류: \texttt{Car}, \texttt{Pedestrian}, \texttt{Cyclist}.
+\item 인접 혼동 부류(\texttt{Car}의 인접 부류 \texttt{Van}, \texttt{Pedestrian}의 인접 부류 \texttt{Person}, \texttt{Person\_\allowbreak{}sitting})와 \texttt{DontCare} 영역을 YOLO 변환 시 중립 회색 픽셀 \texttt{114}로 마스킹(\texttt{pixel\_\allowbreak{}mask\_\allowbreak{}policy = dontcare\_\allowbreak{}and\_\allowbreak{}distractors})하여 TrackEval 평가 기준 대비 불필요한 False-Negative 페널티를 방지합니다.
+\end{itemize}
+\end{enumerate}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{3. 시퀀스 비독립(Sequence-Disjoint) 데이터 분할}
+
+시계열 데이터 누수(Data Leakage)를 원천 차단하기 위해 동일 시퀀스의 프레임은 Train, Validation, Test 세트 간에 \textbf{절대} 분할하지 않습니다(\href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/src/kitti\_prep.py}{src/kitti\_prep.py}의 \texttt{validate\_\allowbreak{}disjoint\_\allowbreak{}sequences}):
+
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.077\textwidth} >{\raggedright\arraybackslash}p{0.055\textwidth} >{\raggedright\arraybackslash}p{0.374\textwidth} >{\raggedright\arraybackslash}p{0.341\textwidth}}
+\toprule
+\textbf{분할(Split)} & \textbf{시퀀스 수} & \textbf{시퀀스 ID} & \textbf{용도} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{분할(Split)} & \textbf{시퀀스 수} & \textbf{시퀀스 ID} & \textbf{용도} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{Train} & 14 & \texttt{0000,\allowbreak{} 0001,\allowbreak{} 0003,\allowbreak{} 0004,\allowbreak{} 0005,\allowbreak{} 0006,\allowbreak{} 0007,\allowbreak{} 0008,\allowbreak{} 0009,\allowbreak{} 0010,\allowbreak{} 0011,\allowbreak{} 0014,\allowbreak{} 0018,\allowbreak{} 0020} & 검출기 학습 (\texttt{Car}, \texttt{Pedestrian}, \texttt{Cyclist}) \\
+\textbf{Val} & 4 & \texttt{0002,\allowbreak{} 0012,\allowbreak{} 0015,\allowbreak{} 0017} & Epoch별 검증 및 추적 튜닝 (\texttt{0015}) \\
+\textbf{Test} & 3 & \texttt{0013,\allowbreak{} 0016,\allowbreak{} 0019} & 완전 미학습 일반화 평가 및 World Model 시연 (\texttt{0019}) \\
+\end{longtable}
+\end{footnotesize}
+
+
+시퀀스별 프레임 수, 분할별 부류 분포, 빈 프레임 비율은 원격 Colab/Kaggle 실행 시 \texttt{kitti\_\allowbreak{}prep.\allowbreak{}py}에 의해 \texttt{results/\allowbreak{}kitti\_\allowbreak{}step2\_\allowbreak{}audit.\allowbreak{}json} 및 \texttt{results/\allowbreak{}kitti\_\allowbreak{}export\_\allowbreak{}manifest.\allowbreak{}json}으로 자동 생성됩니다.
+
+\end{document}

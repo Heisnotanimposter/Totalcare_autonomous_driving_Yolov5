@@ -1,0 +1,49 @@
+{
+  "sequence_id": "0019",
+  "frames_rendered": 80,
+  "fps": 10.0,
+  "duration_sec": 8.0,
+  "calibrated": true,
+  "ego_motion_compensated": true,
+  "mask_backend": "mobile_sam.pt",
+  "road_lane_backend": "segformer-b2-cityscapes-kitti-road",
+  "staged_demo": true,
+  "video_path": "/kaggle/working/v4_world_outputs/world_model_0019_staged/world_model_demo_0019.mp4",
+  "timeline_path": "/kaggle/working/v4_world_outputs/world_model_0019_staged/world_model_timeline_0019.json",
+  "eval_metrics": {
+    "depth_metrics": {
+      "matched_samples": 232,
+      "abs_rel": 0.1355,
+      "rmse_m": 1.3276
+    },
+    "motion_prediction_metrics": {
+      "matched_trajectories": 201,
+      "ade_future_ego_m": 2.4447,
+      "fde_future_ego_m": 3.7558,
+      "ade_world_m": 1.9119,
+      "fde_world_m": 2.6115,
+      "per_horizon_future_ego_m": {
+        "0.5": 1.2998,
+        "1.0": 2.0509,
+        "1.5": 3.2093,
+        "2.0": 4.5339
+      },
+      "per_horizon_world_m": {
+        "0.5": 1.2433,
+        "1.0": 1.7371,
+        "1.5": 2.3854,
+        "2.0": 3.1091
+      }
+    },
+    "uncertainty_calibration": {
+      "samples": 702,
+      "empirical_1sigma_coverage": 0.5427,
+      "empirical_2sigma_coverage": 0.7436,
+      "theoretical_2d_gaussian": {
+        "1sigma": 0.3935,
+        "2sigma": 0.8647
+      }
+    },
+    "note": "Evaluated against KITTI label_02 3D GT matched via IoU > 0.4; World-frame uses OXTS Ego poses."
+  }
+}

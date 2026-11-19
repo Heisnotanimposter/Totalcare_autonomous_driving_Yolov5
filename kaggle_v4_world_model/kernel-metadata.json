@@ -1,0 +1,20 @@
+{
+  "id": "test013/totalcare-kitti-v4-world-model",
+  "title": "TotalCare KITTI v4 World Model",
+  "code_file": "run_v4_world_model_kaggle.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": "true",
+  "enable_gpu": "false",
+  "enable_tpu": "false",
+  "enable_internet": "true",
+  "dataset_sources": [
+    "leducnhuan/kitti-tracking"
+  ],
+  "competition_sources": [],
+  "kernel_sources": [
+    "test013/totalcare-kitti-v4-road-lane",
+    "test013/totalcare-kitti-v4-detect"
+  ],
+  "model_sources": []
+}

@@ -1,0 +1,131 @@
+\documentclass[10.5pt,a4paper]{article}
+\usepackage{geometry}
+\geometry{margin=18mm,top=20mm,bottom=20mm}
+\usepackage{kotex}
+\usepackage{fontspec}
+\setmainhangulfont{Apple SD Gothic Neo}[BoldFont={* Bold}]
+\setsanshangulfont{Apple SD Gothic Neo}[BoldFont={* Bold}]
+\setmonofont{Menlo}[Scale=0.82]
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,longtable,array}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue!60!black,urlcolor=blue!65!black}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\setcounter{secnumdepth}{0}
+\sloppy
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{gray}시각화 명세: 시계열 자차 중심 World Model}
+\fancyhead[R]{\small\color{gray}KITTI Tracking Temporal World Model}
+\fancyfoot[C]{\small\thepage}
+\begin{document}
+\begin{center}
+{\LARGE\bfseries 시각화 명세: 시계열 자차 중심 World Model}\\[6pt]
+{\normalsize\color{gray} 시각화 명세: 시계열 자차 중심 World Model}\\[4pt]
+{\small\href{https://github.com/Heisnotanimposter/Totalcare_autonomous_driving_Yolov5}{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5}}
+\end{center}
+\vspace{4pt}
+\hrule
+\vspace{8pt}
+
+\href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/src/world\_visualizer.py}{src/world\_visualizer.py}에 구현됨.
+
+
+\section{1. 좌우 분할 화면 레이아웃}
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{전체 합성 해상도}: \texttt{1360 $\times$ 632} (\texttt{왼쪽:\allowbreak{} 720 $\times$ 540} | \texttt{오른쪽:\allowbreak{} 640 $\times$ 540} | \texttt{하단 텔레메트리 HUD:\allowbreak{} 1360 $\times$ 92}), 프레임 레이트 \texttt{10 Hz} (KITTI 원본 프레임 레이트와 동일).
+\end{itemize}
+
+\subsection{왼쪽 패널 --- 관측 세계 (Observed World)}
+카메라 프레임의 직접 관측 정보만 표시합니다:
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item 원본 KITTI \texttt{image\_\allowbreak{}02} RGB 프레임
+\item 클래스별 색상 2D 바운딩 박스 (\texttt{Car}, \texttt{Pedestrian}, \texttt{Cyclist}) 및 MobileSAM 인스턴스 폴리곤 마스크
+\item 클래스 라벨, 시퀀스 격리 Track ID (\texttt{\#id}), 검출 신뢰도 (\texttt{0.\allowbreak{}00--1.\allowbreak{}00})
+\item (\texttt{v4}) 도로(녹색)·비도로(자주색)·자차로(청록색) 반투명 마스킹, 좌/우 차선 2차 다항식 폴리라인, 객체별 \texttt{[LANE]}/\texttt{[RD]}/\texttt{[NON-\allowbreak{}RD]} 배지
+\end{itemize}
+
+\subsection{오른쪽 패널 --- 추정 세계 (Inferred World)}
+구조화된 자차 중심 조감도(BEV, \texttt{X:\allowbreak{} [-\allowbreak{}18m,\allowbreak{} +18m]}, \texttt{Y:\allowbreak{} [-\allowbreak{}10m,\allowbreak{} +52m]}):
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{자차 (Ego Vehicle)}: 원점 \texttt{(0,\allowbreak{} 0)}에 고정된 삼각형 마커
+\item \textbf{주변 객체}: 클래스별 BEV 점유 표식, Track ID, 전방 거리(\texttt{m})
+\item \textbf{상대 위치}: 자차 좌표계 기준 거리 원호 (\texttt{10m}--\texttt{50m})
+\item \textbf{이동 방향 및 보정 속도}: \texttt{P2} 캘리브레이션이 활성화되고 트랙 관측 횟수가 \texttt{>= 3}일 때만 화살표 및 \texttt{m/\allowbreak{}s} 라벨 표시
+\item \textbf{예측 궤적}: \texttt{+0.\allowbreak{}5s}, \texttt{+1.\allowbreak{}0s}, \texttt{+1.\allowbreak{}5s}, \texttt{+2.\allowbreak{}0s} 칼만 예측 노드
+\item \textbf{자차 계획 경로}: 전방 주행 회랑 (\texttt{$\pm$1.\allowbreak{}6m} 반폭, \texttt{0--35m} 구간)
+\item \textbf{도로 구조}: 자차 회랑 정렬 차로 경계 및 \texttt{v4} 지각 도로 폴리곤·곡률 차선
+\item \textbf{점유 / 장애물}: 실선 점유 영역 및 각도 폐색 음영(Shadow Cone)
+\item \textbf{충돌 위험}: 충돌 구간 링(\texttt{CONFLICT +t\_\allowbreak{}s}) 및 \texttt{Risk Indicator >= 0.\allowbreak{}45} 시 위험 강조 표시
+\item \textbf{불확실성 시각화}: 미래 예측 노드별 \texttt{1$\sigma$} 야코비안 공분산 타원 및 HUD 세부 내역(\texttt{Det}, \texttt{Depth $\pm$m}, \texttt{Track}, \texttt{Pred +2s $\pm$m})
+\item \textbf{시간 상태 분리}: 지수 감쇠되는 \texttt{Past World} 과거 궤적 vs \texttt{Present World} 현재 박스 vs \texttt{Future World} 확률 타원
+\item \textbf{공간 한계}: 자차 후방(\texttt{Y < 0}) 및 카메라 수평 화각 외부는 대각선 해칭과 \texttt{UNKNOWN (Outside Front Camera FOV)} 라벨로 명시
+\end{enumerate}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{2. 정보 상태 인코딩}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.108\textwidth} >{\raggedright\arraybackslash}p{0.397\textwidth} >{\raggedright\arraybackslash}p{0.361\textwidth}}
+\toprule
+\textbf{상태} & \textbf{시각적 인코딩} & \textbf{의미} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{상태} & \textbf{시각적 인코딩} & \textbf{의미} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{Observed (관측)} & 채워진 BEV 마커 + 흰색 테두리; 왼쪽 패널 2D 박스 & 현재 프레임 전방 화각(FOV) 내 직접 검출 \\
+\textbf{Inferred (추정)} & 속이 빈 윤곽선 \texttt{[INF]}, 속도 화살표, 미래 타원, 충돌 링 & 지면 투영 또는 칼만 운동학 기반 추정치 \\
+\textbf{Occluded (폐색)} & 전경 차량 후방 어두운 각도 음영; 빈 Coasting 박스 & 시선 차단 또는 일시적 미검출 유지 (\texttt{<= 1.\allowbreak{}0s}) \\
+\textbf{Unknown (미관측)} & 어두운 대각선 해칭 배경 (\texttt{Y < 0} 및 FOV 원뿔 외부) & 단일 전방 카메라로 관측 불가; 절대 임의 추정(Hallucination) 안 함 \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{3. 5초 단계별 시연 타임라인 (\texttt{-\allowbreak{}-\allowbreak{}staged-\allowbreak{}demo})}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.150\textwidth} >{\raggedright\arraybackslash}p{0.150\textwidth} >{\raggedright\arraybackslash}p{0.566\textwidth}}
+\toprule
+\textbf{시간 구간} & \textbf{프레임 (\texttt{10 Hz})} & \textbf{활성화 레이어} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{시간 구간} & \textbf{프레임 (\texttt{10 Hz})} & \textbf{활성화 레이어} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{0.0--1.0초} & \texttt{0--9} & \textbf{원시 관측 (Raw Observation)}: 카메라 영상 + 자차 \texttt{(0,\allowbreak{}0)} + FOV / \texttt{Unknown} 초기화 \\
+\textbf{1.0--2.0초} & \texttt{10--19} & \textbf{객체 인식 (Object Perception)}: + 2D BBox, 클래스, 신뢰도, Track ID, BEV 검출, 폐색 음영 \\
+\textbf{2.0--3.0초} & \texttt{20--29} & \textbf{시계열 이해 (Temporal Understanding)}: + Past World 감쇠 궤적, 보정 속도 벡터 \\
+\textbf{3.0--4.0초} & \texttt{30--39} & \textbf{미래 예측 (Future Prediction)}: + 다중 시점 궤적(\texttt{0.\allowbreak{}5s--2.\allowbreak{}0s}), \texttt{1$\sigma$} 공분산 타원, 자차 계획 경로 \\
+\textbf{4.0--5.0초+} & \texttt{40+} & \textbf{위험도 평가 \& Safety Shield}: + Risk Indicator 게이지, 충돌 구간, 권고형 Safety Shield 판단 \\
+\end{longtable}
+\end{footnotesize}
+
+
+전체 오버레이 모드(\texttt{-\allowbreak{}-\allowbreak{}full-\allowbreak{}overlay})는 \texttt{t = 0.\allowbreak{}0초}부터 모든 레이어를 동시에 렌더링합니다.
+
+\end{document}

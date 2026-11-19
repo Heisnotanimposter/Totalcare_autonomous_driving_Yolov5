@@ -130,8 +130,10 @@ def render_left_observed_panel(
     stage: int,
     target_size: Tuple[int, int],
     frame_masks: Optional[Sequence[Dict]] = None,
+    road_lane_record: Optional[Dict] = None,
+    present_objects: Optional[Sequence[Dict]] = None,
 ) -> np.ndarray:
-    """Render Left Panel (Observed World) strictly using directly observed 2D detections + instance masks."""
+    """Render Left Panel (Observed World) with Road/Non-Road/Lane masks + 2D detections + instance masks."""
     tw, th = target_size
     fh, fw = bgr_frame.shape[:2]
     scale = min(tw / fw, th / fh)
@@ -144,6 +146,39 @@ def render_left_observed_panel(
     oy = (th - nh) // 2
 
     vis = resized.copy()
+    # Road vs Non-Road semantic segmentation & lane overlays (v4)
+    if stage >= 2 and road_lane_record:
+        road_polys = road_lane_record.get("road_px_polys") or []
+        ego_polys = road_lane_record.get("ego_lane_px_polys") or []
+        # 1) Tint Non-Road lower ground band faintly rose-plum, Road emerald green, Ego-Lane cyan-teal
+        sem_layer = vis.copy()
+        horizon_y = int(round(nh * 0.40))
+        cv2.rectangle(sem_layer, (0, horizon_y), (nw - 1, nh - 1), (95, 50, 145), -1)
+        for poly in road_polys:
+            pts_s = np.round(np.asarray(poly, dtype=np.float32) * scale).astype(np.int32).reshape((-1, 1, 2))
+            cv2.fillPoly(sem_layer, [pts_s], (55, 185, 70))
+        for poly in ego_polys:
+            pts_s = np.round(np.asarray(poly, dtype=np.float32) * scale).astype(np.int32).reshape((-1, 1, 2))
+            cv2.fillPoly(sem_layer, [pts_s], (210, 175, 45))
+        vis = cv2.addWeighted(sem_layer, 0.24, vis, 0.76, 0.0)
+
+        # Draw crisp Road contour & Detected Left/Right Lane Polylines
+        for poly in road_polys:
+            pts_s = np.round(np.asarray(poly, dtype=np.float32) * scale).astype(np.int32).reshape((-1, 1, 2))
+            cv2.polylines(vis, [pts_s], isClosed=True, color=(70, 220, 95), thickness=1, lineType=cv2.LINE_AA)
+        lane_px = road_lane_record.get("lane_lines_px") or {}
+        for side_name, col in (("left_ego", (0, 235, 255)), ("right_ego", (255, 210, 60))):
+            lpts = lane_px.get(side_name)
+            if lpts and len(lpts) >= 2:
+                pts_s = np.round(np.asarray(lpts, dtype=np.float32) * scale).astype(np.int32).reshape((-1, 1, 2))
+                cv2.polylines(vis, [pts_s], isClosed=False, color=col, thickness=3, lineType=cv2.LINE_AA)
+
+    obj_ctx_by_tid: Dict[int, Dict] = {}
+    if present_objects:
+        for obj in present_objects:
+            if obj.get("road_context"):
+                obj_ctx_by_tid[int(obj["track_id"])] = obj["road_context"]
+
     if stage >= 2:
         mask_layer = vis.copy()
         scaled_polys: List[Tuple[np.ndarray, Tuple[int, int, int]]] = []
@@ -171,22 +206,59 @@ def render_left_observed_panel(
             conf = float(d["conf"])
             color = CLASS_COLORS_BGR.get(cname, (200, 200, 200))
             cv2.rectangle(vis, (x1, y1), (x2, y2), color, 1 if scaled_polys else 2)
-            label = f"{cname} #{tid} {conf:.2f}" if tid >= 0 else f"{cname} {conf:.2f}"
-            (lw, lh), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.45, 1)
+            ctx = obj_ctx_by_tid.get(tid)
+            ctx_tag = ""
+            if ctx:
+                ctx_tag = " [LANE]" if ctx.get("in_ego_lane") else (" [RD]" if ctx.get("on_road") else " [NON-RD]")
+            label = f"{cname} #{tid} {conf:.2f}{ctx_tag}" if tid >= 0 else f"{cname} {conf:.2f}{ctx_tag}"
+            (lw, lh), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.43, 1)
             cv2.rectangle(vis, (x1, max(0, y1 - lh - 6)), (x1 + lw + 6, y1), color, -1)
-            cv2.putText(vis, label, (x1 + 3, max(12, y1 - 4)), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (15, 15, 15), 1, cv2.LINE_AA)
+            cv2.putText(vis, label, (x1 + 3, max(12, y1 - 4)), cv2.FONT_HERSHEY_SIMPLEX, 0.43, (15, 15, 15), 1, cv2.LINE_AA)
 
     panel[oy : oy + nh, ox : ox + nw] = vis
 
+    # Top Road / Lane classification badge inside top bar gap if road_lane_record present
+    if road_lane_record:
+        g_cov = float(road_lane_record.get("ground_road_ratio", 0.0)) * 100.0
+        r_conf = float(road_lane_record.get("road_mean_confidence", 0.0)) * 100.0
+        l_src = str(road_lane_record.get("lane_source", "n/a"))
+        cv2.rectangle(panel, (12, 42), (382, 86), (20, 24, 30), -1)
+        cv2.rectangle(panel, (12, 42), (382, 86), (70, 175, 90), 1)
+        cv2.putText(
+            panel,
+            f"Road: {g_cov:.1f}% (conf {r_conf:.0f}%) | Non-Road: {max(0.0, 100.0 - g_cov):.1f}%",
+            (20, 60),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.39,
+            (130, 235, 145),
+            1,
+            cv2.LINE_AA,
+        )
+        cv2.putText(
+            panel,
+            f"Ego-Lane Mask + Lines ({l_src})",
+            (20, 78),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.39,
+            (255, 225, 110),
+            1,
+            cv2.LINE_AA,
+        )
+
     # Header badge
     cv2.rectangle(panel, (0, 0), (tw, 34), (28, 32, 38), -1)
-    header_txt = "LEFT PANEL | OBSERVED WORLD (Camera 2D + Instance Masks)" if frame_masks else "LEFT PANEL | OBSERVED WORLD (Front Camera 2D)"
+    if road_lane_record and frame_masks:
+        header_txt = "LEFT PANEL | OBSERVED (2D + Object/Road/Lane Masks)"
+    elif frame_masks:
+        header_txt = "LEFT PANEL | OBSERVED WORLD (Camera 2D + Instance Masks)"
+    else:
+        header_txt = "LEFT PANEL | OBSERVED WORLD (Front Camera 2D)"
     cv2.putText(
         panel,
         header_txt,
         (14, 23),
         cv2.FONT_HERSHEY_SIMPLEX,
-        0.54,
+        0.52,
         (235, 242, 250),
         1,
         cv2.LINE_AA,
@@ -234,23 +306,53 @@ def render_right_world_panel(
         lx, ly = mapper.to_px(r_m * math.sin(half_fov) * 0.88, r_m * math.cos(half_fov) * 0.88)
         cv2.putText(panel, f"{r_m}m", (lx - 26, ly), cv2.FONT_HERSHEY_SIMPLEX, 0.36, (125, 145, 160), 1)
 
-    # 3. Road Structure (nominal lane geometry) & Ego Planned Path
+    # 3. Road Structure (v4 perceived BEV Road Free-Space + Detected Curvilinear Lanes, with nominal fallback)
+    road_struct = world_state.get("road_structure")
     lane_hw = float(world_state["ego"]["corridor_half_width_m"])
-    for x_lane, col in ((-lane_hw * 3.0, (70, 75, 85)), (-lane_hw, (120, 135, 150)), (lane_hw, (120, 135, 150)), (lane_hw * 3.0, (70, 75, 85))):
-        p_bot = mapper.to_px(x_lane, 0.0)
-        p_top = mapper.to_px(x_lane, 50.0)
-        cv2.line(panel, p_bot, p_top, col, 1, cv2.LINE_AA)
+    if stage >= 2 and road_struct and road_struct.get("road_bev_polys"):
+        road_ov = panel.copy()
+        for rpoly in road_struct["road_bev_polys"]:
+            pts = np.array([mapper.to_px(px, py) for px, py in rpoly], dtype=np.int32)
+            cv2.fillPoly(road_ov, [pts], (42, 72, 54))
+        cv2.addWeighted(road_ov, 0.48, panel, 0.52, 0.0, panel)
+        for rpoly in road_struct["road_bev_polys"]:
+            pts = np.array([mapper.to_px(px, py) for px, py in rpoly], dtype=np.int32)
+            cv2.polylines(panel, [pts], True, (65, 140, 85), 1, cv2.LINE_AA)
+
+    lane_lines_bev = (road_struct or {}).get("lane_lines_bev") or {}
+    if stage >= 2 and ("left_ego" in lane_lines_bev or "right_ego" in lane_lines_bev):
+        for side_key, col in (("left_ego", (0, 235, 255)), ("right_ego", (255, 210, 60))):
+            if side_key in lane_lines_bev:
+                lpts = np.array([mapper.to_px(px, py) for px, py in lane_lines_bev[side_key]], dtype=np.int32)
+                cv2.polylines(panel, [lpts], False, col, 2, cv2.LINE_AA)
+    else:
+        for x_lane, col in ((-lane_hw * 3.0, (70, 75, 85)), (-lane_hw, (120, 135, 150)), (lane_hw, (120, 135, 150)), (lane_hw * 3.0, (70, 75, 85))):
+            p_bot = mapper.to_px(x_lane, 0.0)
+            p_top = mapper.to_px(x_lane, 50.0)
+            cv2.line(panel, p_bot, p_top, col, 1, cv2.LINE_AA)
 
     if stage >= 4:
-        corr_poly = np.array(
-            [
-                mapper.to_px(-lane_hw, 0.0),
-                mapper.to_px(lane_hw, 0.0),
-                mapper.to_px(lane_hw, 35.0),
-                mapper.to_px(-lane_hw, 35.0),
-            ],
-            dtype=np.int32,
-        )
+        if "left_ego" in lane_lines_bev and "right_ego" in lane_lines_bev:
+            l_arr = [pt for pt in lane_lines_bev["left_ego"] if pt[1] <= 36.0]
+            r_arr = [pt for pt in reversed(lane_lines_bev["right_ego"]) if pt[1] <= 36.0]
+            corr_pts_m = l_arr + r_arr
+            if len(corr_pts_m) >= 3:
+                corr_poly = np.array([mapper.to_px(px, py) for px, py in corr_pts_m], dtype=np.int32)
+            else:
+                corr_poly = np.array(
+                    [mapper.to_px(-lane_hw, 0.0), mapper.to_px(lane_hw, 0.0), mapper.to_px(lane_hw, 35.0), mapper.to_px(-lane_hw, 35.0)],
+                    dtype=np.int32,
+                )
+        else:
+            corr_poly = np.array(
+                [
+                    mapper.to_px(-lane_hw, 0.0),
+                    mapper.to_px(lane_hw, 0.0),
+                    mapper.to_px(lane_hw, 35.0),
+                    mapper.to_px(-lane_hw, 35.0),
+                ],
+                dtype=np.int32,
+            )
         overlay = panel.copy()
         cv2.fillPoly(overlay, [corr_poly], (45, 85, 95))
         cv2.addWeighted(overlay, 0.30, panel, 0.70, 0, panel)
@@ -557,6 +659,7 @@ def generate_world_model_demo(
     label_file: Optional[Path] = None,
     oxts_file: Optional[Path] = None,
     masks_json: Optional[Path] = None,
+    road_lane_json: Optional[Path] = None,
     seq_id: str = "0019",
     fps: float = 10.0,
     max_frames: Optional[int] = 80,
@@ -590,6 +693,13 @@ def generate_world_model_demo(
         m_payload = json.loads(masks_json.read_text(encoding="utf-8"))
         masks_by_frame = m_payload.get("masks_by_frame", {})
         mask_backend = m_payload.get("mask_backend", "json")
+
+    road_lane_by_frame: Dict[str, Dict] = {}
+    road_lane_backend = "none"
+    if road_lane_json is not None and road_lane_json.is_file():
+        rl_payload = json.loads(road_lane_json.read_text(encoding="utf-8"))
+        road_lane_by_frame = rl_payload.get("frames_by_idx", {})
+        road_lane_backend = rl_payload.get("road_backend", "segformer_road_lane")
 
     dets_by_frame: Dict[int, List[Dict]] = defaultdict(list)
     with open(trajectories_csv, "r", encoding="utf-8") as f:
@@ -625,12 +735,21 @@ def generate_world_model_demo(
                 continue
             t_sec = (sfr - base_sfr) / fps
             frame_dets = dets_by_frame.get(sfr, [])
-            w_state = world.step(frame_idx=sfr, timestamp_sec=t_sec, detections=frame_dets)
+            rl_rec = road_lane_by_frame.get(str(sfr))
+            w_state = world.step(frame_idx=sfr, timestamp_sec=t_sec, detections=frame_dets, road_lane_record=rl_rec)
             world_timeline.append(w_state)
 
             stage, stage_title = _stage_for_time(t_sec, staged_demo=staged_demo)
             frame_masks = masks_by_frame.get(str(sfr))
-            left = render_left_observed_panel(bgr, frame_dets, stage=stage, target_size=left_size, frame_masks=frame_masks)
+            left = render_left_observed_panel(
+                bgr,
+                frame_dets,
+                stage=stage,
+                target_size=left_size,
+                frame_masks=frame_masks,
+                road_lane_record=rl_rec,
+                present_objects=w_state["present_world"]["objects"],
+            )
             right = render_right_world_panel(w_state, stage=stage, panel_size=right_size)
             hud = render_telemetry_hud(w_state, stage=stage, stage_title=stage_title, total_width=total_w, hud_height=hud_h)
 
@@ -665,6 +784,7 @@ def generate_world_model_demo(
         "calibrated": calib is not None,
         "ego_motion_compensated": oxts is not None,
         "mask_backend": mask_backend,
+        "road_lane_backend": road_lane_backend,
         "staged_demo": staged_demo,
         "video_path": str(video_path),
         "timeline_path": str(timeline_path),
@@ -683,6 +803,7 @@ def main() -> None:
     parser.add_argument("--label-file", type=Path, default=None)
     parser.add_argument("--oxts-file", type=Path, default=None)
     parser.add_argument("--masks-json", type=Path, default=None)
+    parser.add_argument("--road-lane-json", type=Path, default=None)
     parser.add_argument("--seq-id", type=str, default="0019")
     parser.add_argument("--fps", type=float, default=10.0)
     parser.add_argument("--max-frames", type=int, default=80)
@@ -697,6 +818,7 @@ def main() -> None:
         label_file=args.label_file,
         oxts_file=args.oxts_file,
         masks_json=args.masks_json,
+        road_lane_json=args.road_lane_json,
         seq_id=args.seq_id,
         fps=args.fps,
         max_frames=args.max_frames,

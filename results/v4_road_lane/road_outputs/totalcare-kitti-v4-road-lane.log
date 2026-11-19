@@ -1,0 +1,41 @@
+[{"stream_name":"stdout","time":28.978732259,"data":"[DATA] Found KITTI data_road pairs: 289 (um_lane=95)\n"}
+,{"stream_name":"stdout","time":28.978788496,"data":"[SPLIT] Train=230 imgs, Val=59 imgs\n"}
+,{"stream_name":"stdout","time":40.882095124,"data":"[LOAD] Pretrained SegFormer: nvidia/segformer-b2-finetuned-cityscapes-1024-1024\n"}
+,{"stream_name":"stderr","time":41.118299291,"data":"Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stderr","time":43.762143353,"data":"\rLoading weights:   0%|          | 0/380 [00:00\u003c?, ?it/s]\rLoading weights: 100%|██████████| 380/380 [00:00\u003c00:00, 15953.35it/s]\n"}
+,{"stream_name":"stdout","time":87.264270741,"data":"[EP 01/25] loss=1.1112/0.2662 RoadAcc=0.9832 RoadF1=0.9530 mIoU=0.9449 EgoLaneF1=0.7134\n"}
+,{"stream_name":"stdout","time":106.679464285,"data":"[EP 02/25] loss=0.3072/0.0868 RoadAcc=0.9805 RoadF1=0.9430 mIoU=0.9344 EgoLaneF1=0.6503\n"}
+,{"stream_name":"stdout","time":126.675714746,"data":"[EP 03/25] loss=0.1357/0.0424 RoadAcc=0.9890 RoadF1=0.9692 mIoU=0.9635 EgoLaneF1=0.6419\n"}
+,{"stream_name":"stdout","time":147.217824744,"data":"[EP 04/25] loss=0.0987/0.0356 RoadAcc=0.9893 RoadF1=0.9701 mIoU=0.9645 EgoLaneF1=0.6534\n"}
+,{"stream_name":"stdout","time":168.210545408,"data":"[EP 05/25] loss=0.0946/0.0309 RoadAcc=0.9900 RoadF1=0.9720 mIoU=0.9667 EgoLaneF1=0.6686\n"}
+,{"stream_name":"stdout","time":188.826136373,"data":"[EP 06/25] loss=0.0853/0.0313 RoadAcc=0.9899 RoadF1=0.9717 mIoU=0.9663 EgoLaneF1=0.6756\n"}
+,{"stream_name":"stdout","time":209.101830586,"data":"[EP 07/25] loss=0.0837/0.0264 RoadAcc=0.9908 RoadF1=0.9742 mIoU=0.9693 EgoLaneF1=0.7258\n"}
+,{"stream_name":"stdout","time":229.624474494,"data":"[EP 08/25] loss=0.0748/0.0281 RoadAcc=0.9906 RoadF1=0.9736 mIoU=0.9686 EgoLaneF1=0.7732\n"}
+,{"stream_name":"stdout","time":250.16305015,"data":"[EP 09/25] loss=0.0720/0.0278 RoadAcc=0.9906 RoadF1=0.9735 mIoU=0.9685 EgoLaneF1=0.7999\n"}
+,{"stream_name":"stdout","time":270.615136869,"data":"[EP 10/25] loss=0.0672/0.0310 RoadAcc=0.9903 RoadF1=0.9730 mIoU=0.9678 EgoLaneF1=0.8231\n"}
+,{"stream_name":"stdout","time":291.117914846,"data":"[EP 11/25] loss=0.0648/0.0263 RoadAcc=0.9909 RoadF1=0.9744 mIoU=0.9695 EgoLaneF1=0.8483\n"}
+,{"stream_name":"stdout","time":311.796062135,"data":"[EP 12/25] loss=0.0603/0.0275 RoadAcc=0.9910 RoadF1=0.9749 mIoU=0.9701 EgoLaneF1=0.8668\n"}
+,{"stream_name":"stdout","time":332.331340103,"data":"[EP 13/25] loss=0.0562/0.0270 RoadAcc=0.9911 RoadF1=0.9749 mIoU=0.9701 EgoLaneF1=0.8743\n"}
+,{"stream_name":"stdout","time":352.945172125,"data":"[EP 14/25] loss=0.0575/0.0287 RoadAcc=0.9910 RoadF1=0.9748 mIoU=0.9700 EgoLaneF1=0.8865\n"}
+,{"stream_name":"stdout","time":373.365828215,"data":"[EP 15/25] loss=0.0538/0.0265 RoadAcc=0.9911 RoadF1=0.9751 mIoU=0.9703 EgoLaneF1=0.8862\n"}
+,{"stream_name":"stdout","time":393.929780776,"data":"[EP 16/25] loss=0.0529/0.0275 RoadAcc=0.9910 RoadF1=0.9748 mIoU=0.9700 EgoLaneF1=0.8989\n"}
+,{"stream_name":"stdout","time":414.374279533,"data":"[EP 17/25] loss=0.0498/0.0273 RoadAcc=0.9910 RoadF1=0.9748 mIoU=0.9700 EgoLaneF1=0.8969\n"}
+,{"stream_name":"stdout","time":434.774884958,"data":"[EP 18/25] loss=0.0456/0.0265 RoadAcc=0.9912 RoadF1=0.9753 mIoU=0.9705 EgoLaneF1=0.9041\n"}
+,{"stream_name":"stdout","time":455.329426406,"data":"[EP 19/25] loss=0.0485/0.0266 RoadAcc=0.9912 RoadF1=0.9755 mIoU=0.9707 EgoLaneF1=0.9057\n"}
+,{"stream_name":"stdout","time":475.927586856,"data":"[EP 20/25] loss=0.0453/0.0265 RoadAcc=0.9912 RoadF1=0.9754 mIoU=0.9707 EgoLaneF1=0.9086\n"}
+,{"stream_name":"stdout","time":496.364404023,"data":"[EP 21/25] loss=0.0477/0.0263 RoadAcc=0.9913 RoadF1=0.9756 mIoU=0.9709 EgoLaneF1=0.9090\n"}
+,{"stream_name":"stdout","time":516.997283949,"data":"[EP 22/25] loss=0.0444/0.0259 RoadAcc=0.9913 RoadF1=0.9755 mIoU=0.9708 EgoLaneF1=0.9104\n"}
+,{"stream_name":"stdout","time":537.476595046,"data":"[EP 23/25] loss=0.0457/0.0268 RoadAcc=0.9913 RoadF1=0.9756 mIoU=0.9709 EgoLaneF1=0.9110\n"}
+,{"stream_name":"stdout","time":558.081821813,"data":"[EP 24/25] loss=0.0447/0.0261 RoadAcc=0.9913 RoadF1=0.9755 mIoU=0.9708 EgoLaneF1=0.9117\n"}
+,{"stream_name":"stdout","time":578.499080069,"data":"[EP 25/25] loss=0.0457/0.0257 RoadAcc=0.9913 RoadF1=0.9754 mIoU=0.9707 EgoLaneF1=0.9118\n"}
+,{"stream_name":"stdout","time":591.980451474,"data":"[DL] https://s3.eu-central-1.amazonaws.com/avg-kitti/data_tracking_calib.zip\n"}
+,{"stream_name":"stdout","time":661.784548232,"data":"[INFER 0015] frames=376 json_saved\n"}
+,{"stream_name":"stdout","time":855.627781875,"data":"[INFER 0019] frames=1059 json_saved\n"}
+,{"stream_name":"stdout","time":855.628590915,"data":"[DONE] road_eval_metrics: {\"threshold\": 0.5, \"precision\": 0.96671, \"recall\": 0.98458, \"f1\": 0.97557, \"acc\": 0.99129} AUC= 0.99921\n"}
+,{"stream_name":"stderr","time":864.400014163,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":864.400048127,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":864.664163581,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":864.664207909,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":865.442263524,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":866.591805068,"data":"[NbConvertApp] Writing 409877 bytes to __results__.html\n"}
+]

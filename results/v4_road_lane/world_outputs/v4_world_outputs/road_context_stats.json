@@ -1,0 +1,14 @@
+{
+  "0015": {
+    "total_object_observations": 2195,
+    "ego_lane_objects": 172,
+    "adjacent_road_objects": 350,
+    "non_road_objects": 1673
+  },
+  "0019": {
+    "total_object_observations": 11738,
+    "ego_lane_objects": 3262,
+    "adjacent_road_objects": 1376,
+    "non_road_objects": 7100
+  }
+}

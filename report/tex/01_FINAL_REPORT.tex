@@ -254,5 +254,40 @@
 \item \textbf{\texttt{MobileSAM} (\texttt{38.\allowbreak{}8 MB})}: Knowledge-Distilled \texttt{TinyViT} Image Encoder (\texttt{MBConv} + \texttt{Windowed Self-\allowbreak{}Attention}), Box Prompt Positional Encoder, Two-Way Cross-Attention Mask Decoder + \texttt{4$\times$} Transposed Conv.
 \item \textbf{\texttt{ByteTrack}}: 8D Constant-Velocity BBox Kalman Filter + 2단계 Hungarian Bipartite Matching (\texttt{High-\allowbreak{}Conf} + \texttt{Low-\allowbreak{}Conf} 가려짐 복구).
 \item \textbf{Temporal World Model \& Safety Shield}: \texttt{P2} 역분산 깊이 융합 + OXTS \texttt{SE(2)} 보상 + 4D World-ENU 칼만 필터 + 야코비안 BEV 공분산 타원 투영 + $C^1$ 위험 포텐셜 \& \texttt{CollisionRiskSmoother} 슬루율/히스테리시스 평활화.
+\item \textbf{\texttt{SegFormer-\allowbreak{}B2} (\texttt{nvidia/\allowbreak{}segformer-\allowbreak{}b2-\allowbreak{}finetuned-\allowbreak{}cityscapes-\allowbreak{}1024-\allowbreak{}1024}, v4 추가)}: MiT-B2 계층형 Mix-Transformer 인코더 + All-MLP 디코더 (\texttt{Non-\allowbreak{}Road} / \texttt{Other Road} / \texttt{Ego-\allowbreak{}Lane} 3-Class 헤드) + BEV IPM 역투영 및 HLS+Sobel 차선 2차 다항식 EMA 추적기.
 \end{enumerate}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{6. Version 4 고도화: 도로/비도로 분류·차선 검출 및 정확도 \texttt{0.\allowbreak{}9} 달성 (\texttt{v4\_\allowbreak{}road\_\allowbreak{}lane})}
+
+\texttt{v3\_\allowbreak{}bev\_\allowbreak{}fixed} 이후 사용자 추가 요구사항(\textbf{도로 vs 비도로 레이블 및 차선 검출·마스킹}, \textbf{정확도 \texttt{0.\allowbreak{}7 $\rightarrow$ 0.\allowbreak{}9} 개선})을 반영하여 3개의 Kaggle 커널(\texttt{test013/\allowbreak{}totalcare-\allowbreak{}kitti-\allowbreak{}v4-\allowbreak{}road-\allowbreak{}lane}, \texttt{test013/\allowbreak{}totalcare-\allowbreak{}kitti-\allowbreak{}v4-\allowbreak{}detect}, \texttt{test013/\allowbreak{}totalcare-\allowbreak{}kitti-\allowbreak{}v4-\allowbreak{}world-\allowbreak{}model})을 완주하고 \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/tree/main/results/v4\_road\_lane/}{\texttt{results/\allowbreak{}v4\_\allowbreak{}road\_\allowbreak{}lane/\allowbreak{}}} 에 통합했습니다.
+
+
+\subsection{6.1 도로 vs 비도로 분류 및 자차로·차선 검출 (\texttt{SegFormer-\allowbreak{}B2} + BEV IPM)}
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{데이터셋 및 학습}: \texttt{tryingit/\allowbreak{}roadlane-\allowbreak{}detection-\allowbreak{}evaluation-\allowbreak{}2013} (KITTI \texttt{data\_\allowbreak{}road}, \texttt{230 train /\allowbreak{} 59 val} 계층 분할, 25 epochs)으로 \texttt{SegFormer-\allowbreak{}B2} 3-Class(\texttt{Non-\allowbreak{}Road}, \texttt{Other Road}, \texttt{Ego-\allowbreak{}Lane}) 미세조정.
+\item \textbf{실측 성능 (\href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v4\_road\_lane/road\_outputs/road\_lane\_outputs/road\_eval\_metrics.json}{\texttt{road\_\allowbreak{}eval\_\allowbreak{}metrics.\allowbreak{}json}})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Road vs Non-Road}: \textbf{ROC AUC = \texttt{0.\allowbreak{}9992}}, \textbf{Pixel Acc = \texttt{0.\allowbreak{}9910} (\texttt{99.\allowbreak{}10\%})}, \textbf{Road F1 = \texttt{0.\allowbreak{}9747}} (\texttt{Precision 0.\allowbreak{}9690} / \texttt{Recall 0.\allowbreak{}9804}), Road IoU \texttt{0.\allowbreak{}9506}, mIoU \texttt{0.\allowbreak{}9698}.
+\item \textbf{Ego-Lane (\texttt{um\_\allowbreak{}lane})}: \textbf{F1 = \texttt{0.\allowbreak{}9119}} (\texttt{Precision 0.\allowbreak{}9070} / \texttt{Recall 0.\allowbreak{}9169}), IoU \texttt{0.\allowbreak{}8381}.
+\end{itemize}
+\item \textbf{시각화 및 World Model 결합}: Left Panel에 도로(녹색)·비도로(자주색)·자차로(청록색) 반투명 마스킹, 좌/우 차선 2차 다항식 폴리라인, 객체별 \texttt{[LANE]}/\texttt{[RD]}/\texttt{[NON-\allowbreak{}RD]} 컨텍스트 배지를 표시하고, Right Panel BEV에 도로 폴리곤·곡률 차선과 비도로(\texttt{0.\allowbreak{}65} 위험 감쇠) 인식형 Safety Shield를 연동했습니다.
+\end{itemize}
+
+\subsection{6.2 객체 검출 정확도 향상 (\texttt{YOLO11l @ 1280} + 중복 제거 병합 + Multi-Scale TTA)}
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{데이터 무결성 확장}: \texttt{leducnhuan/\allowbreak{}kitti-\allowbreak{}tracking} + \texttt{harshpdani/\allowbreak{}kitti-\allowbreak{}stereo-\allowbreak{}image}(\texttt{7,\allowbreak{}481}장 중 Val/Test \texttt{0002,\allowbreak{}0012,\allowbreak{}0015,\allowbreak{}0017,\allowbreak{}0013,\allowbreak{}0016,\allowbreak{}0019}와 MD5/dHash 일치 \texttt{595}장 엄격 제거 $\rightarrow$ 고유 \texttt{6,\allowbreak{}886}장 추가, 총 \texttt{14,\allowbreak{}371} 학습 엔트리) + \texttt{Van}/\texttt{Person\_\allowbreak{}sitting} 114 그레이 마스킹.
+\item \textbf{정량 비교 (\texttt{v2 $\rightarrow$ v4}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v4\_road\_lane/detect\_outputs/outputs/eval\_metrics\_v4.json}{\texttt{eval\_\allowbreak{}metrics\_\allowbreak{}v4.\allowbreak{}json}})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Val (\texttt{All} 난이도)}: \texttt{v2 mAP@0.\allowbreak{}5 = 0.\allowbreak{}5235} $\rightarrow$ \texttt{v4 std = 0.\allowbreak{}6889} (\texttt{Precision 0.\allowbreak{}8685}) $\rightarrow$ \textbf{\texttt{v4 TTA = 0.\allowbreak{}7400}} (\texttt{Car 0.\allowbreak{}8475 /\allowbreak{} Ped 0.\allowbreak{}7712 /\allowbreak{} Cyc 0.\allowbreak{}6014}).
+\item \textbf{Test (\texttt{All} 난이도)}: \texttt{v2 mAP@0.\allowbreak{}5 = 0.\allowbreak{}4269} $\rightarrow$ \textbf{\texttt{v4 TTA = 0.\allowbreak{}6705}} (\texttt{Precision 0.\allowbreak{}7984}, \texttt{Car 0.\allowbreak{}7804 /\allowbreak{} Ped 0.\allowbreak{}6441 /\allowbreak{} Cyc 0.\allowbreak{}5870}).
+\item \textbf{KITTI 표준 난이도별 평가 (TTA)}: Val \textbf{Easy \texttt{mAP@0.\allowbreak{}5 = 0.\allowbreak{}8677}} (\texttt{Precision 0.\allowbreak{}9750}), Test \textbf{Easy \texttt{mAP@0.\allowbreak{}5 = 0.\allowbreak{}8966}} (\texttt{\textasciitilde{}0.\allowbreak{}90}, \texttt{Car 0.\allowbreak{}9792 /\allowbreak{} Ped 0.\allowbreak{}9206 /\allowbreak{} Cyc 0.\allowbreak{}7899}), Test \textbf{Moderate \texttt{mAP@0.\allowbreak{}5 = 0.\allowbreak{}8404}}, Test \textbf{Hard \texttt{mAP@0.\allowbreak{}5 = 0.\allowbreak{}8025}}, Test \textbf{KITTI-All \texttt{mAP@0.\allowbreak{}5 = 0.\allowbreak{}7965}} (\texttt{mean\_\allowbreak{}precision 0.\allowbreak{}8531}).
+\end{itemize}
+\item \textbf{v4 World Model 최종 시연 및 RQ1--RQ4 재검증}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item Val \texttt{0015} (\href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v4\_road\_lane/world\_outputs/v4\_world\_outputs/world\_model\_0015\_full/world\_model\_demo\_0015.mp4}{\texttt{full MP4}} / \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v4\_road\_lane/world\_outputs/v4\_world\_outputs/world\_model\_0015\_staged/world\_model\_demo\_0015.mp4}{\texttt{staged MP4}}): \texttt{ADE 3.\allowbreak{}5836 m}, RQ3 \texttt{0.\allowbreak{}2277 < 0.\allowbreak{}2838 < 0.\allowbreak{}2916}, RQ4 스파이크 \texttt{8 $\rightarrow$ 0 (-\allowbreak{}100\%)}.
+\item Test \texttt{0019} (\href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v4\_road\_lane/world\_outputs/v4\_world\_outputs/world\_model\_0019\_full/world\_model\_demo\_0019.mp4}{\texttt{full MP4}} / \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v4\_road\_lane/world\_outputs/v4\_world\_outputs/world\_model\_0019\_staged/world\_model\_demo\_0019.mp4}{\texttt{staged MP4}}): \texttt{ADE 2.\allowbreak{}0437 m}, RQ3 \texttt{0.\allowbreak{}5421 < 0.\allowbreak{}6261 < 0.\allowbreak{}6454}, RQ4 스파이크 \texttt{16 $\rightarrow$ 0 (-\allowbreak{}100\%)}, 플립 \texttt{124 $\rightarrow$ 53 (-\allowbreak{}57.\allowbreak{}26\%)}.
+\end{itemize}
+\end{itemize}
 \end{document}

@@ -1,0 +1,343 @@
+\documentclass[10.5pt,a4paper]{article}
+\usepackage{geometry}
+\geometry{margin=18mm,top=20mm,bottom=20mm}
+\usepackage{kotex}
+\usepackage{fontspec}
+\setmainhangulfont{Apple SD Gothic Neo}[BoldFont={* Bold}]
+\setsanshangulfont{Apple SD Gothic Neo}[BoldFont={* Bold}]
+\setmonofont{Menlo}[Scale=0.82]
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,longtable,array}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue!60!black,urlcolor=blue!65!black}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\setcounter{secnumdepth}{0}
+\sloppy
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{gray}실험 계획 및 정량 벤치마크: 카메라 중심 시계열 자차 중심 World Model}
+\fancyhead[R]{\small\color{gray}KITTI Tracking Temporal World Model}
+\fancyfoot[C]{\small\thepage}
+\begin{document}
+\begin{center}
+{\LARGE\bfseries 실험 계획 및 정량 벤치마크: 카메라 중심 시계열 자차 중심 World Model}\\[6pt]
+{\normalsize\color{gray} 실험 계획 및 정량 벤치마크: 카메라 중심 시계열 자차 중심 World Model}\\[4pt]
+{\small\href{https://github.com/Heisnotanimposter/Totalcare_autonomous_driving_Yolov5}{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5}}
+\end{center}
+\vspace{4pt}
+\hrule
+\vspace{8pt}
+
+\section{1. 연구 가설 (Research Hypotheses)}
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{H1 (시퀀스 비독립 무결성 및 마스킹)}: 시퀀스 비독립 분할과 \texttt{DontCare} + Distractor(\texttt{Van}, \texttt{Person}, \texttt{Person\_\allowbreak{}sitting}) 마스킹을 결합하면 비마스킹 또는 프레임 단위 무작위 분할 대비 시계열 과적합과 잘못된 False-Negative 경사를 방지할 수 있습니다.
+\item \textbf{H2 (시계열 연속성)}: 2D 검출 결과를 ByteTrack(\texttt{src/\allowbreak{}track\_\allowbreak{}utils.\allowbreak{}py})으로 연결하고 운동학 칼만 필터(\texttt{src/\allowbreak{}world\_\allowbreak{}model.\allowbreak{}py})로 자차 중심 궤적을 필터링하면 단안 지면 깊이 추정의 잡음을 안정화하고 짧은 가려짐(Occlusion) 구간에서도 객체 정체성을 유지할 수 있습니다.
+\item \textbf{H3 (불확실성 기반 예측 및 위험도 평가)}: 검출, 깊이, 추적, 운동 예측의 불확실성을 분리 모델링하면 단순 선형 BBox 외삽 대비 보정된 다중 시점 궤적 범위(\texttt{t + 0.\allowbreak{}5s} \textasciitilde{} \texttt{+2.\allowbreak{}0s})와 일관된 위험도 지표를 산출할 수 있습니다.
+\end{itemize}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{2. 베이스라인 및 절제 연구(Ablation Studies)}
+
+\subsection{베이스라인 모델}
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{B0 --- 프레임 독립 검출 (\texttt{src/\allowbreak{}detect.\allowbreak{}py})}: 시계열 ID나 자차 중심 공간 투영이 없는 프레임별 2D 바운딩 박스 검출.
+\item \textbf{B1 --- 검출기 + 2D 추적기 (\texttt{YOLOv8s + ByteTrack}, \texttt{src/\allowbreak{}track\_\allowbreak{}utils.\allowbreak{}py})}: \texttt{px/\allowbreak{}sec} 속도만 사용하는 2D 이미지 평면 추적.
+\item \textbf{B2 --- 시계열 자차 중심 World Model (\texttt{src/\allowbreak{}world\_\allowbreak{}model.\allowbreak{}py})}: 보정된 \texttt{P2} 지면 투영 + 4D 운동학 칼만 필터 + \texttt{Observed/\allowbreak{}Inferred/\allowbreak{}Occluded/\allowbreak{}Unknown} 상태 머신 + Safety Shield.
+\end{enumerate}
+
+\subsection{계획된 절제 실험}
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.157\textwidth} >{\raggedright\arraybackslash}p{0.355\textwidth} >{\raggedright\arraybackslash}p{0.355\textwidth}}
+\toprule
+\textbf{실험 항목} & \textbf{비교 변형} & \textbf{목표 관측 지표} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{실험 항목} & \textbf{비교 변형} & \textbf{목표 관측 지표} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{A1: 라벨 마스킹 정책} & \texttt{raw} vs \texttt{dontcare\_\allowbreak{}only} vs \texttt{dontcare\_\allowbreak{}and\_\allowbreak{}distractors} & \texttt{Car}/\texttt{Pedestrian} 정밀도 및 승합차·앉은 보행자 오검출률 변화 \\
+\textbf{A2: 추적기 매칭 알고리즘} & \texttt{bytetrack.\allowbreak{}yaml} vs \texttt{botsort.\allowbreak{}yaml} & 추적 연속성(\texttt{IDF1}, \texttt{IDSW}) 및 Coasting 안정성 \\
+\textbf{A3: 운동 모델} & 단순 선형 외삽 vs 4D 칼만 필터 (\texttt{accel\_\allowbreak{}sigma} 튜닝) & \texttt{+0.\allowbreak{}5s .\allowbreak{}.\allowbreak{} +2.\allowbreak{}0s} 다중 시점 \texttt{ADE} / \texttt{FDE} \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{3. 평가 지표 및 정답(GT) 가용성}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.059\textwidth} >{\raggedright\arraybackslash}p{0.288\textwidth} >{\raggedright\arraybackslash}p{0.212\textwidth} >{\raggedright\arraybackslash}p{0.288\textwidth}}
+\toprule
+\textbf{모듈} & \textbf{평가지표} & \textbf{KITTI Tracking 정답(GT) 가용 여부} & \textbf{평가 도구} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{모듈} & \textbf{평가지표} & \textbf{KITTI Tracking 정답(GT) 가용 여부} & \textbf{평가 도구} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{검출 (Detection)} & Precision, Recall, \texttt{mAP@0.\allowbreak{}5}, \texttt{mAP@0.\allowbreak{}5:\allowbreak{}0.\allowbreak{}95} & \textbf{가용} (\texttt{label\_\allowbreak{}02} 2D 박스) & \texttt{ultralytics} \texttt{val} (Val \& Test 분할) \\
+\textbf{추적 (Tracking)} & HOTA, IDF1, ID Switches & \textbf{가용} (\texttt{label\_\allowbreak{}02} 2D + \texttt{track\_\allowbreak{}id}, 공식 \texttt{Car}/\texttt{Pedestrian}) & TrackEval / \texttt{kitti\_\allowbreak{}preds/\allowbreak{}<seq>.\allowbreak{}txt} \\
+\textbf{단안 깊이 (Depth)} & \texttt{Abs Rel}, \texttt{RMSE} (m) & \textbf{가용} (\texttt{label\_\allowbreak{}02} cols 13--15 3D \texttt{x,\allowbreak{} y,\allowbreak{} z}) & \texttt{evaluate\_\allowbreak{}world\_\allowbreak{}model\_\allowbreak{}against\_\allowbreak{}kitti\_\allowbreak{}gt} \\
+\textbf{궤적 예측 (Prediction)} & \texttt{ADE}, \texttt{FDE} (m, \texttt{0.\allowbreak{}5s--2.\allowbreak{}0s}) & \textbf{가용} (미래 시점 \texttt{label\_\allowbreak{}02} 3D 위치) & \texttt{evaluate\_\allowbreak{}world\_\allowbreak{}model\_\allowbreak{}against\_\allowbreak{}kitti\_\allowbreak{}gt} \\
+\textbf{위험도 평가 (Risk)} & 위험도 지표 분포, 보정(Calibration) & KITTI Tracking 내 \textbf{직접 GT 없음} & 대리 재생(Proxy Replay) 감사(휴리스틱 명기) \\
+\textbf{안전 개입 (Control)} & 충돌률, 개입률 & \textbf{불가} (오프라인 영상 전용, 폐루프 시뮬레이터 없음) & 오프라인 권고 로그만 기록 \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{4. 실험 실행 조건}
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{실행 환경}: Kaggle CLI GPU (\texttt{NvidiaTeslaT4}, \texttt{2x T4} 자동 DDP 지원) 및 Google Colab CLI 연동.
+\item \textbf{타겟 부류}: \texttt{Car}, \texttt{Pedestrian}, \texttt{Cyclist} (\texttt{nc = 3}).
+\item \textbf{v1 베이스라인 하이퍼파라미터}: \texttt{yolov8s.\allowbreak{}pt}, \texttt{epochs=30}, \texttt{imgsz=640}, \texttt{batch=16}, \texttt{patience=10}, \texttt{device=0}.
+\item \textbf{v2 개선 하이퍼파라미터}: \texttt{yolo11m.\allowbreak{}pt}, \texttt{epochs=40} (24 epoch 조기 종료, Best 12 epoch), \texttt{imgsz=960}, \texttt{batch=16} (\texttt{8 x 2 GPUs}), \texttt{patience=12}, \texttt{cos\_\allowbreak{}lr=True}, \texttt{close\_\allowbreak{}mosaic=10}, \texttt{mixup=0.\allowbreak{}1}, \texttt{oversample\_\allowbreak{}rare\_\allowbreak{}classes=True} (\texttt{Cyclist x4}, \texttt{Pedestrian x2}, \texttt{6,\allowbreak{}974} 가중 학습 엔트리; \texttt{val}/\texttt{test} 미변조).
+\item \textbf{추적·마스킹·World Model 파라미터}: \texttt{ByteTrack} @ \texttt{imgsz=960}, \texttt{conf=0.\allowbreak{}25}, \texttt{mask\_\allowbreak{}model=mobile\_\allowbreak{}sam.\allowbreak{}pt}, \texttt{fps=10.\allowbreak{}0}, \texttt{camera\_\allowbreak{}height\_\allowbreak{}m=1.\allowbreak{}65}, \texttt{max\_\allowbreak{}coast\_\allowbreak{}sec=1.\allowbreak{}0}, \texttt{horizons=(0.\allowbreak{}5,\allowbreak{} 1.\allowbreak{}0,\allowbreak{} 1.\allowbreak{}5,\allowbreak{} 2.\allowbreak{}0)}, \texttt{CollisionRiskSmoother} (\texttt{alpha\_\allowbreak{}up=0.\allowbreak{}36}, \texttt{alpha\_\allowbreak{}down=0.\allowbreak{}22}, \texttt{max\_\allowbreak{}rise\_\allowbreak{}per\_\allowbreak{}sec=1.\allowbreak{}10}, \texttt{max\_\allowbreak{}fall\_\allowbreak{}per\_\allowbreak{}sec=0.\allowbreak{}85}, \texttt{hysteresis\_\allowbreak{}margin=0.\allowbreak{}04}).
+\end{itemize}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{5. 핵심 연구 질문(RQ1--RQ3) 초기 검증 결과 (\texttt{src/\allowbreak{}validation\_\allowbreak{}experiments.\allowbreak{}py}, Kaggle v5)}
+
+\texttt{training/\allowbreak{}} 시퀀스 \texttt{0015} (376 frames) 및 \texttt{0019} (1059 frames)를 대상으로 \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/src/validation\_experiments.py}{src/validation\_experiments.py}로 평가했습니다(\href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/world\_model/world\_outputs/validation\_rq1\_rq2\_rq3.json}{validation\_rq1\_rq2\_rq3.json}).
+
+
+\subsection{RQ1: 좌표 변환 및 자차 움직임 보상}
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.294\textwidth} >{\raggedright\arraybackslash}p{0.279\textwidth} >{\raggedright\arraybackslash}p{0.294\textwidth}}
+\toprule
+\textbf{지표} & \textbf{시퀀스 \texttt{0015} (376 frames)} & \textbf{시퀀스 \texttt{0019} (1059 frames)} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{지표} & \textbf{시퀀스 \texttt{0015} (376 frames)} & \textbf{시퀀스 \texttt{0019} (1059 frames)} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+자차 주행 거리 (\texttt{oxts}) & \texttt{71.\allowbreak{}61 m} & \texttt{238.\allowbreak{}10 m} \\
+최대 \texttt{ego $\leftrightarrow$ world} 왕복 오차 & \texttt{2.\allowbreak{}161e-\allowbreak{}14 m} & \texttt{3.\allowbreak{}352e-\allowbreak{}14 m} \\
+정지 GT 트랙 / 매칭 샘플 수 & \texttt{5} 트랙 / \texttt{369} 샘플 & \texttt{36} 트랙 / \texttt{602} 샘플 \\
+정지 객체 겉보기 속도 (비보정 자차 상대 평균) & \texttt{1.\allowbreak{}409 m/\allowbreak{}s} & \texttt{3.\allowbreak{}370 m/\allowbreak{}s} \\
+정지 객체 겉보기 속도 (OXTS World 보상 평균) & \texttt{0.\allowbreak{}618 m/\allowbreak{}s} (\texttt{-\allowbreak{}56.\allowbreak{}1\%}) & \texttt{2.\allowbreak{}350 m/\allowbreak{}s} (\texttt{-\allowbreak{}30.\allowbreak{}3\%}) \\
+\end{longtable}
+\end{footnotesize}
+
+
+\subsection{RQ2: 미래 궤적 예측 (\texttt{+0.\allowbreak{}5s} \textasciitilde{} \texttt{+2.\allowbreak{}0s}) vs 실제 미래 GT 관측치}
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.297\textwidth} >{\raggedright\arraybackslash}p{0.284\textwidth} >{\raggedright\arraybackslash}p{0.284\textwidth}}
+\toprule
+\textbf{모델 변형} & \textbf{시퀀스 \texttt{0015} Future-Ego ADE / FDE (m)} & \textbf{시퀀스 \texttt{0019} Future-Ego ADE / FDE (m)} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{모델 변형} & \textbf{시퀀스 \texttt{0015} Future-Ego ADE / FDE (m)} & \textbf{시퀀스 \texttt{0019} Future-Ego ADE / FDE (m)} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{Zero-Velocity 베이스라인} & \texttt{10.\allowbreak{}1950 /\allowbreak{} 11.\allowbreak{}4531} & \texttt{4.\allowbreak{}0831 /\allowbreak{} 5.\allowbreak{}2281} \\
+\textbf{자차 상대 칼만 (No OXTS)} & \texttt{8.\allowbreak{}7443 /\allowbreak{} 9.\allowbreak{}3002} & \texttt{3.\allowbreak{}6625 /\allowbreak{} 4.\allowbreak{}7413} \\
+\textbf{OXTS World 칼만 + CTRV 자차} & \textbf{\texttt{8.\allowbreak{}3848 /\allowbreak{} 8.\allowbreak{}8193}} (World \texttt{8.\allowbreak{}3388 /\allowbreak{} 8.\allowbreak{}6873}) & \textbf{\texttt{3.\allowbreak{}4873 /\allowbreak{} 4.\allowbreak{}4877}} (World \texttt{3.\allowbreak{}3824 /\allowbreak{} 4.\allowbreak{}2587}) \\
+\end{longtable}
+\end{footnotesize}
+
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{불확실성 보정 (2D 마할라노비스 \texttt{1$\sigma$ /\allowbreak{} 2$\sigma$}, 이론치 \texttt{0.\allowbreak{}3935 /\allowbreak{} 0.\allowbreak{}8647})}: \texttt{0019} \texttt{0.\allowbreak{}4138 /\allowbreak{} 0.\allowbreak{}6149} (\texttt{9,\allowbreak{}156} 샘플); \texttt{0015} \texttt{0.\allowbreak{}1451 /\allowbreak{} 0.\allowbreak{}3602} (\texttt{3,\allowbreak{}301} 샘플, 단안 지면 깊이 RMSE \texttt{12.\allowbreak{}484 m} vs \texttt{0019} \texttt{4.\allowbreak{}2726 m} 영향).
+\end{itemize}
+
+\subsection{RQ3: 인식·예측 불확실성이 위험도 및 Safety Shield에 미치는 인과성}
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.231\textwidth} >{\raggedright\arraybackslash}p{0.318\textwidth} >{\raggedright\arraybackslash}p{0.318\textwidth}}
+\toprule
+\textbf{반사실 실험군 (Arm)} & \textbf{시퀀스 \texttt{0015} 평균 위험도 / 비정상 주행 비율} & \textbf{시퀀스 \texttt{0019} 평균 위험도 / 비정상 주행 비율} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{반사실 실험군 (Arm)} & \textbf{시퀀스 \texttt{0015} 평균 위험도 / 비정상 주행 비율} & \textbf{시퀀스 \texttt{0019} 평균 위험도 / 비정상 주행 비율} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{Arm A: 불확실성 미고려 (Blind)} & \texttt{0.\allowbreak{}3076 /\allowbreak{} 41.\allowbreak{}76\%} (\texttt{Emergency=0}) & \texttt{0.\allowbreak{}5325 /\allowbreak{} 84.\allowbreak{}70\%} (\texttt{Emergency=98}) \\
+\textbf{Arm B: 불확실성 반영 (Nominal)} & \texttt{0.\allowbreak{}5189 /\allowbreak{} 90.\allowbreak{}43\%} (\texttt{248/\allowbreak{}376} 상향, \texttt{Emergency=10}) & \texttt{0.\allowbreak{}6990 /\allowbreak{} 89.\allowbreak{}52\%} (\texttt{377/\allowbreak{}1059} 상향, \texttt{Emergency=227}) \\
+\textbf{Arm C: 불확실성 반영 (Degraded)} & \texttt{0.\allowbreak{}5428 /\allowbreak{} 90.\allowbreak{}96\%} (\texttt{254/\allowbreak{}376} 위험 상승, \texttt{23} 상향) & \texttt{0.\allowbreak{}7003 /\allowbreak{} 89.\allowbreak{}14\%} (\texttt{592/\allowbreak{}1059} 위험 상승, \texttt{77} 상향, \texttt{Emergency=242}) \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{6. v2 업그레이드 검증 (\texttt{v1/\allowbreak{}v5 베이스라인} vs \texttt{v2 개선판})}
+
+모든 v2 산출물은 Kaggle \texttt{2x T4 GPU}에서 실행되어 \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/tree/main/results/v2\_improved/outputs}{results/v2\_improved/outputs/}에 저장되었습니다.
+
+
+\subsection{6.1 Stage 2 객체 검출 정확도 (\texttt{eval\_\allowbreak{}metrics.\allowbreak{}json})}
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.222\textwidth} >{\raggedright\arraybackslash}p{0.198\textwidth} >{\raggedright\arraybackslash}p{0.198\textwidth} >{\raggedright\arraybackslash}p{0.231\textwidth}}
+\toprule
+\textbf{Split / 지표} & \textbf{v1 베이스라인 (\texttt{yolov8s @ 640})} & \textbf{v2 개선판 (\texttt{yolo11m @ 960 + Oversampling})} & \textbf{개선폭 (\texttt{Delta})} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Split / 지표} & \textbf{v1 베이스라인 (\texttt{yolov8s @ 640})} & \textbf{v2 개선판 (\texttt{yolo11m @ 960 + Oversampling})} & \textbf{개선폭 (\texttt{Delta})} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{Val \texttt{mAP@0.\allowbreak{}5} / \texttt{mAP@0.\allowbreak{}5:\allowbreak{}0.\allowbreak{}95}} & \texttt{0.\allowbreak{}4521 /\allowbreak{} 0.\allowbreak{}2471} & \textbf{\texttt{0.\allowbreak{}5235 /\allowbreak{} 0.\allowbreak{}3060}} & \textbf{\texttt{+0.\allowbreak{}0714 (+15.\allowbreak{}8\%)} / \texttt{+0.\allowbreak{}0589}} \\
+\textbf{Val AP50 (\texttt{Car /\allowbreak{} Ped /\allowbreak{} Cyc})} & \texttt{0.\allowbreak{}7501 /\allowbreak{} 0.\allowbreak{}5141 /\allowbreak{} 0.\allowbreak{}0922} & \textbf{\texttt{0.\allowbreak{}8235 /\allowbreak{} 0.\allowbreak{}5871 /\allowbreak{} 0.\allowbreak{}1598}} & \texttt{+0.\allowbreak{}0734 /\allowbreak{} +0.\allowbreak{}0730 /\allowbreak{} +0.\allowbreak{}0676 (+73.\allowbreak{}3\%)} \\
+\textbf{Test \texttt{mAP@0.\allowbreak{}5} / \texttt{mAP@0.\allowbreak{}5:\allowbreak{}0.\allowbreak{}95}} & \texttt{0.\allowbreak{}3652 /\allowbreak{} 0.\allowbreak{}1695} & \textbf{\texttt{0.\allowbreak{}4269 /\allowbreak{} 0.\allowbreak{}2145}} & \textbf{\texttt{+0.\allowbreak{}0617 (+16.\allowbreak{}9\%)} / \texttt{+0.\allowbreak{}0450}} \\
+\textbf{Test AP50 (\texttt{Car /\allowbreak{} Ped /\allowbreak{} Cyc})} & \texttt{0.\allowbreak{}6294 /\allowbreak{} 0.\allowbreak{}3497 /\allowbreak{} 0.\allowbreak{}1165} & \textbf{\texttt{0.\allowbreak{}6662 /\allowbreak{} 0.\allowbreak{}3631 /\allowbreak{} 0.\allowbreak{}2513}} & \texttt{+0.\allowbreak{}0368 /\allowbreak{} +0.\allowbreak{}0134 /\allowbreak{} +0.\allowbreak{}1348 (+115.\allowbreak{}7\%)} \\
+\end{longtable}
+\end{footnotesize}
+
+
+\subsection{6.2 Stage 2--3 SAM 인스턴스 객체 마스킹 (\texttt{tracking\_\allowbreak{}summary.\allowbreak{}json})}
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{마스크 백엔드}: ByteTrack 트랙에 Box-Prompt를 적용한 \texttt{mobile\_\allowbreak{}sam.\allowbreak{}pt} (\texttt{trajectories\_\allowbreak{}masks.\allowbreak{}json} 및 CSV \texttt{mask\_\allowbreak{}area\_\allowbreak{}px}, \texttt{mask\_\allowbreak{}fill\_\allowbreak{}ratio}, \texttt{mask\_\allowbreak{}bottom\_\allowbreak{}x/\allowbreak{}y}).
+\item \textbf{시퀀스 \texttt{0015} (376 frames)}: \texttt{1,\allowbreak{}370}개 마스킹 인스턴스 (\texttt{41}개 고유 트랙).
+\item \textbf{시퀀스 \texttt{0019} (1059 frames)}: \texttt{3,\allowbreak{}788}개 마스킹 인스턴스 (\texttt{203}개 고유 트랙).
+\end{itemize}
+
+\subsection{6.3 Stage 4--5 World Model 깊이, 자차 보상 및 미래 예측 (\texttt{validation\_\allowbreak{}0015.\allowbreak{}json}, \texttt{validation\_\allowbreak{}0019.\allowbreak{}json})}
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.289\textwidth} >{\raggedright\arraybackslash}p{0.289\textwidth} >{\raggedright\arraybackslash}p{0.289\textwidth}}
+\toprule
+\textbf{지표 (전체 시퀀스)} & \textbf{시퀀스 \texttt{0015} v5 $\rightarrow$ v2} & \textbf{시퀀스 \texttt{0019} v5 $\rightarrow$ v2} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{지표 (전체 시퀀스)} & \textbf{시퀀스 \texttt{0015} v5 $\rightarrow$ v2} & \textbf{시퀀스 \texttt{0019} v5 $\rightarrow$ v2} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{RQ1 정지체 World 속도 평균} & \texttt{0.\allowbreak{}618 $\rightarrow$ 0.\allowbreak{}264 m/\allowbreak{}s} (\texttt{-\allowbreak{}57.\allowbreak{}3\%}) & \texttt{2.\allowbreak{}350 $\rightarrow$ 0.\allowbreak{}834 m/\allowbreak{}s} (\texttt{-\allowbreak{}64.\allowbreak{}5\%}) \\
+\textbf{RQ2 깊이 \texttt{Abs Rel /\allowbreak{} RMSE}} & \texttt{0.\allowbreak{}5207 /\allowbreak{} 12.\allowbreak{}484m $\rightarrow$ 0.\allowbreak{}2720 /\allowbreak{} 2.\allowbreak{}756m} (\texttt{-\allowbreak{}77.\allowbreak{}9\%} RMSE) & \texttt{0.\allowbreak{}1803 /\allowbreak{} 4.\allowbreak{}2726m $\rightarrow$ 0.\allowbreak{}1560 /\allowbreak{} 3.\allowbreak{}3568m} (\texttt{-\allowbreak{}21.\allowbreak{}4\%} RMSE) \\
+\textbf{RQ2 Future-Ego \texttt{ADE /\allowbreak{} FDE}} & \texttt{8.\allowbreak{}3848 /\allowbreak{} 8.\allowbreak{}8193m $\rightarrow$ 3.\allowbreak{}4999 /\allowbreak{} 4.\allowbreak{}5694m} (\texttt{-\allowbreak{}58.\allowbreak{}3\%} ADE) & \texttt{3.\allowbreak{}4873 /\allowbreak{} 4.\allowbreak{}4877m $\rightarrow$ 2.\allowbreak{}7907 /\allowbreak{} 3.\allowbreak{}2671m} (\texttt{-\allowbreak{}20.\allowbreak{}0\%} ADE) \\
+\textbf{RQ2 2D 불확실성 보정 (\texttt{1$\sigma$ /\allowbreak{} 2$\sigma$})} & \texttt{0.\allowbreak{}1451 /\allowbreak{} 0.\allowbreak{}3602 $\rightarrow$ 0.\allowbreak{}4584 /\allowbreak{} 0.\allowbreak{}6941} & \texttt{0.\allowbreak{}4138 /\allowbreak{} 0.\allowbreak{}6149 $\rightarrow$ 0.\allowbreak{}5808 /\allowbreak{} 0.\allowbreak{}7500} \\
+\textbf{RQ3 Blind $\rightarrow$ Nominal $\rightarrow$ Degraded 평균 위험도} & \texttt{0.\allowbreak{}4637 $\rightarrow$ 0.\allowbreak{}6498 $\rightarrow$ 0.\allowbreak{}6898} (\texttt{258} / \texttt{334} frames) & \texttt{0.\allowbreak{}7518 $\rightarrow$ 0.\allowbreak{}9053 $\rightarrow$ 0.\allowbreak{}9107} (\texttt{609} / \texttt{595} frames) \\
+\end{longtable}
+\end{footnotesize}
+
+
+\subsection{6.4 RQ4: 충돌 감지기 기울기 평활화 (\texttt{validation\_\allowbreak{}0015.\allowbreak{}json}, \texttt{validation\_\allowbreak{}0019.\allowbreak{}json})}
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.034\textwidth} >{\raggedright\arraybackslash}p{0.233\textwidth} >{\raggedright\arraybackslash}p{0.192\textwidth} >{\raggedright\arraybackslash}p{0.185\textwidth} >{\raggedright\arraybackslash}p{0.185\textwidth}}
+\toprule
+\textbf{시퀀스} & \textbf{지표} & \textbf{비평활화 (Raw Potential)} & \textbf{기울기 평활화 (\texttt{CollisionRiskSmoother})} & \textbf{감소율} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{시퀀스} & \textbf{지표} & \textbf{비평활화 (Raw Potential)} & \textbf{기울기 평활화 (\texttt{CollisionRiskSmoother})} & \textbf{감소율} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{\texttt{0015} (376f)} & \texttt{mean |dR/\allowbreak{}dt|} / \texttt{p95 |dR/\allowbreak{}dt|} / \texttt{max |dR/\allowbreak{}dt|} & \texttt{0.\allowbreak{}1656 /\allowbreak{} 0.\allowbreak{}7430 /\allowbreak{} 2.\allowbreak{}2500 /\allowbreak{}s} & \texttt{0.\allowbreak{}1290 /\allowbreak{} 0.\allowbreak{}4130 /\allowbreak{} 1.\allowbreak{}0400 /\allowbreak{}s} & \textbf{\texttt{-\allowbreak{}22.\allowbreak{}10\% /\allowbreak{} -\allowbreak{}44.\allowbreak{}41\% /\allowbreak{} -\allowbreak{}53.\allowbreak{}78\%}} \\
+\textbf{\texttt{0015} (376f)} & 스파이크 (\texttt{> 1.\allowbreak{}5/\allowbreak{}s}) / 판단 플립 & \texttt{3} / \texttt{24} & \textbf{\texttt{0}} / \texttt{18} & \textbf{\texttt{-\allowbreak{}100.\allowbreak{}0\%} / \texttt{-\allowbreak{}25.\allowbreak{}0\%}} \\
+\textbf{\texttt{0019} (1059f)} & \texttt{mean |dR/\allowbreak{}dt|} / \texttt{p95 |dR/\allowbreak{}dt|} / \texttt{max |dR/\allowbreak{}dt|} & \texttt{0.\allowbreak{}2236 /\allowbreak{} 0.\allowbreak{}9000 /\allowbreak{} 10.\allowbreak{}0000 /\allowbreak{}s} & \texttt{0.\allowbreak{}1188 /\allowbreak{} 0.\allowbreak{}5200 /\allowbreak{} 1.\allowbreak{}2500 /\allowbreak{}s} & \textbf{\texttt{-\allowbreak{}46.\allowbreak{}87\% /\allowbreak{} -\allowbreak{}42.\allowbreak{}22\% /\allowbreak{} -\allowbreak{}87.\allowbreak{}50\%}} \\
+\textbf{\texttt{0019} (1059f)} & 스파이크 (\texttt{> 1.\allowbreak{}5/\allowbreak{}s}) / 판단 플립 & \texttt{23} / \texttt{74} & \textbf{\texttt{0}} / \texttt{40} & \textbf{\texttt{-\allowbreak{}100.\allowbreak{}0\%} / \texttt{-\allowbreak{}45.\allowbreak{}95\%}} \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{7. v3 오른쪽 BEV 시각화 및 오경보 수정 (\texttt{v2\_\allowbreak{}improved} $\rightarrow$ \texttt{v3\_\allowbreak{}bev\_\allowbreak{}fixed}, Kaggle v7)}
+
+산출물은 \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/tree/main/results/v3\_bev\_fixed/world\_outputs}{results/v3\_bev\_fixed/world\_outputs/}에 보관되어 있습니다(\texttt{mask\_\allowbreak{}backend:\allowbreak{} "mobile\_\allowbreak{}sam.\allowbreak{}pt"}).
+
+
+\subsection{7.1 오경보 억제 및 개입 정밀도 (\texttt{Arm B} Nominal)}
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.043\textwidth} >{\raggedright\arraybackslash}p{0.274\textwidth} >{\raggedright\arraybackslash}p{0.128\textwidth} >{\raggedright\arraybackslash}p{0.128\textwidth} >{\raggedright\arraybackslash}p{0.257\textwidth}}
+\toprule
+\textbf{시퀀스} & \textbf{지표} & \textbf{v2 수정 전} & \textbf{v3 수정 후} & \textbf{변화량 (\texttt{Delta})} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{시퀀스} & \textbf{지표} & \textbf{v2 수정 전} & \textbf{v3 수정 후} & \textbf{변화량 (\texttt{Delta})} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{\texttt{0015} (376f)} & 평균 위험도 / 비정상 주행 비율 & \texttt{0.\allowbreak{}6498 /\allowbreak{} 95.\allowbreak{}21\%} & \textbf{\texttt{0.\allowbreak{}2791 /\allowbreak{} 47.\allowbreak{}07\%}} & \textbf{\texttt{-\allowbreak{}57.\allowbreak{}0\%} 위험도 / \texttt{-\allowbreak{}48.\allowbreak{}14\%p}} \\
+\textbf{\texttt{0015} (376f)} & Normal Driving / Emergency 프레임 수 & \texttt{18 /\allowbreak{} 104} & \textbf{\texttt{199 /\allowbreak{} 16}} & \textbf{\texttt{+181 Normal} / \texttt{-\allowbreak{}84.\allowbreak{}6\% Emergency}} \\
+\textbf{\texttt{0019} (1059f)} & 평균 위험도 / Emergency 프레임 수 & \texttt{0.\allowbreak{}9053 /\allowbreak{} 849} & \textbf{\texttt{0.\allowbreak{}6290 /\allowbreak{} 216}} & \textbf{\texttt{-\allowbreak{}30.\allowbreak{}5\%} 위험도 / \texttt{-\allowbreak{}74.\allowbreak{}6\% Emergency}} \\
+\end{longtable}
+\end{footnotesize}
+
+
+\subsection{7.2 유지·개선된 RQ1--RQ4 검증 지표 (\texttt{v3\_\allowbreak{}bev\_\allowbreak{}fixed})}
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.289\textwidth} >{\raggedright\arraybackslash}p{0.289\textwidth} >{\raggedright\arraybackslash}p{0.289\textwidth}}
+\toprule
+\textbf{RQ} & \textbf{시퀀스 \texttt{0015} (376f)} & \textbf{시퀀스 \texttt{0019} (1059f)} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{RQ} & \textbf{시퀀스 \texttt{0015} (376f)} & \textbf{시퀀스 \texttt{0019} (1059f)} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{RQ1 왕복 오차 / 정지체 World 속도} & \texttt{2.\allowbreak{}161e-\allowbreak{}14 m} / \texttt{0.\allowbreak{}227 m/\allowbreak{}s} (비보정 \texttt{1.\allowbreak{}358 m/\allowbreak{}s}) & \texttt{3.\allowbreak{}352e-\allowbreak{}14 m} / \texttt{0.\allowbreak{}756 m/\allowbreak{}s} (비보정 \texttt{1.\allowbreak{}849 m/\allowbreak{}s}) \\
+\textbf{RQ2 OXTS+CTRV \texttt{ADE /\allowbreak{} FDE} (vs No-OXTS / Zero-Vel)} & \texttt{3.\allowbreak{}6052 /\allowbreak{} 4.\allowbreak{}6872 m} (vs \texttt{4.\allowbreak{}275 /\allowbreak{} 5.\allowbreak{}6099}, \texttt{5.\allowbreak{}2465 /\allowbreak{} 7.\allowbreak{}1198}) & \texttt{2.\allowbreak{}7890 /\allowbreak{} 3.\allowbreak{}2453 m} (vs \texttt{2.\allowbreak{}9277 /\allowbreak{} 3.\allowbreak{}5301}, \texttt{3.\allowbreak{}2491 /\allowbreak{} 4.\allowbreak{}2215}) \\
+\textbf{RQ2 2D 실측 커버리지 (\texttt{1$\sigma$ /\allowbreak{} 2$\sigma$})} & \texttt{0.\allowbreak{}3939 /\allowbreak{} 0.\allowbreak{}5779} (이론치 \texttt{0.\allowbreak{}3935 /\allowbreak{} 0.\allowbreak{}8647}) & \texttt{0.\allowbreak{}4863 /\allowbreak{} 0.\allowbreak{}6826} \\
+\textbf{RQ3 Blind $\rightarrow$ Nominal $\rightarrow$ Degraded 평균 위험도} & \texttt{0.\allowbreak{}2220 $\rightarrow$ 0.\allowbreak{}2791 $\rightarrow$ 0.\allowbreak{}2792} (\texttt{77 /\allowbreak{} 18} 상향, \texttt{259/\allowbreak{}376} 상승) & \texttt{0.\allowbreak{}5242 $\rightarrow$ 0.\allowbreak{}6290 $\rightarrow$ 0.\allowbreak{}6396} (\texttt{521 /\allowbreak{} 121} 상향, \texttt{732/\allowbreak{}1059} 상승) \\
+\textbf{RQ4 최대 \texttt{|dR/\allowbreak{}dt|} / 스파이크(\texttt{>1.\allowbreak{}5/\allowbreak{}s}) / 플립} & \texttt{5.\allowbreak{}29 $\rightarrow$ 1.\allowbreak{}10 /\allowbreak{}s (-\allowbreak{}79.\allowbreak{}21\%)} / \texttt{5 $\rightarrow$ 0 (-\allowbreak{}100\%)} / \texttt{34 $\rightarrow$ 22 (-\allowbreak{}35.\allowbreak{}29\%)} & \texttt{5.\allowbreak{}76 $\rightarrow$ 1.\allowbreak{}10 /\allowbreak{}s (-\allowbreak{}80.\allowbreak{}90\%)} / \texttt{42 $\rightarrow$ 0 (-\allowbreak{}100\%)} / \texttt{140 $\rightarrow$ 78 (-\allowbreak{}44.\allowbreak{}29\%)} \\
+\end{longtable}
+\end{footnotesize}
+
+\end{document}

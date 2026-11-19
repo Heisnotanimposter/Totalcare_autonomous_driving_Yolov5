@@ -1,0 +1,115 @@
+\documentclass[10.5pt,a4paper]{article}
+\usepackage{geometry}
+\geometry{margin=18mm,top=20mm,bottom=20mm}
+\usepackage{fontspec}
+\setmonofont{Menlo}[Scale=0.82]
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,longtable,array}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue!60!black,urlcolor=blue!65!black}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\setcounter{secnumdepth}{0}
+\sloppy
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{gray}Dataset Audit: KITTI Tracking (`image\_02` \& `label\_02`)}
+\fancyhead[R]{\small\color{gray}KITTI Tracking Temporal World Model}
+\fancyfoot[C]{\small\thepage}
+\begin{document}
+\begin{center}
+{\LARGE\bfseries Dataset Audit: KITTI Tracking (`image\_02` \& `label\_02`)}\\[6pt]
+{\normalsize\color{gray} Dataset Audit: KITTI Tracking (`image\_02` \& `label\_02`)}\\[4pt]
+{\small\href{https://github.com/Heisnotanimposter/Totalcare_autonomous_driving_Yolov5}{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5}}
+\end{center}
+\vspace{4pt}
+\hrule
+\vspace{8pt}
+
+\section{1. Dataset Structure}
+
+The perception and temporal world model pipeline uses the \textbf{KITTI Object Tracking} training benchmark:
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Images}: \texttt{training/\allowbreak{}image\_\allowbreak{}02/\allowbreak{}<seq>/\allowbreak{}<frame>.\allowbreak{}png} (\texttt{data\_\allowbreak{}tracking\_\allowbreak{}image\_\allowbreak{}2.\allowbreak{}zip}, \texttt{14.\allowbreak{}73 GiB}, \texttt{10 Hz} sequential RGB frames)
+\item \textbf{Labels}: \texttt{training/\allowbreak{}label\_\allowbreak{}02/\allowbreak{}<seq>.\allowbreak{}txt} (\texttt{data\_\allowbreak{}tracking\_\allowbreak{}label\_\allowbreak{}2.\allowbreak{}zip}, \texttt{2.\allowbreak{}15 MiB}, 17-column format)
+\item \textbf{Calibration}: \texttt{training/\allowbreak{}calib/\allowbreak{}<seq>.\allowbreak{}txt} (\texttt{data\_\allowbreak{}tracking\_\allowbreak{}calib.\allowbreak{}zip}, containing \texttt{P2} camera projection matrix for ground-plane ego transformation)
+\end{itemize}
+
+Canonical Google Drive directory preserved from Colab workflow (\href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/untitled63.py}{untitled63.py}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/colab/01\_kitti\_colab\_audit\_and\_prep.ipynb}{01\_kitti\_colab\_audit\_and\_prep.ipynb}):
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \texttt{/\allowbreak{}content/\allowbreak{}drive/\allowbreak{}MyDrive/\allowbreak{}KITTI\_\allowbreak{}Tracking/\allowbreak{}}
+\end{itemize}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{2. Integrity Verification Protocol}
+
+Implemented in \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/src/kitti\_prep.py}{src/kitti\_prep.py} (\texttt{audit\_\allowbreak{}images\_\allowbreak{}and\_\allowbreak{}labels}) and initially audited in \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/untitled63.py}{untitled63.py}:
+
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Archive CRC \& Decode Check}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \texttt{ZipFile.\allowbreak{}testzip()} verifies zero corrupt archive members.
+\item \texttt{PIL.\allowbreak{}Image.\allowbreak{}verify()} checks image readability across all \texttt{8,\allowbreak{}008} training frames across \texttt{21} sequences (\texttt{0000}--\texttt{0020}).
+\end{itemize}
+\item \textbf{1:1 Image-Label Correspondence}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item Every sequence ID in \texttt{training/\allowbreak{}image\_\allowbreak{}02/\allowbreak{}} matches \texttt{training/\allowbreak{}label\_\allowbreak{}02/\allowbreak{}}.
+\item Counts \texttt{missing\_\allowbreak{}image\_\allowbreak{}count}, \texttt{extra\_\allowbreak{}image\_\allowbreak{}count}, \texttt{duplicate\_\allowbreak{}image\_\allowbreak{}frame\_\allowbreak{}count}, and \texttt{label\_\allowbreak{}frame\_\allowbreak{}without\_\allowbreak{}image\_\allowbreak{}count}.
+\item Frames with zero annotated objects (empty label frames) are retained as valid negative frames in YOLO export.
+\end{itemize}
+\item \textbf{Label Row Validation}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item Enforces 17 fields per row, finite numeric values, and \texttt{x2 > x1}, \texttt{y2 > y1}.
+\end{itemize}
+\item \textbf{Sequence-Scoped Track IDs}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item KITTI \texttt{track\_\allowbreak{}id} values reset per sequence and are always treated as composite \texttt{(sequence\_\allowbreak{}id,\allowbreak{} track\_\allowbreak{}id)}.
+\end{itemize}
+\item \textbf{DontCare \& Distractor Masking}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item Target classes: \texttt{Car}, \texttt{Pedestrian}, \texttt{Cyclist}.
+\item Adjacent KITTI classes (\texttt{Van} for \texttt{Car}; \texttt{Person}, \texttt{Person\_\allowbreak{}sitting} for \texttt{Pedestrian}) and \texttt{DontCare} regions are masked with neutral pixel value \texttt{114} during YOLO export (\texttt{pixel\_\allowbreak{}mask\_\allowbreak{}policy = dontcare\_\allowbreak{}and\_\allowbreak{}distractors}), preventing false negative penalties against TrackEval distractor taxonomy.
+\end{itemize}
+\end{enumerate}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{3. Sequence-Disjoint Data Split}
+
+To prevent temporal data leakage, frames from the same sequence are \textbf{never} split across Train, Validation, and Test sets (\texttt{validate\_\allowbreak{}disjoint\_\allowbreak{}sequences} in \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/src/kitti\_prep.py}{src/kitti\_prep.py}):
+
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.049\textwidth} >{\raggedright\arraybackslash}p{0.136\textwidth} >{\raggedright\arraybackslash}p{0.331\textwidth} >{\raggedright\arraybackslash}p{0.331\textwidth}}
+\toprule
+\textbf{Split} & \textbf{Sequence Count} & \textbf{Sequence IDs} & \textbf{Purpose} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Split} & \textbf{Sequence Count} & \textbf{Sequence IDs} & \textbf{Purpose} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{Train} & 14 & \texttt{0000,\allowbreak{} 0001,\allowbreak{} 0003,\allowbreak{} 0004,\allowbreak{} 0005,\allowbreak{} 0006,\allowbreak{} 0007,\allowbreak{} 0008,\allowbreak{} 0009,\allowbreak{} 0010,\allowbreak{} 0011,\allowbreak{} 0014,\allowbreak{} 0018,\allowbreak{} 0020} & Detector training (\texttt{Car}, \texttt{Pedestrian}, \texttt{Cyclist}) \\
+\textbf{Val} & 4 & \texttt{0002,\allowbreak{} 0012,\allowbreak{} 0015,\allowbreak{} 0017} & Epoch validation \& tracking tuning (\texttt{0015}) \\
+\textbf{Test} & 3 & \texttt{0013,\allowbreak{} 0016,\allowbreak{} 0019} & Held-out generalization \& world-model demo (\texttt{0019}) \\
+\end{longtable}
+\end{footnotesize}
+
+
+Exact per-sequence frame counts, per-split class distributions, and empty-frame ratios are generated automatically by \texttt{kitti\_\allowbreak{}prep.\allowbreak{}py} into \texttt{results/\allowbreak{}kitti\_\allowbreak{}step2\_\allowbreak{}audit.\allowbreak{}json} and \texttt{results/\allowbreak{}kitti\_\allowbreak{}export\_\allowbreak{}manifest.\allowbreak{}json} during remote Colab/Kaggle execution.
+
+\end{document}

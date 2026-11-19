@@ -24,3 +24,11 @@ results/v2_improved/outputs/world_model_*/
 
 # Large raw frame-by-frame timeline dumps (>15MB JSON; metrics & keyframes remain tracked)
 results/v3_bev_fixed/world_outputs/**/world_model_timeline_*.json
+results/v4_road_lane/world_outputs/**/world_model_timeline_*.json
+
+# v4 heavy checkpoints & redundant raw tracking dumps (>100MB GitHub limit or superseded by world_model_demo)
+results/v4_road_lane/road_outputs/road_lane_outputs/road_segformer_best.pt
+results/v4_road_lane/detect_outputs/*.pt
+results/v4_road_lane/detect_outputs/outputs/weights/last.pt
+results/v4_road_lane/detect_outputs/outputs/track_*/trajectories_masks.json
+results/v4_road_lane/detect_outputs/outputs/track_0019/tracking_demo.mp4

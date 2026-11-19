@@ -1,0 +1,200 @@
+\documentclass[10.5pt,a4paper]{article}
+\usepackage{geometry}
+\geometry{margin=18mm,top=20mm,bottom=20mm}
+\usepackage{fontspec}
+\setmonofont{Menlo}[Scale=0.82]
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,longtable,array}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue!60!black,urlcolor=blue!65!black}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\setcounter{secnumdepth}{0}
+\sloppy
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{gray}Per-Layer Machine Learning \& Deep Learning Technical Specification and References}
+\fancyhead[R]{\small\color{gray}KITTI Tracking Temporal World Model}
+\fancyfoot[C]{\small\thepage}
+\begin{document}
+\begin{center}
+{\LARGE\bfseries Per-Layer Machine Learning \& Deep Learning Technical Specification and References}\\[6pt]
+{\normalsize\color{gray} Per-Layer Machine Learning \& Deep Learning Technical Specification and References}\\[4pt]
+{\small\href{https://github.com/Heisnotanimposter/Totalcare_autonomous_driving_Yolov5}{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5}}
+\end{center}
+\vspace{4pt}
+\hrule
+\vspace{8pt}
+
+\textbf{Repository:} \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5}{Totalcare\_autonomous\_driving\_Yolov5}
+
+\textbf{Target Pipeline:} \texttt{Stage 2 (YOLO11m/\allowbreak{}l + MobileSAM + SegFormer-\allowbreak{}B2) $\rightarrow$ Stage 3 (ByteTrack) $\rightarrow$ Stage 4--7 (Temporal Ego-\allowbreak{}centric World Model \& Safety Shield)}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{1. Object Detector: \texttt{YOLO11m} (\texttt{results/\allowbreak{}v2\_\allowbreak{}improved/\allowbreak{}outputs/\allowbreak{}weights/\allowbreak{}best.\allowbreak{}pt}) \& \texttt{YOLO11l} (\texttt{v4})}
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Model Specification (Measured from Kaggle \texttt{2x Tesla T4} Training Logs)}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Architecture Scale (\texttt{YOLO11m})}: \texttt{231 layers}, \texttt{20,\allowbreak{}055,\allowbreak{}321 parameters}, \texttt{68.\allowbreak{}3 GFLOPs} (fused inference: \texttt{125 layers}, \texttt{20,\allowbreak{}032,\allowbreak{}345 parameters}, \texttt{67.\allowbreak{}8 GFLOPs}).
+\item \textbf{Input Resolution}: \texttt{960 $\times$ 960} RGB in \texttt{v2} (\texttt{1280 $\times$ 1280} in \texttt{v4} \texttt{YOLO11l}, \texttt{AMP FP16} training, \texttt{nc = 3}: \texttt{Car}, \texttt{Pedestrian}, \texttt{Cyclist}).
+\item \textbf{Improvement over Baseline (\texttt{v1 YOLOv8s})}: Upgrades \texttt{YOLOv8s} (\texttt{129 layers}, \texttt{11.\allowbreak{}14M params}, \texttt{28.\allowbreak{}6 GFLOPs}, \texttt{640px}) via \texttt{C2f $\rightarrow$ C3k2} backbone efficiency, \texttt{C2PSA} Spatial Attention, and high-resolution input (\texttt{960px}/\texttt{1280px}) to preserve distant/small pedestrian and cyclist features.
+\end{itemize}
+\end{itemize}
+
+\subsection{1.1 \texttt{YOLO11m} Full 24-Module Layer-by-Layer Breakdown (\texttt{Layer 0} -- \texttt{Layer 23})}
+
+Exact network graph printed by Ultralytics \texttt{8.\allowbreak{}4.\allowbreak{}212} (\texttt{logs/\allowbreak{}v2\_\allowbreak{}improved/\allowbreak{}totalcare-\allowbreak{}kitti-\allowbreak{}yolo-\allowbreak{}train-\allowbreak{}and-\allowbreak{}track.\allowbreak{}log}):
+
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.032\textwidth} >{\raggedright\arraybackslash}p{0.063\textwidth} >{\raggedright\arraybackslash}p{0.139\textwidth} >{\raggedright\arraybackslash}p{0.183\textwidth} >{\raggedright\arraybackslash}p{0.063\textwidth} >{\raggedright\arraybackslash}p{0.101\textwidth} >{\raggedright\arraybackslash}p{0.214\textwidth}}
+\toprule
+\textbf{Layer} & \textbf{Input (\texttt{from})} & \textbf{Module (\texttt{Ultralytics})} & \textbf{Output Channels / Args} & \textbf{Parameters} & \textbf{Stage} & \textbf{Technical Role} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Layer} & \textbf{Input (\texttt{from})} & \textbf{Module (\texttt{Ultralytics})} & \textbf{Output Channels / Args} & \textbf{Parameters} & \textbf{Stage} & \textbf{Technical Role} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{0} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Conv} & \texttt{[3,\allowbreak{} 64,\allowbreak{} 3,\allowbreak{} 2]} & \texttt{1,\allowbreak{}856} & Backbone (Stem) & \texttt{3$\times$3} Conv (\texttt{stride=2}) + BatchNorm + SiLU for \texttt{960$\rightarrow$480} downsampling (P1/2) and low-level edge/texture extraction \\
+\textbf{1} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Conv} & \texttt{[64,\allowbreak{} 128,\allowbreak{} 3,\allowbreak{} 2]} & \texttt{73,\allowbreak{}984} & Backbone (Stage 1) & \texttt{3$\times$3} Conv (\texttt{stride=2}), \texttt{480$\rightarrow$240} reduction (P2/4) and channel expansion \\
+\textbf{2} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}C3k2} & \texttt{[128,\allowbreak{} 256,\allowbreak{} 1,\allowbreak{} True,\allowbreak{} 0.\allowbreak{}25]} & \texttt{111,\allowbreak{}872} & Backbone (Stage 1) & Cross-Stage Partial Bottleneck (\texttt{c3k=False}, \texttt{e=0.\allowbreak{}25}) reducing compute via split channels and skip fusion \\
+\textbf{3} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Conv} & \texttt{[256,\allowbreak{} 256,\allowbreak{} 3,\allowbreak{} 2]} & \texttt{590,\allowbreak{}336} & Backbone (Stage 2) & \texttt{3$\times$3} Conv (\texttt{stride=2}), \texttt{240$\rightarrow$120} reduction (P3/8 --- small-object feature map anchor) \\
+\textbf{4} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}C3k2} & \texttt{[256,\allowbreak{} 512,\allowbreak{} 1,\allowbreak{} True,\allowbreak{} 0.\allowbreak{}25]} & \texttt{444,\allowbreak{}928} & Backbone (Stage 2) & P3/8 refinement preserving contour cues for distant \texttt{Pedestrian}/\texttt{Cyclist} \\
+\textbf{5} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Conv} & \texttt{[512,\allowbreak{} 512,\allowbreak{} 3,\allowbreak{} 2]} & \texttt{2,\allowbreak{}360,\allowbreak{}320} & Backbone (Stage 3) & \texttt{3$\times$3} Conv (\texttt{stride=2}), \texttt{120$\rightarrow$60} reduction (P4/16 --- medium-object feature map) \\
+\textbf{6} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}C3k2} & \texttt{[512,\allowbreak{} 512,\allowbreak{} 1,\allowbreak{} True]} & \texttt{1,\allowbreak{}380,\allowbreak{}352} & Backbone (Stage 3) & Deep \texttt{C3k} block (\texttt{c3k=True}) abstracting mid-range vehicles and cyclists \\
+\textbf{7} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Conv} & \texttt{[512,\allowbreak{} 512,\allowbreak{} 3,\allowbreak{} 2]} & \texttt{2,\allowbreak{}360,\allowbreak{}320} & Backbone (Stage 4) & \texttt{3$\times$3} Conv (\texttt{stride=2}), \texttt{60$\rightarrow$30} reduction (P5/32 --- large near vehicles \& global context) \\
+\textbf{8} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}C3k2} & \texttt{[512,\allowbreak{} 512,\allowbreak{} 1,\allowbreak{} True]} & \texttt{1,\allowbreak{}380,\allowbreak{}352} & Backbone (Stage 4) & High-level semantic feature extraction \\
+\textbf{9} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}SPPF} & \texttt{[512,\allowbreak{} 512,\allowbreak{} 5]} & \texttt{656,\allowbreak{}896} & Backbone (Context) & Spatial Pyramid Pooling - Fast: 3 sequential \texttt{5$\times$5} MaxPool layers aggregating multi-scale receptive fields \\
+\textbf{10} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}C2PSA} & \texttt{[512,\allowbreak{} 512,\allowbreak{} 1]} & \texttt{990,\allowbreak{}976} & Backbone (Attention) & Cross-Stage Partial \textbf{Pyramid Squeeze / Spatial Attention}: Multi-head Self-Attention focusing on occluded lane objects \\
+\textbf{11} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}Upsample} & \texttt{[None,\allowbreak{} 2,\allowbreak{} 'nearest']} & \texttt{0} & Neck (Top-Down FPN) & 2x nearest-neighbor upsampling from P5 (\texttt{30$\times$30}) to P4 (\texttt{60$\times$60}) \\
+\textbf{12} & \texttt{[-\allowbreak{}1,\allowbreak{} 6]} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Concat} & \texttt{dim=1} & \texttt{0} & Neck (Top-Down FPN) & Channel concatenation of Layer 11 (semantic) and Layer 6 (P4 spatial) (\texttt{512+512$\rightarrow$1024}) \\
+\textbf{13} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}C3k2} & \texttt{[1024,\allowbreak{} 512,\allowbreak{} 1,\allowbreak{} True]} & \texttt{1,\allowbreak{}642,\allowbreak{}496} & Neck (Top-Down FPN) & Fused P4 feature refinement \\
+\textbf{14} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}Upsample} & \texttt{[None,\allowbreak{} 2,\allowbreak{} 'nearest']} & \texttt{0} & Neck (Top-Down FPN) & 2x upsampling from P4 (\texttt{60$\times$60}) to P3 (\texttt{120$\times$120}) \\
+\textbf{15} & \texttt{[-\allowbreak{}1,\allowbreak{} 4]} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Concat} & \texttt{dim=1} & \texttt{0} & Neck (Top-Down FPN) & Concatenation of Layer 14 and Layer 4 (P3 high-res) (\texttt{512+512$\rightarrow$1024}) \\
+\textbf{16} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}C3k2} & \texttt{[1024,\allowbreak{} 256,\allowbreak{} 1,\allowbreak{} True]} & \texttt{542,\allowbreak{}720} & Neck $\rightarrow$ \textbf{P3/8 Out} & Final small-object (\texttt{Pedestrian}, distant \texttt{Cyclist}) detection map (\texttt{256ch}) \\
+\textbf{17} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Conv} & \texttt{[256,\allowbreak{} 256,\allowbreak{} 3,\allowbreak{} 2]} & \texttt{590,\allowbreak{}336} & Neck (Bottom-Up PAN) & Path Aggregation bottom-up path: P3 (\texttt{120$\times$120}) $\rightarrow$ \texttt{60$\times$60} downsampling \\
+\textbf{18} & \texttt{[-\allowbreak{}1,\allowbreak{} 13]} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Concat} & \texttt{dim=1} & \texttt{0} & Neck (Bottom-Up PAN) & Combines localization (Layer 17) with semantics (Layer 13) (\texttt{256+512$\rightarrow$768}) \\
+\textbf{19} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}C3k2} & \texttt{[768,\allowbreak{} 512,\allowbreak{} 1,\allowbreak{} True]} & \texttt{1,\allowbreak{}511,\allowbreak{}424} & Neck $\rightarrow$ \textbf{P4/16 Out} & Final medium-object detection map (\texttt{512ch}) \\
+\textbf{20} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Conv} & \texttt{[512,\allowbreak{} 512,\allowbreak{} 3,\allowbreak{} 2]} & \texttt{2,\allowbreak{}360,\allowbreak{}320} & Neck (Bottom-Up PAN) & P4 (\texttt{60$\times$60}) $\rightarrow$ \texttt{30$\times$30} downsampling \\
+\textbf{21} & \texttt{[-\allowbreak{}1,\allowbreak{} 10]} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Concat} & \texttt{dim=1} & \texttt{0} & Neck (Bottom-Up PAN) & Fuses bottom-up P4 with Backbone C2PSA output (Layer 10) (\texttt{512+512$\rightarrow$1024}) \\
+\textbf{22} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}C3k2} & \texttt{[1024,\allowbreak{} 512,\allowbreak{} 1,\allowbreak{} True]} & \texttt{1,\allowbreak{}642,\allowbreak{}496} & Neck $\rightarrow$ \textbf{P5/32 Out} & Final large/near vehicle (\texttt{Car}) detection map (\texttt{512ch}) \\
+\textbf{23} & \texttt{[16,\allowbreak{} 19,\allowbreak{} 22]} & \texttt{nn.\allowbreak{}modules.\allowbreak{}head.\allowbreak{}Detect} & \texttt{[nc=3,\allowbreak{} reg\_\allowbreak{}max=16,\allowbreak{} [256,\allowbreak{}512,\allowbreak{}512]]} & \texttt{1,\allowbreak{}413,\allowbreak{}337} & \textbf{Head (Decoupled)} & Anchor-Free decoupled head: regression branch (\texttt{4$\times$16=64} DFL) + classification branch (\texttt{nc=3} Depthwise Separable Conv) \\
+\end{longtable}
+\end{footnotesize}
+
+
+\subsection{1.2 Loss Functions \& Optimization Layers}
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Box Regression (\texttt{box=7.\allowbreak{}5}, \texttt{dfl=1.\allowbreak{}5})}: \textbf{CIoU Loss} (center distance, aspect ratio, and overlap area) + \textbf{Distribution Focal Loss (DFL, \texttt{reg\_\allowbreak{}max=16})} predicting discrete probability distributions over box edges via fixed projection \texttt{model.\allowbreak{}23.\allowbreak{}dfl.\allowbreak{}conv.\allowbreak{}weight}.
+\item \textbf{Classification (\texttt{cls=0.\allowbreak{}5})}: Per-class \textbf{Binary Cross-Entropy (BCE with Logits)} + \textbf{Task-Aligned Assigner (TAL)} dynamic positive/negative anchor assignment.
+\item \textbf{Cosine LR + MixUp + Close-Mosaic}: 3-epoch linear warmup (\texttt{warmup\_\allowbreak{}bias\_\allowbreak{}lr=0.\allowbreak{}1}), Cosine Annealing (\texttt{lrf=0.\allowbreak{}01}), and \texttt{close\_\allowbreak{}mosaic=10} for clean natural-image convergence.
+\end{itemize}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{2. Instance Segmentation: \texttt{MobileSAM} (\texttt{src/\allowbreak{}track\_\allowbreak{}utils.\allowbreak{}py})}
+
+Accepts per-track 2D Bounding Boxes from ByteTrack as \textbf{Box Prompts} to produce pixel-level foreground masks, providing ground-contact anchors (\texttt{mask\_\allowbreak{}bottom\_\allowbreak{}xy}) and occupancy ratios (\texttt{mask\_\allowbreak{}fill\_\allowbreak{}ratio}) for Stage 4 monocular depth fusion.
+
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.212\textwidth} >{\raggedright\arraybackslash}p{0.212\textwidth} >{\raggedright\arraybackslash}p{0.212\textwidth} >{\raggedright\arraybackslash}p{0.212\textwidth}}
+\toprule
+\textbf{Module (MobileSAM)} & \textbf{Internal Layer Mechanism} & \textbf{I/O Specification} & \textbf{Role in Pipeline} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Module (MobileSAM)} & \textbf{Internal Layer Mechanism} & \textbf{I/O Specification} & \textbf{Role in Pipeline} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{1. Image Encoder (\texttt{TinyViT})} & \texttt{PatchEmbed} (Conv$\times$2) $\rightarrow$ \textbf{Stage 1} (\texttt{MBConv} local channel-spatial) $\rightarrow$ \textbf{Stage 2--4} (\texttt{Windowed Multi-\allowbreak{}Head Self-\allowbreak{}Attention} + \texttt{MLP} + Patch Merging) $\rightarrow$ Neck (\texttt{1$\times$1} + \texttt{3$\times$3} Conv) & \texttt{BGR} image (\texttt{1242$\times$375}) $\rightarrow$ \texttt{64$\times$64$\times$256} Feature Embedding & Lightweight \texttt{TinyViT} backbone (\texttt{38.\allowbreak{}8 MB}) via decoupled distillation from ViT-H \\
+\textbf{2. Prompt Encoder} & \textbf{Random Fourier Positional Encoding} + learned corner-type embeddings on Box Prompt \texttt{[x1,\allowbreak{} y1,\allowbreak{} x2,\allowbreak{} y2]} & Bounding Box coords $\rightarrow$ \texttt{(N,\allowbreak{} 2,\allowbreak{} 256)} Sparse Prompt Tokens & Encodes detector boxes as spatial prompts to suppress background clutter \\
+\textbf{3. Two-Way Transformer Mask Decoder} & \textbf{Cross-Attention} (\texttt{Prompt$\rightarrow$Image}, \texttt{Image$\rightarrow$Prompt}) 2 blocks + MLP $\rightarrow$ \textbf{\texttt{ConvTranspose2d} (\texttt{4$\times$} Upsampling)} $\rightarrow$ Hypernetwork MLP Inner Product & Sparse Tokens + \texttt{64$\times$64$\times$256} $\rightarrow$ Binary Mask + Polygon Contour & \texttt{cv2.\allowbreak{}findContours} extracts polygons (\texttt{trajectories\_\allowbreak{}masks.\allowbreak{}json}), \texttt{mask\_\allowbreak{}fill\_\allowbreak{}ratio}, and \texttt{mask\_\allowbreak{}bottom\_\allowbreak{}x/\allowbreak{}y} \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{3. Multi-Object Tracking Layer: \texttt{ByteTrack} (\texttt{src/\allowbreak{}track\_\allowbreak{}utils.\allowbreak{}py})}
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{State Estimation Filter (Linear Kalman Filter)}: 8D constant-velocity image-plane state $\mathbf{x} = [c_x, c_y, a, h, \dot{c}_x, \dot{c}_y, \dot{a}, \dot{h}]^T$ (center, aspect ratio, height, and velocities).
+\item \textbf{Two-Stage Hungarian Association}:
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{High-Confidence Matching (\texttt{conf >= 0.\allowbreak{}5})}: Applies \texttt{linear\_\allowbreak{}sum\_\allowbreak{}assignment} on the IoU cost matrix between active tracks and high-confidence boxes.
+\item \textbf{Low-Confidence Recovery (\texttt{0.\allowbreak{}1 <= conf < 0.\allowbreak{}5})}: Re-associates lower-confidence detections caused by partial occlusion or backlight to unmatched tracks, reducing ID switches.
+\end{enumerate}
+\item \textbf{Sequence Isolation Audit (\texttt{compute\_\allowbreak{}track\_\allowbreak{}trajectories})}: Resets tracker state at sequence boundaries, indexes by composite \texttt{(sequence\_\allowbreak{}id,\allowbreak{} track\_\allowbreak{}id)}, and logs any frame-order, duplicate, or class-flip anomalies.
+\end{itemize}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{4. Road \& Lane Segmentation Layer: \texttt{SegFormer-\allowbreak{}B2} + BEV IPM (\texttt{src/\allowbreak{}road\_\allowbreak{}lane.\allowbreak{}py}, \texttt{v4})}
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Semantic Segmentation (\texttt{nvidia/\allowbreak{}segformer-\allowbreak{}b2-\allowbreak{}finetuned-\allowbreak{}cityscapes-\allowbreak{}1024-\allowbreak{}1024})}: Hierarchical \textbf{Mix-Transformer (MiT-B2)} encoder with Overlapped Patch Merging and Efficient Self-Attention + lightweight \textbf{All-MLP} decoder fine-tuned on KITTI \texttt{data\_\allowbreak{}road} with a 3-class head (\texttt{Non-\allowbreak{}Road}, \texttt{Other Road}, \texttt{Ego-\allowbreak{}Lane}).
+\item \textbf{Curvilinear Lane Extraction (\texttt{TemporalRoadLaneProcessor})}: Inverse Perspective Mapping (IPM) to BEV + HLS/Sobel lane-marking filtering + Ego-Lane boundary fallback + quadratic polynomial ($x = a y^2 + b y + c$) EMA temporal smoothing.
+\end{itemize}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{5. Temporal Ego-centric World Model \& Safety Shield Layer (\texttt{src/\allowbreak{}world\_\allowbreak{}model.\allowbreak{}py}, \texttt{src/\allowbreak{}world\_\allowbreak{}visualizer.\allowbreak{}py})}
+
+Differentiable Kalman-based backend unifying perception outputs into metric physics and temporal continuity:
+
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{P2 Inverse-Variance Depth Fusion Layer (\texttt{KittiCalibration.\allowbreak{}ground\_\allowbreak{}plane\_\allowbreak{}bev\_\allowbreak{}fusion})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item Combines flat-ground projection ($Y_{\text{ground}} = f_y h_{\text{cam}} / (v - c_y)$) anchored at \texttt{mask\_\allowbreak{}bottom\_\allowbreak{}xy} (\texttt{mask\_\allowbreak{}fill\_\allowbreak{}ratio >= 0.\allowbreak{}25}) with pitch-invariant class-height depth ($Y_{\text{height}} = f_y H_c / h_{\text{px}}$) via $Y_{\text{fused}} = \frac{w_g Y_g + w_h Y_h}{w_g + w_h}$.
+\end{itemize}
+\item \textbf{OXTS \texttt{SE(2)} Ego-Motion Compensation \& CTRV Layer (\texttt{EgoPose2D}, \texttt{KittiOxtsOdometry})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item Mercator-projected \texttt{World-\allowbreak{}ENU} transform removes Ego translation and yaw ($\psi, v_f, w_z$) to eliminate false velocities on stationary objects (\texttt{round-\allowbreak{}trip error < 4e-\allowbreak{}14 m}).
+\end{itemize}
+\item \textbf{4D World-ENU Linear Kalman Filter (\texttt{ObjectWorldTrack})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item State $\mathbf{x}_w = [X_w, Y_w, v_{X,w}, v_{Y,w}]^T$, white-noise acceleration process noise ($\sigma_a = 1.1\text{ m/s}^2$), rotated measurement covariance $R_w$ scaled inversely by confidence and mask fill ratio, projected to BEV pixels via Jacobian $J=\text{diag}(s_x,-s_y)$.
+\end{itemize}
+\item \textbf{$C^1$ Continuous Hazard Potential + \texttt{CollisionRiskSmoother} Layer}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item Lateral-covariance (\texttt{lateral\_\allowbreak{}uncertainty\_\allowbreak{}m}) corridor intrusion, approach-speed gating (\texttt{approach\_\allowbreak{}w}), non-road attenuation (\texttt{0.\allowbreak{}65} in \texttt{v4}), calibrated TTC, and probabilistic soft-union $1 - \prod_i (1 - r_i)$.
+\item Asymmetric EMA (\texttt{alpha\_\allowbreak{}up=0.\allowbreak{}36}, \texttt{alpha\_\allowbreak{}down=0.\allowbreak{}22}), slew-rate clamping (\texttt{1.\allowbreak{}10/\allowbreak{}s}, \texttt{-\allowbreak{}0.\allowbreak{}85/\allowbreak{}s}), per-track EMA (\texttt{per\_\allowbreak{}track\_\allowbreak{}ema}), low-TTC debouncing (\texttt{low\_\allowbreak{}ttc\_\allowbreak{}streak}), and hysteresis (\texttt{0.\allowbreak{}04}) eliminate \texttt{>1.\allowbreak{}5/\allowbreak{}s} spikes by \texttt{100\%}.
+\end{itemize}
+\end{enumerate}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{6. References}
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Ultralytics YOLO11 / YOLOv8}: Jocher, G., Chaurasia, A., \& Qiu, J. (2023--2025). \textit{Ultralytics YOLO (\texttt{YOLO11}, \texttt{C3k2}, \texttt{C2PSA}, \texttt{YOLOv8})} --- https:\allowbreak{}/\allowbreak{}/\allowbreak{}docs.\allowbreak{}ultralytics.\allowbreak{}com/\allowbreak{}models/\allowbreak{}yolo11/\allowbreak{}
+\item \textbf{SegFormer}: Xie, E., Wang, W., Yu, Z., Anandkumar, A., Alvarez, J. M., \& Luo, P. (2021). \textit{SegFormer: Simple and Efficient Design for Semantic Segmentation with Transformers} (\texttt{NeurIPS 2021}, \texttt{arXiv:\allowbreak{}2105.\allowbreak{}15203}).\allowbreak{} --- https:\allowbreak{}/\allowbreak{}/\allowbreak{}arxiv.\allowbreak{}org/\allowbreak{}abs/\allowbreak{}2105.\allowbreak{}15203
+\item \textbf{MobileSAM}: Zhang, C., Han, D., Qiao, Y., Kim, J. U., Bae, S.-H., Lee, S., \& Hong, C. S. (2023). \textit{Faster Segment Anything: Towards Lightweight SAM for Mobile Applications} (\texttt{arXiv:\allowbreak{}2306.\allowbreak{}14289}).\allowbreak{} --- https:\allowbreak{}/\allowbreak{}/\allowbreak{}arxiv.\allowbreak{}org/\allowbreak{}abs/\allowbreak{}2306.\allowbreak{}14289
+\item \textbf{Segment Anything (SAM)}: Kirillov, A., Mintun, E., Ravi, N., et al. (2023). \textit{Segment Anything} (\texttt{ICCV 2023}, \texttt{arXiv:\allowbreak{}2304.\allowbreak{}02643}).\allowbreak{} --- https:\allowbreak{}/\allowbreak{}/\allowbreak{}arxiv.\allowbreak{}org/\allowbreak{}abs/\allowbreak{}2304.\allowbreak{}02643
+\item \textbf{ByteTrack}: Zhang, Y., Sun, P., Jiang, Y., Yu, D., Weng, F., Yuan, Z., Luo, P., Liu, W., \& Wang, X. (2022). \textit{ByteTrack: Multi-Object Tracking by Associating Every Detection Box} (\texttt{ECCV 2022}).\allowbreak{} --- https:\allowbreak{}/\allowbreak{}/\allowbreak{}arxiv.\allowbreak{}org/\allowbreak{}abs/\allowbreak{}2110.\allowbreak{}06864
+\item \textbf{KITTI Object Tracking \& Road Benchmark}: Geiger, A., Lenz, P., \& Urtasun, R. (2012). \textit{Are we ready for Autonomous Driving? The KITTI Vision Benchmark Suite} (\texttt{CVPR 2012}).\allowbreak{} --- https:\allowbreak{}/\allowbreak{}/\allowbreak{}www.\allowbreak{}cvlibs.\allowbreak{}net/\allowbreak{}datasets/\allowbreak{}kitti/\allowbreak{}eval\_\allowbreak{}tracking.\allowbreak{}php
+\item \textbf{Kalman Filter \& CTRV Motion Modeling}: Kalman, R. E. (1960). \textit{A New Approach to Linear Filtering and Prediction Problems}; Schubert, R., et al. (2008). \textit{Comparison and Evaluation of Advanced Motion Models for Vehicle Tracking} (\texttt{FUSION 2008}).
+\item \textbf{DFL \& Task-Aligned Assigner}: Li, X., et al. (2020). \textit{Generalized Focal Loss} (\texttt{NeurIPS 2020}); Feng, C., et al. (2021). \textit{TOOD: Task-aligned One-stage Object Detection} (\texttt{ICCV 2021}).
+\end{enumerate}
+\end{document}

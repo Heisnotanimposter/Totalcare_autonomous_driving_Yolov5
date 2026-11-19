@@ -1,0 +1,18 @@
+{
+  "id": "test013/totalcare-kitti-v4-road-lane",
+  "title": "TotalCare KITTI v4 Road Lane",
+  "code_file": "train_road_lane_kitti.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": "true",
+  "enable_gpu": "true",
+  "enable_tpu": "false",
+  "enable_internet": "true",
+  "dataset_sources": [
+    "tryingit/roadlane-detection-evaluation-2013",
+    "leducnhuan/kitti-tracking"
+  ],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": []
+}

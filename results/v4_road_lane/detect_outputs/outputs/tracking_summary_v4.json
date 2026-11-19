@@ -1,0 +1,12 @@
+{
+  "0015": {
+    "frames_processed": 376,
+    "unique_track_ids_in_clip": 40,
+    "masked_instances_count": 1682
+  },
+  "0019": {
+    "frames_processed": 1059,
+    "unique_track_ids_in_clip": 269,
+    "masked_instances_count": 7599
+  }
+}

@@ -1,0 +1,342 @@
+\documentclass[10.5pt,a4paper]{article}
+\usepackage{geometry}
+\geometry{margin=18mm,top=20mm,bottom=20mm}
+\usepackage{fontspec}
+\setmonofont{Menlo}[Scale=0.82]
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,longtable,array}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue!60!black,urlcolor=blue!65!black}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\setcounter{secnumdepth}{0}
+\sloppy
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{gray}Experiment Plan: Camera-Centric Temporal Ego-centric World Model}
+\fancyhead[R]{\small\color{gray}KITTI Tracking Temporal World Model}
+\fancyfoot[C]{\small\thepage}
+\begin{document}
+\begin{center}
+{\LARGE\bfseries Experiment Plan: Camera-Centric Temporal Ego-centric World Model}\\[6pt]
+{\normalsize\color{gray} Experiment Plan: Camera-Centric Temporal Ego-centric World Model}\\[4pt]
+{\small\href{https://github.com/Heisnotanimposter/Totalcare_autonomous_driving_Yolov5}{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5}}
+\end{center}
+\vspace{4pt}
+\hrule
+\vspace{8pt}
+
+\section{1. Research Hypotheses}
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{H1 (Sequence-Disjoint Integrity \& Masking):} Sequence-disjoint splitting combined with \texttt{DontCare} + distractor (\texttt{Van}, \texttt{Person}, \texttt{Person\_\allowbreak{}sitting}) masking prevents temporal overfitting and spurious false-negative gradients compared to unmasked or frame-random splits.
+\item \textbf{H2 (Temporal Continuity):} Associating 2D detections with ByteTrack (\texttt{src/\allowbreak{}track\_\allowbreak{}utils.\allowbreak{}py}) and filtering ego-centric trajectories via a kinematic Kalman filter (\texttt{src/\allowbreak{}world\_\allowbreak{}model.\allowbreak{}py}) stabilizes noisy monocular ground-plane depth estimates and preserves object identity across brief occlusions.
+\item \textbf{H3 (Uncertainty-Aware Prediction \& Risk):} Separating detection, depth, tracking, and motion prediction uncertainties yields calibrated multi-horizon trajectory bounds (\texttt{t + 0.\allowbreak{}5s} to \texttt{+2.\allowbreak{}0s}) and more consistent risk indicators than naive linear bounding-box extrapolation.
+\end{itemize}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{2. Baselines \& Ablation Studies}
+
+\subsection{Baselines}
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{B0 --- Frame-Independent Detection (\texttt{src/\allowbreak{}detect.\allowbreak{}py})}: Per-frame 2D bounding boxes with no temporal identity or ego-centric spatial projection.
+\item \textbf{B1 --- Detector + 2D Tracker (\texttt{YOLOv8s + ByteTrack}, \texttt{src/\allowbreak{}track\_\allowbreak{}utils.\allowbreak{}py})}: 2D image-plane tracking with \texttt{px/\allowbreak{}sec} velocity only.
+\item \textbf{B2 --- Temporal Ego-centric World Model (\texttt{src/\allowbreak{}world\_\allowbreak{}model.\allowbreak{}py})}: Calibrated \texttt{P2} ground-plane projection + 4D kinematic Kalman filter + \texttt{Observed/\allowbreak{}Inferred/\allowbreak{}Occluded/\allowbreak{}Unknown} state machine + Safety Shield.
+\end{enumerate}
+
+\subsection{Planned Ablations}
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.226\textwidth} >{\raggedright\arraybackslash}p{0.320\textwidth} >{\raggedright\arraybackslash}p{0.320\textwidth}}
+\toprule
+\textbf{Study} & \textbf{Variants} & \textbf{Target Observation} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Study} & \textbf{Variants} & \textbf{Target Observation} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{A1: Label Masking Policy} & \texttt{raw} vs \texttt{dontcare\_\allowbreak{}only} vs \texttt{dontcare\_\allowbreak{}and\_\allowbreak{}distractors} & Impact on \texttt{Car}/\texttt{Pedestrian} precision and false-positive rate on vans/sitting persons \\
+\textbf{A2: Tracker Association} & \texttt{bytetrack.\allowbreak{}yaml} vs \texttt{botsort.\allowbreak{}yaml} & Track continuity (\texttt{IDF1}, \texttt{IDSW}) and coasting stability \\
+\textbf{A3: Motion Model} & Naive linear extrapolation vs 4D Kalman filter (\texttt{accel\_\allowbreak{}sigma} tuned) & Multi-horizon \texttt{ADE} / \texttt{FDE} at \texttt{+0.\allowbreak{}5s .\allowbreak{}.\allowbreak{} +2.\allowbreak{}0s} \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{3. Evaluation Metrics \& Ground-Truth Availability}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.133\textwidth} >{\raggedright\arraybackslash}p{0.238\textwidth} >{\raggedright\arraybackslash}p{0.238\textwidth} >{\raggedright\arraybackslash}p{0.238\textwidth}}
+\toprule
+\textbf{Module} & \textbf{Metrics} & \textbf{KITTI Tracking GT Availability} & \textbf{Tooling} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Module} & \textbf{Metrics} & \textbf{KITTI Tracking GT Availability} & \textbf{Tooling} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{Detection} & Precision, Recall, \texttt{mAP@0.\allowbreak{}5}, \texttt{mAP@0.\allowbreak{}5:\allowbreak{}0.\allowbreak{}95} & \textbf{Available} (\texttt{label\_\allowbreak{}02} 2D boxes) & \texttt{ultralytics} \texttt{val} on Val \& Test splits \\
+\textbf{Tracking} & HOTA, IDF1, ID Switches & \textbf{Available} (\texttt{label\_\allowbreak{}02} 2D + \texttt{track\_\allowbreak{}id}, official \texttt{Car}/\texttt{Pedestrian} scope) & TrackEval / \texttt{kitti\_\allowbreak{}preds/\allowbreak{}<seq>.\allowbreak{}txt} \\
+\textbf{Depth (Monocular)} & \texttt{Abs Rel}, \texttt{RMSE} (m) & \textbf{Available} (\texttt{label\_\allowbreak{}02} cols 13--15 3D \texttt{x,\allowbreak{} y,\allowbreak{} z}) & \texttt{evaluate\_\allowbreak{}world\_\allowbreak{}model\_\allowbreak{}against\_\allowbreak{}kitti\_\allowbreak{}gt} \\
+\textbf{Motion Prediction} & \texttt{ADE}, \texttt{FDE} (m, \texttt{0.\allowbreak{}5s--2.\allowbreak{}0s}) & \textbf{Available} (future \texttt{label\_\allowbreak{}02} 3D positions) & \texttt{evaluate\_\allowbreak{}world\_\allowbreak{}model\_\allowbreak{}against\_\allowbreak{}kitti\_\allowbreak{}gt} \\
+\textbf{Risk Assessment} & Risk Indicator distribution, Calibration & \textbf{No direct GT label} in KITTI Tracking & Proxy replay audit only (labeled heuristic) \\
+\textbf{Safety Intervention} & Collision Rate, Intervention Rate & \textbf{Not available} (offline video only, no closed-loop sim) & Offline advisory logging only \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{4. Experimental Execution Conditions}
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Execution Environment}: Kaggle CLI GPU (\texttt{NvidiaTeslaT4}, auto-DP \texttt{2x T4} supported) and/or Google Colab CLI (local CPU lacks PyTorch/CUDA).
+\item \textbf{Target Classes}: \texttt{Car}, \texttt{Pedestrian}, \texttt{Cyclist} (\texttt{nc = 3}).
+\item \textbf{Training Hyperparameters (v1 Baseline)}: \texttt{yolov8s.\allowbreak{}pt}, \texttt{epochs=30}, \texttt{imgsz=640}, \texttt{batch=16}, \texttt{patience=10}, \texttt{device=0}.
+\item \textbf{Training Hyperparameters (v2 Improved)}: \texttt{yolo11m.\allowbreak{}pt}, \texttt{epochs=40} (early-stopped at 24, best epoch 12), \texttt{imgsz=960}, \texttt{batch=16} (\texttt{8 x 2 GPUs}), \texttt{patience=12}, \texttt{cos\_\allowbreak{}lr=True}, \texttt{close\_\allowbreak{}mosaic=10}, \texttt{mixup=0.\allowbreak{}1}, \texttt{oversample\_\allowbreak{}rare\_\allowbreak{}classes=True} (\texttt{Cyclist x4}, \texttt{Pedestrian x2}, \texttt{6,\allowbreak{}974} weighted train entries; \texttt{val}/\texttt{test} untouched).
+\item \textbf{Tracking, Masking \& World Model Params}: \texttt{ByteTrack} @ \texttt{imgsz=960}, \texttt{conf=0.\allowbreak{}25}, \texttt{mask\_\allowbreak{}model=mobile\_\allowbreak{}sam.\allowbreak{}pt}, \texttt{fps=10.\allowbreak{}0}, \texttt{camera\_\allowbreak{}height\_\allowbreak{}m=1.\allowbreak{}65}, \texttt{max\_\allowbreak{}coast\_\allowbreak{}sec=1.\allowbreak{}0}, \texttt{horizons=(0.\allowbreak{}5,\allowbreak{} 1.\allowbreak{}0,\allowbreak{} 1.\allowbreak{}5,\allowbreak{} 2.\allowbreak{}0)}, \texttt{CollisionRiskSmoother} (\texttt{alpha\_\allowbreak{}up=0.\allowbreak{}36}, \texttt{alpha\_\allowbreak{}down=0.\allowbreak{}22}, \texttt{max\_\allowbreak{}rise\_\allowbreak{}per\_\allowbreak{}sec=1.\allowbreak{}10}, \texttt{max\_\allowbreak{}fall\_\allowbreak{}per\_\allowbreak{}sec=0.\allowbreak{}85}, \texttt{hysteresis\_\allowbreak{}margin=0.\allowbreak{}04}).
+\end{itemize}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{5. Core Research Validation Results (\texttt{src/\allowbreak{}validation\_\allowbreak{}experiments.\allowbreak{}py}, Kaggle v5)}
+
+Evaluated using \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/src/validation\_experiments.py}{src/validation\_experiments.py} on \texttt{training/\allowbreak{}} sequences \texttt{0015} (376 frames) and \texttt{0019} (1059 frames); raw outputs stored in \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/world\_model/world\_outputs/validation\_rq1\_rq2\_rq3.json}{validation\_rq1\_rq2\_rq3.json}.
+
+
+\subsection{RQ1: Coordinate Transform \& Ego-Motion Compensation}
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.373\textwidth} >{\raggedright\arraybackslash}p{0.241\textwidth} >{\raggedright\arraybackslash}p{0.252\textwidth}}
+\toprule
+\textbf{Metric} & \textbf{Seq \texttt{0015} (376 frames)} & \textbf{Seq \texttt{0019} (1059 frames)} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Metric} & \textbf{Seq \texttt{0015} (376 frames)} & \textbf{Seq \texttt{0019} (1059 frames)} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+Ego Travel Distance (\texttt{oxts}) & \texttt{71.\allowbreak{}61 m} & \texttt{238.\allowbreak{}10 m} \\
+Max \texttt{ego $\leftrightarrow$ world} Round-Trip Error & \texttt{2.\allowbreak{}161e-\allowbreak{}14 m} & \texttt{3.\allowbreak{}352e-\allowbreak{}14 m} \\
+Stationary GT Tracks / Matched Samples & \texttt{5} tracks / \texttt{369} samples & \texttt{36} tracks / \texttt{602} samples \\
+Apparent Speed on Stationary Objects (Uncompensated Ego-Rel Mean) & \texttt{1.\allowbreak{}409 m/\allowbreak{}s} & \texttt{3.\allowbreak{}370 m/\allowbreak{}s} \\
+Apparent Speed on Stationary Objects (OXTS World-Comp Mean) & \texttt{0.\allowbreak{}618 m/\allowbreak{}s} (\texttt{-\allowbreak{}56.\allowbreak{}1\%}) & \texttt{2.\allowbreak{}350 m/\allowbreak{}s} (\texttt{-\allowbreak{}30.\allowbreak{}3\%}) \\
+\end{longtable}
+\end{footnotesize}
+
+
+\subsection{RQ2: Future Prediction (\texttt{+0.\allowbreak{}5s} to \texttt{+2.\allowbreak{}0s}) vs Real Future GT Observations}
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.337\textwidth} >{\raggedright\arraybackslash}p{0.265\textwidth} >{\raggedright\arraybackslash}p{0.265\textwidth}}
+\toprule
+\textbf{Model Variant} & \textbf{Seq \texttt{0015} Future-Ego ADE / FDE (m)} & \textbf{Seq \texttt{0019} Future-Ego ADE / FDE (m)} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Model Variant} & \textbf{Seq \texttt{0015} Future-Ego ADE / FDE (m)} & \textbf{Seq \texttt{0019} Future-Ego ADE / FDE (m)} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{Zero-Velocity Baseline} & \texttt{10.\allowbreak{}1950 /\allowbreak{} 11.\allowbreak{}4531} & \texttt{4.\allowbreak{}0831 /\allowbreak{} 5.\allowbreak{}2281} \\
+\textbf{Ego-Relative Kalman (No OXTS)} & \texttt{8.\allowbreak{}7443 /\allowbreak{} 9.\allowbreak{}3002} & \texttt{3.\allowbreak{}6625 /\allowbreak{} 4.\allowbreak{}7413} \\
+\textbf{OXTS World Kalman + CTRV Ego} & \textbf{\texttt{8.\allowbreak{}3848 /\allowbreak{} 8.\allowbreak{}8193}} (World \texttt{8.\allowbreak{}3388 /\allowbreak{} 8.\allowbreak{}6873}) & \textbf{\texttt{3.\allowbreak{}4873 /\allowbreak{} 4.\allowbreak{}4877}} (World \texttt{3.\allowbreak{}3824 /\allowbreak{} 4.\allowbreak{}2587}) \\
+\end{longtable}
+\end{footnotesize}
+
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Uncertainty Calibration (2D Mahalanobis \texttt{1$\sigma$ /\allowbreak{} 2$\sigma$} vs Theoretical \texttt{0.\allowbreak{}3935 /\allowbreak{} 0.\allowbreak{}8647})}: \texttt{0019} achieves \texttt{0.\allowbreak{}4138 /\allowbreak{} 0.\allowbreak{}6149} (\texttt{9,\allowbreak{}156} samples); \texttt{0015} achieves \texttt{0.\allowbreak{}1451 /\allowbreak{} 0.\allowbreak{}3602} (\texttt{3,\allowbreak{}301} samples, limited by monocular ground-plane depth RMSE \texttt{12.\allowbreak{}484 m} vs \texttt{4.\allowbreak{}2726 m} on \texttt{0019}).
+\end{itemize}
+
+\subsection{RQ3: Epistemic \& Aleatoric Uncertainty Causality on Risk \& Safety Shield}
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.314\textwidth} >{\raggedright\arraybackslash}p{0.276\textwidth} >{\raggedright\arraybackslash}p{0.276\textwidth}}
+\toprule
+\textbf{Counterfactual Arm} & \textbf{Seq \texttt{0015} Mean Risk / Non-Normal Rate} & \textbf{Seq \texttt{0019} Mean Risk / Non-Normal Rate} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Counterfactual Arm} & \textbf{Seq \texttt{0015} Mean Risk / Non-Normal Rate} & \textbf{Seq \texttt{0019} Mean Risk / Non-Normal Rate} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{Arm A: Uncertainty-Blind} & \texttt{0.\allowbreak{}3076 /\allowbreak{} 41.\allowbreak{}76\%} (\texttt{Emergency=0}) & \texttt{0.\allowbreak{}5325 /\allowbreak{} 84.\allowbreak{}70\%} (\texttt{Emergency=98}) \\
+\textbf{Arm B: Uncertainty-Aware (Nominal)} & \texttt{0.\allowbreak{}5189 /\allowbreak{} 90.\allowbreak{}43\%} (\texttt{248/\allowbreak{}376} escalated, \texttt{Emergency=10}) & \texttt{0.\allowbreak{}6990 /\allowbreak{} 89.\allowbreak{}52\%} (\texttt{377/\allowbreak{}1059} escalated, \texttt{Emergency=227}) \\
+\textbf{Arm C: Uncertainty-Aware (Degraded)} & \texttt{0.\allowbreak{}5428 /\allowbreak{} 90.\allowbreak{}96\%} (\texttt{254/\allowbreak{}376} higher risk, \texttt{23} escalated) & \texttt{0.\allowbreak{}7003 /\allowbreak{} 89.\allowbreak{}14\%} (\texttt{592/\allowbreak{}1059} higher risk, \texttt{77} escalated, \texttt{Emergency=242}) \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{6. v2 Upgrade Verification (\texttt{v1/\allowbreak{}v5 Baseline} vs \texttt{v2 Improved})}
+
+All v2 artifacts were executed on Kaggle 2x T4 GPU and stored in \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/tree/main/results/v2\_improved/outputs}{results/v2\_improved/outputs/}.
+
+
+\subsection{6.1 Stage 2 Detection Accuracy (\texttt{eval\_\allowbreak{}metrics.\allowbreak{}json})}
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.222\textwidth} >{\raggedright\arraybackslash}p{0.198\textwidth} >{\raggedright\arraybackslash}p{0.198\textwidth} >{\raggedright\arraybackslash}p{0.231\textwidth}}
+\toprule
+\textbf{Split / Metric} & \textbf{v1 Baseline (\texttt{yolov8s @ 640})} & \textbf{v2 Improved (\texttt{yolo11m @ 960 + Oversampling})} & \textbf{Delta} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Split / Metric} & \textbf{v1 Baseline (\texttt{yolov8s @ 640})} & \textbf{v2 Improved (\texttt{yolo11m @ 960 + Oversampling})} & \textbf{Delta} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{Val \texttt{mAP@0.\allowbreak{}5} / \texttt{mAP@0.\allowbreak{}5:\allowbreak{}0.\allowbreak{}95}} & \texttt{0.\allowbreak{}4521 /\allowbreak{} 0.\allowbreak{}2471} & \textbf{\texttt{0.\allowbreak{}5235 /\allowbreak{} 0.\allowbreak{}3060}} & \textbf{\texttt{+0.\allowbreak{}0714 (+15.\allowbreak{}8\%)} / \texttt{+0.\allowbreak{}0589}} \\
+\textbf{Val AP50 (\texttt{Car /\allowbreak{} Ped /\allowbreak{} Cyc})} & \texttt{0.\allowbreak{}7501 /\allowbreak{} 0.\allowbreak{}5141 /\allowbreak{} 0.\allowbreak{}0922} & \textbf{\texttt{0.\allowbreak{}8235 /\allowbreak{} 0.\allowbreak{}5871 /\allowbreak{} 0.\allowbreak{}1598}} & \texttt{+0.\allowbreak{}0734 /\allowbreak{} +0.\allowbreak{}0730 /\allowbreak{} +0.\allowbreak{}0676 (+73.\allowbreak{}3\%)} \\
+\textbf{Test \texttt{mAP@0.\allowbreak{}5} / \texttt{mAP@0.\allowbreak{}5:\allowbreak{}0.\allowbreak{}95}} & \texttt{0.\allowbreak{}3652 /\allowbreak{} 0.\allowbreak{}1695} & \textbf{\texttt{0.\allowbreak{}4269 /\allowbreak{} 0.\allowbreak{}2145}} & \textbf{\texttt{+0.\allowbreak{}0617 (+16.\allowbreak{}9\%)} / \texttt{+0.\allowbreak{}0450}} \\
+\textbf{Test AP50 (\texttt{Car /\allowbreak{} Ped /\allowbreak{} Cyc})} & \texttt{0.\allowbreak{}6294 /\allowbreak{} 0.\allowbreak{}3497 /\allowbreak{} 0.\allowbreak{}1165} & \textbf{\texttt{0.\allowbreak{}6662 /\allowbreak{} 0.\allowbreak{}3631 /\allowbreak{} 0.\allowbreak{}2513}} & \texttt{+0.\allowbreak{}0368 /\allowbreak{} +0.\allowbreak{}0134 /\allowbreak{} +0.\allowbreak{}1348 (+115.\allowbreak{}7\%)} \\
+\end{longtable}
+\end{footnotesize}
+
+
+\subsection{6.2 Stage 2--3 SAM Instance Object Masking (\texttt{tracking\_\allowbreak{}summary.\allowbreak{}json})}
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Mask Backend}: \texttt{mobile\_\allowbreak{}sam.\allowbreak{}pt} box-prompted over ByteTrack tracks (\texttt{trajectories\_\allowbreak{}masks.\allowbreak{}json} + CSV \texttt{mask\_\allowbreak{}area\_\allowbreak{}px}, \texttt{mask\_\allowbreak{}fill\_\allowbreak{}ratio}, \texttt{mask\_\allowbreak{}bottom\_\allowbreak{}x/\allowbreak{}y}).
+\item \textbf{Seq \texttt{0015} (376 frames)}: \texttt{1,\allowbreak{}370} masked instances (\texttt{41} unique tracks).
+\item \textbf{Seq \texttt{0019} (1059 frames)}: \texttt{3,\allowbreak{}788} masked instances (\texttt{203} unique tracks).
+\end{itemize}
+
+\subsection{6.3 Stage 4--5 World Model Depth, Ego-Motion \& Future Prediction (\texttt{validation\_\allowbreak{}0015.\allowbreak{}json}, \texttt{validation\_\allowbreak{}0019.\allowbreak{}json})}
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.289\textwidth} >{\raggedright\arraybackslash}p{0.289\textwidth} >{\raggedright\arraybackslash}p{0.289\textwidth}}
+\toprule
+\textbf{Metric (Full Sequence)} & \textbf{Seq \texttt{0015} v5 $\rightarrow$ v2} & \textbf{Seq \texttt{0019} v5 $\rightarrow$ v2} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Metric (Full Sequence)} & \textbf{Seq \texttt{0015} v5 $\rightarrow$ v2} & \textbf{Seq \texttt{0019} v5 $\rightarrow$ v2} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{RQ1 Stationary World Speed Mean} & \texttt{0.\allowbreak{}618 $\rightarrow$ 0.\allowbreak{}264 m/\allowbreak{}s} (\texttt{-\allowbreak{}57.\allowbreak{}3\%}) & \texttt{2.\allowbreak{}350 $\rightarrow$ 0.\allowbreak{}834 m/\allowbreak{}s} (\texttt{-\allowbreak{}64.\allowbreak{}5\%}) \\
+\textbf{RQ2 Depth \texttt{Abs Rel /\allowbreak{} RMSE}} & \texttt{0.\allowbreak{}5207 /\allowbreak{} 12.\allowbreak{}484m $\rightarrow$ 0.\allowbreak{}2720 /\allowbreak{} 2.\allowbreak{}756m} (\texttt{-\allowbreak{}77.\allowbreak{}9\%} RMSE) & \texttt{0.\allowbreak{}1803 /\allowbreak{} 4.\allowbreak{}2726m $\rightarrow$ 0.\allowbreak{}1560 /\allowbreak{} 3.\allowbreak{}3568m} (\texttt{-\allowbreak{}21.\allowbreak{}4\%} RMSE) \\
+\textbf{RQ2 Future-Ego \texttt{ADE /\allowbreak{} FDE}} & \texttt{8.\allowbreak{}3848 /\allowbreak{} 8.\allowbreak{}8193m $\rightarrow$ 3.\allowbreak{}4999 /\allowbreak{} 4.\allowbreak{}5694m} (\texttt{-\allowbreak{}58.\allowbreak{}3\%} ADE) & \texttt{3.\allowbreak{}4873 /\allowbreak{} 4.\allowbreak{}4877m $\rightarrow$ 2.\allowbreak{}7907 /\allowbreak{} 3.\allowbreak{}2671m} (\texttt{-\allowbreak{}20.\allowbreak{}0\%} ADE) \\
+\textbf{RQ2 2D Uncertainty Calibration (\texttt{1$\sigma$ /\allowbreak{} 2$\sigma$})} & \texttt{0.\allowbreak{}1451 /\allowbreak{} 0.\allowbreak{}3602 $\rightarrow$ 0.\allowbreak{}4584 /\allowbreak{} 0.\allowbreak{}6941} & \texttt{0.\allowbreak{}4138 /\allowbreak{} 0.\allowbreak{}6149 $\rightarrow$ 0.\allowbreak{}5808 /\allowbreak{} 0.\allowbreak{}7500} \\
+\textbf{RQ3 Blind $\rightarrow$ Nominal $\rightarrow$ Degraded Mean Risk} & \texttt{0.\allowbreak{}4637 $\rightarrow$ 0.\allowbreak{}6498 $\rightarrow$ 0.\allowbreak{}6898} (\texttt{258} / \texttt{334} frames) & \texttt{0.\allowbreak{}7518 $\rightarrow$ 0.\allowbreak{}9053 $\rightarrow$ 0.\allowbreak{}9107} (\texttt{609} / \texttt{595} frames) \\
+\end{longtable}
+\end{footnotesize}
+
+
+\subsection{6.4 RQ4: Collision Detector Gradient Smoothing (\texttt{validation\_\allowbreak{}0015.\allowbreak{}json}, \texttt{validation\_\allowbreak{}0019.\allowbreak{}json})}
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.054\textwidth} >{\raggedright\arraybackslash}p{0.228\textwidth} >{\raggedright\arraybackslash}p{0.187\textwidth} >{\raggedright\arraybackslash}p{0.181\textwidth} >{\raggedright\arraybackslash}p{0.181\textwidth}}
+\toprule
+\textbf{Sequence} & \textbf{Metric} & \textbf{Unsmoothed (Raw Potential)} & \textbf{Gradient-Smoothed (\texttt{CollisionRiskSmoother})} & \textbf{Reduction} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Sequence} & \textbf{Metric} & \textbf{Unsmoothed (Raw Potential)} & \textbf{Gradient-Smoothed (\texttt{CollisionRiskSmoother})} & \textbf{Reduction} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{\texttt{0015} (376f)} & \texttt{mean |dR/\allowbreak{}dt|} / \texttt{p95 |dR/\allowbreak{}dt|} / \texttt{max |dR/\allowbreak{}dt|} & \texttt{0.\allowbreak{}1656 /\allowbreak{} 0.\allowbreak{}7430 /\allowbreak{} 2.\allowbreak{}2500 /\allowbreak{}s} & \texttt{0.\allowbreak{}1290 /\allowbreak{} 0.\allowbreak{}4130 /\allowbreak{} 1.\allowbreak{}0400 /\allowbreak{}s} & \textbf{\texttt{-\allowbreak{}22.\allowbreak{}10\% /\allowbreak{} -\allowbreak{}44.\allowbreak{}41\% /\allowbreak{} -\allowbreak{}53.\allowbreak{}78\%}} \\
+\textbf{\texttt{0015} (376f)} & Spikes (\texttt{> 1.\allowbreak{}5/\allowbreak{}s}) / Decision Flips & \texttt{3} / \texttt{24} & \textbf{\texttt{0}} / \texttt{18} & \textbf{\texttt{-\allowbreak{}100.\allowbreak{}0\%} / \texttt{-\allowbreak{}25.\allowbreak{}0\%}} \\
+\textbf{\texttt{0019} (1059f)} & \texttt{mean |dR/\allowbreak{}dt|} / \texttt{p95 |dR/\allowbreak{}dt|} / \texttt{max |dR/\allowbreak{}dt|} & \texttt{0.\allowbreak{}2236 /\allowbreak{} 0.\allowbreak{}9000 /\allowbreak{} 10.\allowbreak{}0000 /\allowbreak{}s} & \texttt{0.\allowbreak{}1188 /\allowbreak{} 0.\allowbreak{}5200 /\allowbreak{} 1.\allowbreak{}2500 /\allowbreak{}s} & \textbf{\texttt{-\allowbreak{}46.\allowbreak{}87\% /\allowbreak{} -\allowbreak{}42.\allowbreak{}22\% /\allowbreak{} -\allowbreak{}87.\allowbreak{}50\%}} \\
+\textbf{\texttt{0019} (1059f)} & Spikes (\texttt{> 1.\allowbreak{}5/\allowbreak{}s}) / Decision Flips & \texttt{23} / \texttt{74} & \textbf{\texttt{0}} / \texttt{40} & \textbf{\texttt{-\allowbreak{}100.\allowbreak{}0\%} / \texttt{-\allowbreak{}45.\allowbreak{}95\%}} \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{7. v3 Right-Panel BEV Visual \& False-Positive Collision Fix (\texttt{v2\_\allowbreak{}improved} $\rightarrow$ \texttt{v3\_\allowbreak{}bev\_\allowbreak{}fixed}, Kaggle v7)}
+
+Outputs archived in \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/tree/main/results/v3\_bev\_fixed/world\_outputs}{results/v3\_bev\_fixed/world\_outputs/} (\texttt{mask\_\allowbreak{}backend:\allowbreak{} "mobile\_\allowbreak{}sam.\allowbreak{}pt"}).
+
+
+\subsection{7.1 False-Alarm Suppression \& Intervention Precision (\texttt{Arm B} Nominal)}
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.065\textwidth} >{\raggedright\arraybackslash}p{0.277\textwidth} >{\raggedright\arraybackslash}p{0.122\textwidth} >{\raggedright\arraybackslash}p{0.122\textwidth} >{\raggedright\arraybackslash}p{0.244\textwidth}}
+\toprule
+\textbf{Sequence} & \textbf{Metric} & \textbf{v2 Before Fix} & \textbf{v3 After Fix} & \textbf{Delta} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Sequence} & \textbf{Metric} & \textbf{v2 Before Fix} & \textbf{v3 After Fix} & \textbf{Delta} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{\texttt{0015} (376f)} & Mean Risk Indicator / Non-Normal Rate & \texttt{0.\allowbreak{}6498 /\allowbreak{} 95.\allowbreak{}21\%} & \textbf{\texttt{0.\allowbreak{}2791 /\allowbreak{} 47.\allowbreak{}07\%}} & \textbf{\texttt{-\allowbreak{}57.\allowbreak{}0\%} Risk / \texttt{-\allowbreak{}48.\allowbreak{}14\%p}} \\
+\textbf{\texttt{0015} (376f)} & Normal Driving / Emergency Intervention Frames & \texttt{18 /\allowbreak{} 104} & \textbf{\texttt{199 /\allowbreak{} 16}} & \textbf{\texttt{+181 Normal} / \texttt{-\allowbreak{}84.\allowbreak{}6\% Emergency}} \\
+\textbf{\texttt{0019} (1059f)} & Mean Risk Indicator / Emergency Intervention Frames & \texttt{0.\allowbreak{}9053 /\allowbreak{} 849} & \textbf{\texttt{0.\allowbreak{}6290 /\allowbreak{} 216}} & \textbf{\texttt{-\allowbreak{}30.\allowbreak{}5\%} Risk / \texttt{-\allowbreak{}74.\allowbreak{}6\% Emergency}} \\
+\end{longtable}
+\end{footnotesize}
+
+
+\subsection{7.2 Preserved RQ1--RQ4 Validation Metrics (\texttt{v3\_\allowbreak{}bev\_\allowbreak{}fixed})}
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.289\textwidth} >{\raggedright\arraybackslash}p{0.289\textwidth} >{\raggedright\arraybackslash}p{0.289\textwidth}}
+\toprule
+\textbf{RQ} & \textbf{Sequence \texttt{0015} (376f)} & \textbf{Sequence \texttt{0019} (1059f)} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{RQ} & \textbf{Sequence \texttt{0015} (376f)} & \textbf{Sequence \texttt{0019} (1059f)} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{RQ1 Round-Trip / Stationary World Speed} & \texttt{2.\allowbreak{}161e-\allowbreak{}14 m} / \texttt{0.\allowbreak{}227 m/\allowbreak{}s} (vs uncomp \texttt{1.\allowbreak{}358 m/\allowbreak{}s}) & \texttt{3.\allowbreak{}352e-\allowbreak{}14 m} / \texttt{0.\allowbreak{}756 m/\allowbreak{}s} (vs uncomp \texttt{1.\allowbreak{}849 m/\allowbreak{}s}) \\
+\textbf{RQ2 OXTS+CTRV \texttt{ADE /\allowbreak{} FDE} (vs No-OXTS / Zero-Vel)} & \texttt{3.\allowbreak{}6052 /\allowbreak{} 4.\allowbreak{}6872 m} (vs \texttt{4.\allowbreak{}275 /\allowbreak{} 5.\allowbreak{}6099}, \texttt{5.\allowbreak{}2465 /\allowbreak{} 7.\allowbreak{}1198}) & \texttt{2.\allowbreak{}7890 /\allowbreak{} 3.\allowbreak{}2453 m} (vs \texttt{2.\allowbreak{}9277 /\allowbreak{} 3.\allowbreak{}5301}, \texttt{3.\allowbreak{}2491 /\allowbreak{} 4.\allowbreak{}2215}) \\
+\textbf{RQ2 2D Empirical Coverage (\texttt{1$\sigma$ /\allowbreak{} 2$\sigma$})} & \texttt{0.\allowbreak{}3939 /\allowbreak{} 0.\allowbreak{}5779} (theory \texttt{0.\allowbreak{}3935 /\allowbreak{} 0.\allowbreak{}8647}) & \texttt{0.\allowbreak{}4863 /\allowbreak{} 0.\allowbreak{}6826} \\
+\textbf{RQ3 Blind $\rightarrow$ Nominal $\rightarrow$ Degraded Mean Risk} & \texttt{0.\allowbreak{}2220 $\rightarrow$ 0.\allowbreak{}2791 $\rightarrow$ 0.\allowbreak{}2792} (\texttt{77 /\allowbreak{} 18} escalated, \texttt{259/\allowbreak{}376} inc) & \texttt{0.\allowbreak{}5242 $\rightarrow$ 0.\allowbreak{}6290 $\rightarrow$ 0.\allowbreak{}6396} (\texttt{521 /\allowbreak{} 121} escalated, \texttt{732/\allowbreak{}1059} inc) \\
+\textbf{RQ4 Max \texttt{|dR/\allowbreak{}dt|} / Spikes (\texttt{>1.\allowbreak{}5/\allowbreak{}s}) / Flips} & \texttt{5.\allowbreak{}29 $\rightarrow$ 1.\allowbreak{}10 /\allowbreak{}s (-\allowbreak{}79.\allowbreak{}21\%)} / \texttt{5 $\rightarrow$ 0 (-\allowbreak{}100\%)} / \texttt{34 $\rightarrow$ 22 (-\allowbreak{}35.\allowbreak{}29\%)} & \texttt{5.\allowbreak{}76 $\rightarrow$ 1.\allowbreak{}10 /\allowbreak{}s (-\allowbreak{}80.\allowbreak{}90\%)} / \texttt{42 $\rightarrow$ 0 (-\allowbreak{}100\%)} / \texttt{140 $\rightarrow$ 78 (-\allowbreak{}44.\allowbreak{}29\%)} \\
+\end{longtable}
+\end{footnotesize}
+
+
+
+\end{document}
