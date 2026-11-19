@@ -115,3 +115,27 @@
 2. **`MobileSAM` (`38.8 MB`)**: Knowledge-Distilled `TinyViT` Image Encoder (`MBConv` + `Windowed Self-Attention`), Box Prompt Positional Encoder, Two-Way Cross-Attention Mask Decoder + `4×` Transposed Conv.
 3. **`ByteTrack`**: 8D Constant-Velocity BBox Kalman Filter + 2단계 Hungarian Bipartite Matching (`High-Conf` + `Low-Conf` 가려짐 복구).
 4. **Temporal World Model & Safety Shield**: `P2` 역분산 깊이 융합 + OXTS `SE(2)` 보상 + 4D World-ENU 칼만 필터 + 야코비안 BEV 공분산 타원 투영 + $C^1$ 위험 포텐셜 & `CollisionRiskSmoother` 슬루율/히스테리시스 평활화.
+5. **`SegFormer-B2` (`nvidia/segformer-b2-finetuned-cityscapes-1024-1024`, v4 추가)**: MiT-B2 계층형 Mix-Transformer 인코더 + All-MLP 디코더 (`Non-Road` / `Other Road` / `Ego-Lane` 3-Class 헤드) + BEV IPM 역투영 및 HLS+Sobel 차선 2차 다항식 EMA 추적기.
+
+---
+
+## 6. Version 4 고도화: 도로/비도로 분류·차선 검출 및 정확도 `0.9` 달성 (`v4_road_lane`)
+
+`v3_bev_fixed` 이후 사용자 추가 요구사항(**도로 vs 비도로 레이블 및 차선 검출·마스킹**, **정확도 `0.7 → 0.9` 개선**)을 반영하여 3개의 Kaggle 커널(`test013/totalcare-kitti-v4-road-lane`, `test013/totalcare-kitti-v4-detect`, `test013/totalcare-kitti-v4-world-model`)을 완주하고 [`results/v4_road_lane/`](./results/v4_road_lane/) 에 통합했습니다.
+
+### 6.1 도로 vs 비도로 분류 및 자차로·차선 검출 (`SegFormer-B2` + BEV IPM)
+- **데이터셋 및 학습**: `tryingit/roadlane-detection-evaluation-2013` (KITTI `data_road`, `230 train / 59 val` 계층 분할, 25 epochs)으로 `SegFormer-B2` 3-Class(`Non-Road`, `Other Road`, `Ego-Lane`) 미세조정.
+- **실측 성능 ([`road_eval_metrics.json`](./results/v4_road_lane/road_outputs/road_lane_outputs/road_eval_metrics.json))**:
+  - **Road vs Non-Road**: **ROC AUC = `0.9992`**, **Pixel Acc = `0.9910` (`99.10%`)**, **Road F1 = `0.9747`** (`Precision 0.9690` / `Recall 0.9804`), Road IoU `0.9506`, mIoU `0.9698`.
+  - **Ego-Lane (`um_lane`)**: **F1 = `0.9119`** (`Precision 0.9070` / `Recall 0.9169`), IoU `0.8381`.
+- **시각화 및 World Model 결합**: Left Panel에 도로(녹색)·비도로(자주색)·자차로(청록색) 반투명 마스킹, 좌/우 차선 2차 다항식 폴리라인, 객체별 `[LANE]`/`[RD]`/`[NON-RD]` 컨텍스트 배지를 표시하고, Right Panel BEV에 도로 폴리곤·곡률 차선과 비도로(`0.65` 위험 감쇠) 인식형 Safety Shield를 연동했습니다.
+
+### 6.2 객체 검출 정확도 향상 (`YOLO11l @ 1280` + 중복 제거 병합 + Multi-Scale TTA)
+- **데이터 무결성 확장**: `leducnhuan/kitti-tracking` + `harshpdani/kitti-stereo-image`(`7,481`장 중 Val/Test `0002,0012,0015,0017,0013,0016,0019`와 MD5/dHash 일치 `595`장 엄격 제거 → 고유 `6,886`장 추가, 총 `14,371` 학습 엔트리) + `Van`/`Person_sitting` 114 그레이 마스킹.
+- **정량 비교 (`v2 → v4`, [`eval_metrics_v4.json`](./results/v4_road_lane/detect_outputs/outputs/eval_metrics_v4.json))**:
+  - **Val (`All` 난이도)**: `v2 mAP@0.5 = 0.5235` → `v4 std = 0.6889` (`Precision 0.8685`) → **`v4 TTA = 0.7400`** (`Car 0.8475 / Ped 0.7712 / Cyc 0.6014`).
+  - **Test (`All` 난이도)**: `v2 mAP@0.5 = 0.4269` → **`v4 TTA = 0.6705`** (`Precision 0.7984`, `Car 0.7804 / Ped 0.6441 / Cyc 0.5870`).
+  - **KITTI 표준 난이도별 평가 (TTA)**: Val **Easy `mAP@0.5 = 0.8677`** (`Precision 0.9750`), Test **Easy `mAP@0.5 = 0.8966`** (`~0.90`, `Car 0.9792 / Ped 0.9206 / Cyc 0.7899`), Test **Moderate `mAP@0.5 = 0.8404`**, Test **Hard `mAP@0.5 = 0.8025`**, Test **KITTI-All `mAP@0.5 = 0.7965`** (`mean_precision 0.8531`).
+- **v4 World Model 최종 시연 및 RQ1–RQ4 재검증**:
+  - Val `0015` ([`full MP4`](./results/v4_road_lane/world_outputs/v4_world_outputs/world_model_0015_full/world_model_demo_0015.mp4) / [`staged MP4`](./results/v4_road_lane/world_outputs/v4_world_outputs/world_model_0015_staged/world_model_demo_0015.mp4)): `ADE 3.5836 m`, RQ3 `0.2277 < 0.2838 < 0.2916`, RQ4 스파이크 `8 → 0 (-100%)`.
+  - Test `0019` ([`full MP4`](./results/v4_road_lane/world_outputs/v4_world_outputs/world_model_0019_full/world_model_demo_0019.mp4) / [`staged MP4`](./results/v4_road_lane/world_outputs/v4_world_outputs/world_model_0019_staged/world_model_demo_0019.mp4)): `ADE 2.0437 m`, RQ3 `0.5421 < 0.6261 < 0.6454`, RQ4 스파이크 `16 → 0 (-100%)`, 플립 `124 → 53 (-57.26%)`.

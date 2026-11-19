@@ -1,0 +1,153 @@
+\documentclass[10.5pt,a4paper]{article}
+\usepackage{geometry}
+\geometry{margin=18mm,top=20mm,bottom=20mm}
+\usepackage{fontspec}
+\setmonofont{Menlo}[Scale=0.82]
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,longtable,array}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue!60!black,urlcolor=blue!65!black}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\setcounter{secnumdepth}{0}
+\sloppy
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{gray}Source, Kernel, Report, and Metrics Consolidated Index (Appendix)}
+\fancyhead[R]{\small\color{gray}KITTI Tracking Temporal World Model}
+\fancyfoot[C]{\small\thepage}
+\begin{document}
+\begin{center}
+{\LARGE\bfseries Source, Kernel, Report, and Metrics Consolidated Index (Appendix)}\\[6pt]
+{\normalsize\color{gray} Source, Kernel, Report, and Metrics Consolidated Index (Appendix)}\\[4pt]
+{\small\href{https://github.com/Heisnotanimposter/Totalcare_autonomous_driving_Yolov5}{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5}}
+\end{center}
+\vspace{4pt}
+\hrule
+\vspace{8pt}
+
+This appendix provides a complete index of \textbf{source modules (\texttt{src/\allowbreak{}})}, \textbf{remote GPU/CPU kernels (\texttt{kaggle/\allowbreak{}}, \texttt{kaggle\_\allowbreak{}world\_\allowbreak{}model/\allowbreak{}}, \texttt{kaggle\_\allowbreak{}v4\_\allowbreak{}*}, \texttt{colab/\allowbreak{}})}, \textbf{reports \& technical specs}, and \textbf{quantitative artifacts (\texttt{results/\allowbreak{}}, \texttt{logs/\allowbreak{}})} across the repository.
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{1. Source Code Modules (\texttt{src/\allowbreak{}})}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.398\textwidth} >{\raggedright\arraybackslash}p{0.070\textwidth} >{\raggedright\arraybackslash}p{0.398\textwidth}}
+\toprule
+\textbf{File} & \textbf{Lines} & \textbf{Core Role \& Implementation} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{File} & \textbf{Lines} & \textbf{Core Role \& Implementation} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\texttt{src/\allowbreak{}kitti\_\allowbreak{}prep.\allowbreak{}py} & 624 & KITTI Zip/directory CRC \& image decode integrity audit, sequence-disjoint 14/4/3 split, \texttt{DontCare}+Distractor (\texttt{Van}, \texttt{Person}, \texttt{Person\_\allowbreak{}sitting}) 114-pixel masking, train-only rare-class oversampling (\texttt{train\_\allowbreak{}weighted.\allowbreak{}txt}, \texttt{6,\allowbreak{}974} entries) \\
+\texttt{src/\allowbreak{}track\_\allowbreak{}utils.\allowbreak{}py} & 620 & ByteTrack (\texttt{imgsz=960}/\texttt{1280}, \texttt{conf=0.\allowbreak{}25}) multi-object tracking, \texttt{MobileSAM} (\texttt{mobile\_\allowbreak{}sam.\allowbreak{}pt}) Box-Prompt instance segmentation (\texttt{trajectories\_\allowbreak{}masks.\allowbreak{}json}), ground-contact point (\texttt{mask\_\allowbreak{}bottom\_\allowbreak{}xy}), KITTI 18-column TrackEval export \\
+\texttt{src/\allowbreak{}road\_\allowbreak{}lane.\allowbreak{}py} & --- & \texttt{P2RoadMapper}, \texttt{parse\_\allowbreak{}kitti\_\allowbreak{}road\_\allowbreak{}gt\_\allowbreak{}mask}, \texttt{TemporalRoadLaneProcessor} (BEV IPM warp + HLS/Sobel lane detection + quadratic polynomial EMA smoothing), \texttt{query\_\allowbreak{}object\_\allowbreak{}road\_\allowbreak{}lane\_\allowbreak{}context} \\
+\texttt{src/\allowbreak{}world\_\allowbreak{}model.\allowbreak{}py} & 1,235+ & \texttt{P2} inverse-variance depth fusion (\texttt{ground\_\allowbreak{}plane\_\allowbreak{}bev\_\allowbreak{}fusion}), \texttt{EgoPose2D} \texttt{SE(2)} OXTS ENU compensation \& CTRV rollout, 4D World-ENU Kalman filter (\texttt{+0.\allowbreak{}5s\textasciitilde{}+2.\allowbreak{}0s}), \texttt{Observed/\allowbreak{}Inferred/\allowbreak{}Occluded/\allowbreak{}Unknown} state machine, lateral-covariance \& road-context (\texttt{0.\allowbreak{}65} non-road attenuation) risk + \texttt{CollisionRiskSmoother} \\
+\texttt{src/\allowbreak{}world\_\allowbreak{}visualizer.\allowbreak{}py} & 710+ & \texttt{1360$\times$632} split-screen renderer (\texttt{Left:\allowbreak{} Camera + MobileSAM + Road/\allowbreak{}Lane Masks} | \texttt{Right:\allowbreak{} BEV Inferred World}), Jacobian $J=\text{diag}(s_x,-s_y)$ \texttt{cov\_\allowbreak{}to\_\allowbreak{}pixel\_\allowbreak{}ellipse}, \texttt{-\allowbreak{}-\allowbreak{}staged-\allowbreak{}demo} and \texttt{-\allowbreak{}-\allowbreak{}full-\allowbreak{}overlay} MP4/keyframe export \\
+\texttt{src/\allowbreak{}validation\_\allowbreak{}experiments.\allowbreak{}py} & 499 & Automated \textbf{RQ1} (round-trip \& stationary ego-motion compensation), \textbf{RQ2} (future prediction \texttt{OXTS+CTRV} vs \texttt{No-\allowbreak{}OXTS} vs \texttt{Zero-\allowbreak{}Vel} \& 2D Mahalanobis coverage), \textbf{RQ3} (uncertainty causality \texttt{Arm A/\allowbreak{}B/\allowbreak{}C}), \textbf{RQ4} (gradient smoothing spike/flip reduction) \\
+\texttt{src/\allowbreak{}dataset\_\allowbreak{}prep.\allowbreak{}py}, \texttt{src/\allowbreak{}detect.\allowbreak{}py}, \texttt{src/\allowbreak{}train.\allowbreak{}py}, \texttt{src/\allowbreak{}export.\allowbreak{}py} & 377 & Baseline 9-class dashcam YOLO conversion, inference/risk banner visualization, YOLOv5/Ultralytics training \& ONNX/TensorRT export utilities \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{2. Remote GPU/CPU Training \& Execution Kernels}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.320\textwidth} >{\raggedright\arraybackslash}p{0.226\textwidth} >{\raggedright\arraybackslash}p{0.320\textwidth}}
+\toprule
+\textbf{Kernel / Notebook} & \textbf{Environment} & \textbf{Executed Pipeline \& Outputs} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Kernel / Notebook} & \textbf{Environment} & \textbf{Executed Pipeline \& Outputs} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\texttt{kaggle/\allowbreak{}train\_\allowbreak{}track\_\allowbreak{}kitti.\allowbreak{}py} & Kaggle \texttt{2$\times$ Tesla T4} (15GB$\times$2) & \texttt{test013/\allowbreak{}totalcare-\allowbreak{}kitti-\allowbreak{}yolo-\allowbreak{}train-\allowbreak{}and-\allowbreak{}track} (v2 \texttt{COMPLETE}): Audit $\rightarrow$ YOLO Export $\rightarrow$ \texttt{YOLO11m @ 960} DDP (24ep, \textasciitilde{}108 min) $\rightarrow$ Val/Test Eval $\rightarrow$ \texttt{0015}/\texttt{0019} ByteTrack + MobileSAM $\rightarrow$ World Model validation \\
+\texttt{kaggle\_\allowbreak{}world\_\allowbreak{}model/\allowbreak{}run\_\allowbreak{}world\_\allowbreak{}model\_\allowbreak{}kaggle.\allowbreak{}py} & Kaggle CPU (\texttt{kernel\_\allowbreak{}sources}) & \texttt{test013/\allowbreak{}totalcare-\allowbreak{}kitti-\allowbreak{}world-\allowbreak{}model-\allowbreak{}demo} (v7 \texttt{COMPLETE}): Mounts v2 \texttt{trajectories.\allowbreak{}csv} + \texttt{trajectories\_\allowbreak{}masks.\allowbreak{}json} $\rightarrow$ \texttt{v3} BEV Jacobian ellipse \& false-alarm fix re-render (4 MP4s) $\rightarrow$ RQ1--RQ4 verification \\
+\texttt{kaggle\_\allowbreak{}v4\_\allowbreak{}road/\allowbreak{}train\_\allowbreak{}road\_\allowbreak{}lane\_\allowbreak{}kitti.\allowbreak{}py} & Kaggle GPU (\texttt{Tesla P100}/\texttt{T4}) & \texttt{test013/\allowbreak{}totalcare-\allowbreak{}kitti-\allowbreak{}v4-\allowbreak{}road-\allowbreak{}lane} (\texttt{COMPLETE}): Fine-tunes \texttt{SegFormer-\allowbreak{}B2} 3-class head on \texttt{data\_\allowbreak{}road} (\texttt{230/\allowbreak{}59}, 25ep) $\rightarrow$ infers \texttt{road\_\allowbreak{}lane\_\allowbreak{}0015.\allowbreak{}json} \& \texttt{0019.\allowbreak{}json} \\
+\texttt{kaggle\_\allowbreak{}v4\_\allowbreak{}detect/\allowbreak{}train\_\allowbreak{}v4\_\allowbreak{}detect\_\allowbreak{}kitti.\allowbreak{}py} & Kaggle \texttt{2$\times$ Tesla T4} & \texttt{test013/\allowbreak{}totalcare-\allowbreak{}kitti-\allowbreak{}v4-\allowbreak{}detect} (\texttt{COMPLETE}): Deduped \texttt{kitti-\allowbreak{}stereo-\allowbreak{}image} merge (\texttt{14,\allowbreak{}371} train) $\rightarrow$ \texttt{YOLO11l @ 1280} (24ep) $\rightarrow$ Val/Test std \& TTA + KITTI Easy/Mod/Hard eval $\rightarrow$ ByteTrack + MobileSAM \\
+\texttt{kaggle\_\allowbreak{}v4\_\allowbreak{}world\_\allowbreak{}model/\allowbreak{}run\_\allowbreak{}v4\_\allowbreak{}world\_\allowbreak{}model\_\allowbreak{}kaggle.\allowbreak{}py} & Kaggle CPU (\texttt{kernel\_\allowbreak{}sources}) & \texttt{test013/\allowbreak{}totalcare-\allowbreak{}kitti-\allowbreak{}v4-\allowbreak{}world-\allowbreak{}model} (v2 \texttt{COMPLETE}): Integrates \texttt{v4} road/lane + \texttt{YOLO11l} tracks $\rightarrow$ renders 4 \texttt{v4} MP4s + RQ1--RQ4 validation \\
+\texttt{colab/\allowbreak{}01\_\allowbreak{}kitti\_\allowbreak{}colab\_\allowbreak{}audit\_\allowbreak{}and\_\allowbreak{}prep.\allowbreak{}ipynb}, \texttt{02\_\allowbreak{}traffic\_\allowbreak{}detect\_\allowbreak{}track\_\allowbreak{}colab.\allowbreak{}ipynb} & Google Colab CLI / Drive & \texttt{/\allowbreak{}content/\allowbreak{}drive/\allowbreak{}MyDrive/\allowbreak{}KITTI\_\allowbreak{}Tracking/\allowbreak{}} Stage 1 audit, YOLO export, and tracking notebooks \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{3. Reports \& Technical Documentation}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.338\textwidth} >{\raggedright\arraybackslash}p{0.546\textwidth}}
+\toprule
+\textbf{Document} & \textbf{Summary} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Document} & \textbf{Summary} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\texttt{FINAL\_\allowbreak{}REPORT.\allowbreak{}md} & Final report mapped 1:1 to all 7 instructor evaluation items plus v4 road/lane \& \texttt{0.\allowbreak{}9} accuracy results \\
+\texttt{ML\_\allowbreak{}LAYER\_\allowbreak{}SPEC.\allowbreak{}md} & Layer-by-layer specification of \texttt{YOLO11m} (\texttt{Layer 0--23}), \texttt{MobileSAM}, \texttt{ByteTrack}, \texttt{SegFormer-\allowbreak{}B2}, \texttt{World Model \& Safety Shield}, and 8 academic references \\
+\texttt{architecture.\allowbreak{}md} & 7-stage system architecture, \texttt{P2} camera$\leftrightarrow$Ego equations, \texttt{Past$\rightarrow$Present$\rightarrow$Future} state transitions, and \texttt{CollisionRiskSmoother} design \\
+\texttt{dataset\_\allowbreak{}audit.\allowbreak{}md} & KITTI \texttt{8,\allowbreak{}008}-frame integrity audit, \texttt{DontCare}/Distractor masking, and 14/4/3 sequence-disjoint split \\
+\texttt{experiment\_\allowbreak{}plan.\allowbreak{}md} & Research hypotheses (H1--H3), baselines (B0--B2), \texttt{v1$\rightarrow$v2$\rightarrow$v3} benchmarks, and RQ1--RQ4 empirical results \\
+\texttt{visualization\_\allowbreak{}spec.\allowbreak{}md} & \texttt{1360$\times$632} split-screen encoding spec and 5-second staged demonstration timeline \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{4. Key Quantitative Metrics \& Artifact Archive (\texttt{results/\allowbreak{}}, \texttt{logs/\allowbreak{}})}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.226\textwidth} >{\raggedright\arraybackslash}p{0.320\textwidth} >{\raggedright\arraybackslash}p{0.320\textwidth}}
+\toprule
+\textbf{Category} & \textbf{Artifact Path} & \textbf{Key Quantitative Summary} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Category} & \textbf{Artifact Path} & \textbf{Key Quantitative Summary} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{Stage 2 Detector (\texttt{v2})} & \texttt{results/\allowbreak{}v2\_\allowbreak{}improved/\allowbreak{}outputs/\allowbreak{}weights/\allowbreak{}best.\allowbreak{}pt} (\texttt{38.\allowbreak{}62 MB}) & \texttt{YOLO11m @ 960} (\texttt{231 layers}, \texttt{20.\allowbreak{}06M params}), \textbf{Val \texttt{mAP@0.\allowbreak{}5 = 0.\allowbreak{}5235}} (\texttt{+15.\allowbreak{}8\%} vs \texttt{v1 0.\allowbreak{}4521}), \textbf{Test \texttt{mAP@0.\allowbreak{}5 = 0.\allowbreak{}4269}} \\
+\textbf{Stage 4--7 Demo (\texttt{v3})} & \texttt{results/\allowbreak{}v3\_\allowbreak{}bev\_\allowbreak{}fixed/\allowbreak{}world\_\allowbreak{}outputs/\allowbreak{}world\_\allowbreak{}model\_\allowbreak{}*} & \texttt{0015} (\texttt{37.\allowbreak{}6s}, \texttt{11.\allowbreak{}58 MB}) / \texttt{0019} (\texttt{105.\allowbreak{}9s}, \texttt{53.\allowbreak{}48 MB}) + \texttt{8.\allowbreak{}0s} staged MP4s; \texttt{v3} Arm B risk \texttt{-\allowbreak{}57.\allowbreak{}0\%} (\texttt{0015}) / \texttt{-\allowbreak{}30.\allowbreak{}5\%} (\texttt{0019}), RQ4 spikes \texttt{-\allowbreak{}100\%} \\
+\textbf{v4 Road \& Lane (\texttt{SegFormer-\allowbreak{}B2})} & \texttt{results/\allowbreak{}v4\_\allowbreak{}road\_\allowbreak{}lane/\allowbreak{}road\_\allowbreak{}outputs/\allowbreak{}road\_\allowbreak{}lane\_\allowbreak{}outputs/\allowbreak{}road\_\allowbreak{}eval\_\allowbreak{}metrics.\allowbreak{}json} & Road vs Non-Road \textbf{ROC AUC \texttt{0.\allowbreak{}9992}}, \textbf{Pixel Acc \texttt{0.\allowbreak{}9910}}, \textbf{Road F1 \texttt{0.\allowbreak{}9747}}, \textbf{Ego-Lane F1 \texttt{0.\allowbreak{}9119}} \\
+\textbf{v4 Detector (\texttt{YOLO11l @ 1280})} & \texttt{results/\allowbreak{}v4\_\allowbreak{}road\_\allowbreak{}lane/\allowbreak{}detect\_\allowbreak{}outputs/\allowbreak{}outputs/\allowbreak{}eval\_\allowbreak{}metrics\_\allowbreak{}v4.\allowbreak{}json}, \texttt{weights/\allowbreak{}best.\allowbreak{}pt} (\texttt{49 MB}) & Val TTA \textbf{\texttt{mAP@0.\allowbreak{}5 = 0.\allowbreak{}7400}} (std \texttt{Precision 0.\allowbreak{}8685}), Test TTA \texttt{0.\allowbreak{}6705}, \textbf{Test Easy \texttt{mAP@0.\allowbreak{}5 = 0.\allowbreak{}8966}} (\texttt{\textasciitilde{}0.\allowbreak{}90}), \textbf{Test Mod \texttt{0.\allowbreak{}8404}} \\
+\textbf{v4 World Model \& RQ1--RQ4} & \texttt{results/\allowbreak{}v4\_\allowbreak{}road\_\allowbreak{}lane/\allowbreak{}world\_\allowbreak{}outputs/\allowbreak{}v4\_\allowbreak{}world\_\allowbreak{}outputs/\allowbreak{}world\_\allowbreak{}model\_\allowbreak{}*} & \texttt{0015} (\texttt{37M}/\texttt{6.\allowbreak{}1M}) \& \texttt{0019} (\texttt{25M}/\texttt{3.\allowbreak{}4M}) integrated road+lane+BEV demos; RQ4 spikes \texttt{8$\rightarrow$0}, \texttt{16$\rightarrow$0} (\texttt{-\allowbreak{}100\%}), flips \texttt{-\allowbreak{}57.\allowbreak{}26\%} \\
+\textbf{Execution Logs} & \texttt{logs/\allowbreak{}v1\_\allowbreak{}detect\_\allowbreak{}track/\allowbreak{}}, \texttt{logs/\allowbreak{}v2\_\allowbreak{}improved/\allowbreak{}}, \texttt{logs/\allowbreak{}v3\_\allowbreak{}bev\_\allowbreak{}fixed/\allowbreak{}} & Full Kaggle DDP training (\texttt{231 layers} summary) and World Model console logs \\
+\end{longtable}
+\end{footnotesize}
+
+\end{document}

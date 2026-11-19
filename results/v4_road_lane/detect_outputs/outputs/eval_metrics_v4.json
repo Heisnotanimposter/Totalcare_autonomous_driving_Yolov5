@@ -1,0 +1,302 @@
+{
+  "version": "v4_road_lane",
+  "model_arch": "yolo11l.pt",
+  "imgsz": 1280,
+  "train_entries_total": 14371,
+  "kitti_det_merge": {
+    "found": true,
+    "total_scanned": 7481,
+    "excluded_leak": 595,
+    "added_unique": 6886,
+    "boxes_added": {
+      "Pedestrian": 2318,
+      "Car": 27822,
+      "Cyclist": 1184
+    }
+  },
+  "val_std": {
+    "map50": 0.6889,
+    "map50_95": 0.4236,
+    "precision": 0.8685,
+    "recall": 0.5907,
+    "per_class_ap50": {
+      "Car": 0.8448,
+      "Pedestrian": 0.7764,
+      "Cyclist": 0.4454
+    }
+  },
+  "val_tta": {
+    "map50": 0.74,
+    "map50_95": 0.4458,
+    "precision": 0.7924,
+    "recall": 0.6565,
+    "per_class_ap50": {
+      "Car": 0.8475,
+      "Pedestrian": 0.7712,
+      "Cyclist": 0.6014
+    }
+  },
+  "test_tta": {
+    "map50": 0.6705,
+    "map50_95": 0.3895,
+    "precision": 0.7984,
+    "recall": 0.6094,
+    "per_class_ap50": {
+      "Car": 0.7804,
+      "Pedestrian": 0.6441,
+      "Cyclist": 0.587
+    }
+  },
+  "kitti_difficulty_val_tta": {
+    "Easy": {
+      "map50": 0.8677,
+      "mean_peak_f1": 0.8797,
+      "mean_precision_at_peak_f1": 0.975,
+      "mean_recall_at_peak_f1": 0.8242,
+      "per_class_ap50": {
+        "Car": 0.9901,
+        "Pedestrian": 0.9463,
+        "Cyclist": 0.6666
+      },
+      "per_class_peak_f1": {
+        "Car": {
+          "f1": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "conf": 0.86
+        },
+        "Pedestrian": {
+          "f1": 0.9152,
+          "precision": 0.925,
+          "recall": 0.9055,
+          "conf": 0.606
+        },
+        "Cyclist": {
+          "f1": 0.7238,
+          "precision": 1.0,
+          "recall": 0.5672,
+          "conf": 0.761
+        }
+      }
+    },
+    "Moderate": {
+      "map50": 0.8085,
+      "mean_peak_f1": 0.8046,
+      "mean_precision_at_peak_f1": 0.8431,
+      "mean_recall_at_peak_f1": 0.7703,
+      "per_class_ap50": {
+        "Car": 0.9725,
+        "Pedestrian": 0.8476,
+        "Cyclist": 0.6053
+      },
+      "per_class_peak_f1": {
+        "Car": {
+          "f1": 0.9617,
+          "precision": 0.9884,
+          "recall": 0.9364,
+          "conf": 0.577
+        },
+        "Pedestrian": {
+          "f1": 0.8307,
+          "precision": 0.8986,
+          "recall": 0.7723,
+          "conf": 0.548
+        },
+        "Cyclist": {
+          "f1": 0.6215,
+          "precision": 0.6423,
+          "recall": 0.6021,
+          "conf": 0.057
+        }
+      }
+    },
+    "Hard": {
+      "map50": 0.7795,
+      "mean_peak_f1": 0.7797,
+      "mean_precision_at_peak_f1": 0.8422,
+      "mean_recall_at_peak_f1": 0.7275,
+      "per_class_ap50": {
+        "Car": 0.9555,
+        "Pedestrian": 0.806,
+        "Cyclist": 0.5769
+      },
+      "per_class_peak_f1": {
+        "Car": {
+          "f1": 0.9483,
+          "precision": 0.9885,
+          "recall": 0.9113,
+          "conf": 0.577
+        },
+        "Pedestrian": {
+          "f1": 0.7894,
+          "precision": 0.8971,
+          "recall": 0.7048,
+          "conf": 0.551
+        },
+        "Cyclist": {
+          "f1": 0.6015,
+          "precision": 0.6411,
+          "recall": 0.5665,
+          "conf": 0.057
+        }
+      }
+    },
+    "All": {
+      "map50": 0.7393,
+      "mean_peak_f1": 0.7417,
+      "mean_precision_at_peak_f1": 0.8323,
+      "mean_recall_at_peak_f1": 0.6697,
+      "per_class_ap50": {
+        "Car": 0.8566,
+        "Pedestrian": 0.7836,
+        "Cyclist": 0.5776
+      },
+      "per_class_peak_f1": {
+        "Car": {
+          "f1": 0.8518,
+          "precision": 0.9818,
+          "recall": 0.7523,
+          "conf": 0.494
+        },
+        "Pedestrian": {
+          "f1": 0.7729,
+          "precision": 0.8693,
+          "recall": 0.6957,
+          "conf": 0.503
+        },
+        "Cyclist": {
+          "f1": 0.6004,
+          "precision": 0.6458,
+          "recall": 0.561,
+          "conf": 0.059
+        }
+      }
+    }
+  },
+  "kitti_difficulty_test_tta": {
+    "Easy": {
+      "map50": 0.8966,
+      "mean_peak_f1": 0.8765,
+      "mean_precision_at_peak_f1": 0.8903,
+      "mean_recall_at_peak_f1": 0.8644,
+      "per_class_ap50": {
+        "Car": 0.9792,
+        "Pedestrian": 0.9206,
+        "Cyclist": 0.7899
+      },
+      "per_class_peak_f1": {
+        "Car": {
+          "f1": 0.9569,
+          "precision": 0.9375,
+          "recall": 0.9772,
+          "conf": 0.818
+        },
+        "Pedestrian": {
+          "f1": 0.8869,
+          "precision": 0.9232,
+          "recall": 0.8533,
+          "conf": 0.528
+        },
+        "Cyclist": {
+          "f1": 0.7857,
+          "precision": 0.8101,
+          "recall": 0.7627,
+          "conf": 0.773
+        }
+      }
+    },
+    "Moderate": {
+      "map50": 0.8404,
+      "mean_peak_f1": 0.8271,
+      "mean_precision_at_peak_f1": 0.863,
+      "mean_recall_at_peak_f1": 0.7942,
+      "per_class_ap50": {
+        "Car": 0.8853,
+        "Pedestrian": 0.8796,
+        "Cyclist": 0.7562
+      },
+      "per_class_peak_f1": {
+        "Car": {
+          "f1": 0.8798,
+          "precision": 0.9319,
+          "recall": 0.8332,
+          "conf": 0.462
+        },
+        "Pedestrian": {
+          "f1": 0.8448,
+          "precision": 0.8743,
+          "recall": 0.8172,
+          "conf": 0.398
+        },
+        "Cyclist": {
+          "f1": 0.7566,
+          "precision": 0.7827,
+          "recall": 0.7321,
+          "conf": 0.752
+        }
+      }
+    },
+    "Hard": {
+      "map50": 0.8025,
+      "mean_peak_f1": 0.7966,
+      "mean_precision_at_peak_f1": 0.8616,
+      "mean_recall_at_peak_f1": 0.7409,
+      "per_class_ap50": {
+        "Car": 0.861,
+        "Pedestrian": 0.8206,
+        "Cyclist": 0.726
+      },
+      "per_class_peak_f1": {
+        "Car": {
+          "f1": 0.8604,
+          "precision": 0.936,
+          "recall": 0.7961,
+          "conf": 0.468
+        },
+        "Pedestrian": {
+          "f1": 0.7933,
+          "precision": 0.8662,
+          "recall": 0.7317,
+          "conf": 0.398
+        },
+        "Cyclist": {
+          "f1": 0.7362,
+          "precision": 0.7827,
+          "recall": 0.6949,
+          "conf": 0.752
+        }
+      }
+    },
+    "All": {
+      "map50": 0.7965,
+      "mean_peak_f1": 0.7907,
+      "mean_precision_at_peak_f1": 0.8531,
+      "mean_recall_at_peak_f1": 0.7373,
+      "per_class_ap50": {
+        "Car": 0.8631,
+        "Pedestrian": 0.8113,
+        "Cyclist": 0.7151
+      },
+      "per_class_peak_f1": {
+        "Car": {
+          "f1": 0.8645,
+          "precision": 0.9399,
+          "recall": 0.8003,
+          "conf": 0.468
+        },
+        "Pedestrian": {
+          "f1": 0.7847,
+          "precision": 0.862,
+          "recall": 0.7201,
+          "conf": 0.398
+        },
+        "Cyclist": {
+          "f1": 0.723,
+          "precision": 0.7574,
+          "recall": 0.6916,
+          "conf": 0.735
+        }
+      }
+    }
+  }
+}

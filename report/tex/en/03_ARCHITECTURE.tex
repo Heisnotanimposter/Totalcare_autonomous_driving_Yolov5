@@ -1,0 +1,174 @@
+\documentclass[10.5pt,a4paper]{article}
+\usepackage{geometry}
+\geometry{margin=18mm,top=20mm,bottom=20mm}
+\usepackage{fontspec}
+\setmonofont{Menlo}[Scale=0.82]
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,longtable,array}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue!60!black,urlcolor=blue!65!black}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\setcounter{secnumdepth}{0}
+\sloppy
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{gray}Architecture: Camera-Centric Temporal Ego-centric World Model}
+\fancyhead[R]{\small\color{gray}KITTI Tracking Temporal World Model}
+\fancyfoot[C]{\small\thepage}
+\begin{document}
+\begin{center}
+{\LARGE\bfseries Architecture: Camera-Centric Temporal Ego-centric World Model}\\[6pt]
+{\normalsize\color{gray} Architecture: Camera-Centric Temporal Ego-centric World Model}\\[4pt]
+{\small\href{https://github.com/Heisnotanimposter/Totalcare_autonomous_driving_Yolov5}{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5}}
+\end{center}
+\vspace{4pt}
+\hrule
+\vspace{8pt}
+
+\section{1. System Overview}
+
+This project implements a 7-stage pipeline transforming a single forward-facing camera stream into a structured \textbf{Temporal Ego-centric World Model}, multi-horizon trajectory predictions, risk indicators, and an advisory Safety Shield output:
+
+
+\begin{quote}\begin{footnotesize}\begin{verbatim}
+[Stage 1: Input Video (KITTI 10 Hz)]
+        |
+        v
+[Stage 2: Visual Perception (src/kitti_prep.py & YOLO11m @ 960px + MobileSAM)]
+        |  2D BBox, Class (Car, Pedestrian, Cyclist), Detection Confidence
+        |  Rare-Class Train Oversampling (Cyclist x4, Pedestrian x2) + Instance Polygons
+        v
+[Stage 3: Temporal Understanding (src/track_utils.py, ByteTrack @ 960px + MobileSAM)]
+        |  Sequence-scoped Track ID, Frame ID, Timestamp, mask_area_px, mask_fill_ratio, mask_bottom_xy
+        v
+[Stage 4: Ego-centric World Model (src/world_model.py)]
+        |  P2 Inverse-Variance Depth Fusion (Flat Ground + Class-Height Prior + Mask Bottom Contact)
+        |  OXTS IMU/GPS Ego-Motion Compensation (EgoPose2D: Ego <-> World ENU)
+        |  State Machine: Past <-> Present <-> Future | Observed / Inferred / Occluded / Unknown
+        v
+[Stage 5: Future Prediction (src/world_model.py, World-ENU Kalman + CTRV Ego)]
+        |  t + 0.5s, 1.0s, 1.5s, 2.0s Means + Confidence/Mask-Scaled 1-sigma Covariance Ellipses
+        v
+[Stage 6: Risk Assessment (src/world_model.py, C1 Potential + CollisionRiskSmoother)]
+        |  Smooth Sigmoid Hazard Potential + Asymmetric EMA + Slew-Rate |dR/dt| Clamp + Calibrated TTC
+        v
+[Stage 7: Safety-aware Control (src/world_model.py & src/world_visualizer.py)]
+           Hysteresis-Debounced Advisory Safety Shield + Split-Screen (Masks + BEV World)
+\end{verbatim}\end{footnotesize}\end{quote}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{2. Coordinate Systems \& Transformations}
+
+\subsection{2.1 KITTI Camera Coordinate Frame}
+In KITTI Tracking (\texttt{calib/\allowbreak{}XXXX.\allowbreak{}txt}, \texttt{label\_\allowbreak{}02/\allowbreak{}XXXX.\allowbreak{}txt}):
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item $X_{\text{cam}}$: right ($+$)
+\item $Y_{\text{cam}}$: down ($+$)
+\item $Z_{\text{cam}}$: forward along optical axis ($+$)
+\end{itemize}
+
+\subsection{2.2 Ego-centric BEV Coordinate Frame}
+Defined in \texttt{KittiCalibration} (\href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/src/world\_model.py}{src/world\_model.py}):
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item $X_{\text{ego}}$: lateral right ($+$), meters
+\item $Y_{\text{ego}}$: longitudinal forward ($+$), meters
+\item $Z_{\text{ego}}$: height upward ($+$), meters
+\end{itemize}
+
+Under nominal level mounting ($h_{\text{cam}} = 1.65\text{ m}$, zero pitch/roll assumption):
+
+\[X_{\text{ego}} = X_{\text{cam}}, \quad Y_{\text{ego}} = Z_{\text{cam}}, \quad Z_{\text{ego}} = h_{\text{cam}} - Y_{\text{cam}}\]
+
+\subsection{2.3 Calibrated Inverse-Variance Depth Fusion \& Analytical Uncertainty}
+Given KITTI intrinsics $P_2$ ($f_x, f_y, c_x, c_y$), contact point $(u_{\text{mid}}, v_{\text{bottom}})$ (using MobileSAM foreground bottom \texttt{mask\_\allowbreak{}bottom\_\allowbreak{}xy} when \texttt{mask\_\allowbreak{}fill\_\allowbreak{}ratio >= 0.\allowbreak{}25}, else the 2D box bottom-center), and class canonical height prior $H_c$ (\texttt{CLASS\_\allowbreak{}HEIGHT\_\allowbreak{}PRIORS\_\allowbreak{}M}: \texttt{Car=1.\allowbreak{}52m}, \texttt{Pedestrian=1.\allowbreak{}72m}, \texttt{Cyclist=1.\allowbreak{}68m}):
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Flat-Ground Projection ($Y_{\text{ground}}$)} with pitch uncertainty $\sigma_\theta = 0.012\text{ rad}$:
+\end{enumerate}
+\[Y_{\text{ground}} = \frac{f_y \cdot h_{\text{cam}}}{v_{\text{bottom}} - c_y}, \qquad \sigma_{\text{ground}} = \sqrt{\left(\frac{Y_{\text{ground}}^2}{f_y h_{\text{cam}}}\sigma_v\right)^2 + \left(\frac{Y_{\text{ground}}^2}{h_{\text{cam}}}\sigma_\theta\right)^2}\]
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Pitch-Invariant Height-Prior Depth ($Y_{\text{height}}$)} on non-truncated boxes:
+\end{enumerate}
+\[Y_{\text{height}} = \frac{f_y \cdot H_c}{h_{\text{px}}}, \qquad X_{\text{ego}} = \frac{(u_{\text{mid}} - c_x) \cdot Y_{\text{fused}}}{f_x}\]
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Inverse-Variance Fusion}:
+\end{enumerate}
+\[w_g = \sigma_{\text{ground}}^{-2}, \quad w_h = \sigma_{\text{height}}^{-2}, \qquad Y_{\text{fused}} = \frac{w_g Y_{\text{ground}} + w_h Y_{\text{height}}}{w_g + w_h}, \qquad \sigma_Y = (w_g + w_h)^{-1/2}\]
+Measurement covariance $R_w$ in World-ENU Kalman filtering is further scaled inversely by detection confidence and MobileSAM mask fill quality (\texttt{conf}, \texttt{mask\_\allowbreak{}fill\_\allowbreak{}ratio}).
+
+
+\textbf{Integrity Rules:}
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item If $P_2$ calibration is missing, \texttt{TemporalWorldModel} sets \texttt{calibrated = False} and \textbf{refuses} to compute metric speed (\texttt{m/\allowbreak{}s}) or Time-to-Collision (\texttt{TTC}).
+\item Projected 3D locations are always categorized as \textbf{Inferred} (monocular ground-plane/height-fused estimate), never \textbf{Observed}.
+\end{itemize}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{3. Ego-Motion Compensation \& Temporal World Model (\texttt{Past $\rightarrow$ Present $\rightarrow$ Future})}
+
+Implemented in \texttt{EgoPose2D}, \texttt{KittiOxtsOdometry}, \texttt{TemporalWorldModel}, and \texttt{ObjectWorldTrack} (\href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/src/world\_model.py}{src/world\_model.py}):
+
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{OXTS Ego-Motion Compensation (\texttt{Ego $\leftrightarrow$ World ENU})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \texttt{KittiOxtsOdometry} converts KITTI \texttt{oxts/\allowbreak{}<seq>.\allowbreak{}txt} \texttt{(lat,\allowbreak{} lon,\allowbreak{} yaw,\allowbreak{} vf,\allowbreak{} vl,\allowbreak{} wz)} into local metric \textbf{East-North (ENU)} coordinates via Mercator projection anchored at frame 0.
+\item \texttt{EgoPose2D.\allowbreak{}ego\_\allowbreak{}to\_\allowbreak{}world\_\allowbreak{}xy} and \texttt{world\_\allowbreak{}to\_\allowbreak{}ego\_\allowbreak{}xy} transform instantaneous Ego-centric detections (\texttt{+X} right, \texttt{+Y} forward) into a stationary World-ENU frame (observed round-trip error \texttt{< 4e-\allowbreak{}14 m}).
+\item Object velocities and 4D Kalman states \texttt{[X\_\allowbreak{}w,\allowbreak{} Y\_\allowbreak{}w,\allowbreak{} vX\_\allowbreak{}w,\allowbreak{} vY\_\allowbreak{}w]} are filtered in \textbf{World-ENU} (subtracting Ego translation and yaw rotation), while Ego's planned corridor uses a Constant Turn Rate and Velocity (\texttt{predict\_\allowbreak{}ctrv}) rollout from \texttt{vf} and \texttt{wz}.
+\end{itemize}
+\end{enumerate}
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Temporal State Transition (\texttt{Future\_\allowbreak{}prev $\rightarrow$ Present $\rightarrow$ Past})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item At timestamp $t_k$, each active track's World-frame 4D kinematic Kalman state and covariance $P$ are propagated forward by $\Delta t = t_k - t_{k-1}$ and projected back into Ego $t_k$'s BEV frame.
+\item Tracks matched to current detections are updated with rotated measurement covariance $R_w = R_{\text{ego}\to w} \, \text{diag}(\sigma_X^2, \sigma_Y^2) \, R_{\text{ego}\to w}^T$ and assigned \texttt{observation\_\allowbreak{}state = "Observed"}.
+\item Tracks not observed at $t_k$ within \texttt{max\_\allowbreak{}coast\_\allowbreak{}sec} ($1.0\text{ s}$) transition to \texttt{observation\_\allowbreak{}state = "Occluded"} with exponential confidence decay $\exp(-\Delta t_{\text{miss}} / 0.6)$.
+\item Tracks missing beyond \texttt{max\_\allowbreak{}coast\_\allowbreak{}sec} archive into \texttt{past\_\allowbreak{}world.\allowbreak{}expired\_\allowbreak{}tracks} with their \texttt{last\_\allowbreak{}seen\_\allowbreak{}ts} and World-anchored position history.
+\item Because \texttt{Past}, \texttt{Present}, and \texttt{Future} are indexed by timestamp relative to $t_k$ and maintained in World-ENU, their semantics remain invariant under Ego rotation or reversing.
+\end{itemize}
+\end{enumerate}
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Spatial Information States (\texttt{Observed /\allowbreak{} Inferred /\allowbreak{} Occluded /\allowbreak{} Unknown})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Observed}: Direct 2D camera measurements and active tracked detections inside the front camera FOV.
+\item \textbf{Inferred}: Ground-plane BEV positions, kinematic velocities, Kalman future trajectories (\texttt{+0.\allowbreak{}5s} to \texttt{+2.\allowbreak{}0s}), and Risk Indicators.
+\item \textbf{Occluded}: Angular shadow sectors ray-cast behind foreground objects (\texttt{compute\_\allowbreak{}occlusion\_\allowbreak{}sectors}) and temporarily coasting tracks.
+\item \textbf{Unknown}: Regions behind Ego ($Y_{\text{ego}} < 0$) and outside the front camera horizontal FOV (\texttt{2 * atan2(W /\allowbreak{} 2,\allowbreak{} fx)}).
+\end{itemize}
+\end{enumerate}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{4. Safety Shield Policy \& Collision Detector Gradient Smoothing (Advisory Only)}
+
+\texttt{assess\_\allowbreak{}risk\_\allowbreak{}and\_\allowbreak{}safety\_\allowbreak{}shield} combines:
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{$C^1$-Continuous Differentiable Risk Potential}: Per-object hazard scores use smooth \texttt{\_\allowbreak{}sigmoid} curves over true \textbf{lateral covariance} (\texttt{lateral\_\allowbreak{}uncertainty\_\allowbreak{}m}, \texttt{cov\_\allowbreak{}future\_\allowbreak{}ego[0][0]}) corridor intrusion bounds, approach-gated longitudinal distance (\texttt{approach\_\allowbreak{}w}, preventing stationary-vehicle and sidewalk false alarms), calibrated TTC, and compact earliest-horizon \texttt{conflict\_\allowbreak{}zones} (\texttt{[1.\allowbreak{}0,\allowbreak{} 2.\allowbreak{}2] m}, max 1 per track), aggregated via probabilistic soft-union $1 - \prod_i (1 - r_i)$.
+\item \textbf{Aspect-Corrected BEV Uncertainty Ellipses (\texttt{BevCanvasMapper.\allowbreak{}cov\_\allowbreak{}to\_\allowbreak{}pixel\_\allowbreak{}ellipse})}: Projects World-ENU $2\times 2$ covariance into BEV pixel coordinates via Jacobian $J = \text{diag}(s_x, -s_y)$ so elongated longitudinal covariance is never stretched laterally across lanes, rendered as soft translucent horizon fills (\texttt{t = +1.\allowbreak{}0s,\allowbreak{} +2.\allowbreak{}0s}) and a single outer \texttt{+2.\allowbreak{}0s} contour.
+\item \textbf{Gradient Smoothing (\texttt{CollisionRiskSmoother})}: Eliminates high-frequency detector/depth spikes across frames via asymmetric EMA (\texttt{alpha\_\allowbreak{}up=0.\allowbreak{}36}, \texttt{alpha\_\allowbreak{}down=0.\allowbreak{}22}), explicit slew-rate clamping (\texttt{max\_\allowbreak{}rise\_\allowbreak{}per\_\allowbreak{}sec=1.\allowbreak{}10/\allowbreak{}s}, \texttt{max\_\allowbreak{}fall\_\allowbreak{}per\_\allowbreak{}sec=0.\allowbreak{}85/\allowbreak{}s}), per-track risk EMA (\texttt{per\_\allowbreak{}track\_\allowbreak{}ema}), low-TTC debouncing, and hysteresis (\texttt{hysteresis\_\allowbreak{}margin=0.\allowbreak{}04}) across Safety Shield thresholds.
+\end{enumerate}
+
+Outputs are strictly \textbf{advisory}:
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \texttt{Normal Driving}
+\item \texttt{Caution}
+\item \texttt{Speed Reduction}
+\item \texttt{Braking Recommendation}
+\item \texttt{Emergency Intervention}
+\end{itemize}
+\end{document}

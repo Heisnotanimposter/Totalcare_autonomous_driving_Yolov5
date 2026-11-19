@@ -26,6 +26,11 @@ from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 import numpy as np
 
+try:
+    from road_lane import query_object_road_lane_context
+except Exception:  # pragma: no cover - optional fallback for standalone imports
+    query_object_road_lane_context = None  # type: ignore[assignment]
+
 HORIZONS_SEC: Tuple[float, ...] = (0.5, 1.0, 1.5, 2.0)
 
 SAFETY_LEVELS: Tuple[str, ...] = (
@@ -533,6 +538,7 @@ class TemporalWorldModel:
         frame_idx: int,
         timestamp_sec: float,
         detections: Sequence[Dict],
+        road_lane_record: Optional[Dict] = None,
     ) -> Dict:
         dt = (timestamp_sec - self.last_ts) if self.last_ts is not None else 0.0
         self.last_ts = timestamp_sec
@@ -702,6 +708,21 @@ class TemporalWorldModel:
                     }
                 )
 
+            contact_u = 0.5 * (tr.latest_bbox[0] + tr.latest_bbox[2])
+            contact_v = float(tr.latest_bbox[3])
+            road_ctx = (
+                query_object_road_lane_context(
+                    road_record=road_lane_record,
+                    contact_u=contact_u,
+                    contact_v=contact_v,
+                    x_ego_m=x_ego,
+                    y_ego_m=y_ego,
+                    default_half_width_m=self.ego_corridor_half_width_m,
+                )
+                if query_object_road_lane_context is not None and road_lane_record is not None
+                else None
+            )
+
             present_objects.append(
                 {
                     "track_id": tid,
@@ -721,6 +742,7 @@ class TemporalWorldModel:
                     "last_seen_ts": round(tr.last_seen_ts, 3),
                     "hits": tr.hits,
                     "missed_frames": tr.missed_frames,
+                    "road_context": road_ctx,
                     "uncertainties": {
                         "detection_uncertainty": det_unc,
                         "lateral_uncertainty_m": lat_unc_m,
@@ -769,6 +791,19 @@ class TemporalWorldModel:
 
         fov_deg = round(math.degrees(self.calibration.horizontal_fov_rad(self.image_width)), 1) if self.calibration else None
 
+        road_structure = None
+        if road_lane_record is not None:
+            road_structure = {
+                "road_area_ratio": road_lane_record.get("road_area_ratio"),
+                "ground_road_ratio": road_lane_record.get("ground_road_ratio"),
+                "road_mean_confidence": road_lane_record.get("road_mean_confidence"),
+                "lane_source": road_lane_record.get("lane_source"),
+                "left_poly_coeffs": road_lane_record.get("left_poly_coeffs"),
+                "right_poly_coeffs": road_lane_record.get("right_poly_coeffs"),
+                "road_bev_polys": road_lane_record.get("road_bev_polys", []),
+                "lane_lines_bev": road_lane_record.get("lane_lines_bev", {}),
+            }
+
         return {
             "frame_idx": frame_idx,
             "timestamp_sec": round(timestamp_sec, 3),
@@ -777,6 +812,7 @@ class TemporalWorldModel:
             "uncalibrated_detections_skipped": uncalibrated_detections,
             "coordinate_system": "ego_centric_ground_plane_x_right_y_forward",
             "fov_deg": fov_deg,
+            "road_structure": road_structure,
             "ego": {
                 "x_m": 0.0,
                 "y_m": 0.0,
@@ -969,12 +1005,24 @@ def assess_risk_and_safety_shield(
         pred_unc_2s = float(unc["motion_prediction_uncertainty_2s_m"] or depth_sig)
 
         vy_rel = obj.get("vy_rel_mps") if obj.get("vy_rel_mps") is not None else obj.get("vy_mps")
+        road_ctx = obj.get("road_context")
+        lane_center_x = 0.0
+        eff_corridor_hw = corridor_half_width_m
+        road_ctx_w = 1.0
+        if road_ctx is not None:
+            bounds = road_ctx.get("ego_lane_bounds_x_m")
+            if bounds and len(bounds) == 2:
+                lane_center_x = 0.5 * (float(bounds[0]) + float(bounds[1]))
+                eff_corridor_hw = max(1.15, min(2.15, 0.5 * (float(bounds[1]) - float(bounds[0]))))
+            if road_ctx.get("surface_label") == "Non-Road" and float(road_ctx.get("road_prob", 0.5)) < 0.35 and not road_ctx.get("in_ego_lane"):
+                road_ctx_w = 0.65
 
-        # Smooth lateral corridor membership using LATERAL uncertainty (bounded to avoid adjacent-lane spillover)
+        # Smooth lateral corridor membership using LATERAL uncertainty & curved Ego-Lane center
         lat_allowance = min(0.65, k_sig * 0.5 * lat_sig)
-        lat_envelope = corridor_half_width_m + lat_allowance + 0.20
-        w_lat = _sigmoid((lat_envelope - abs(x)) / 0.35) if y > 0.0 else 0.0
-        in_corridor_now = y > 0.0 and (abs(x) - (corridor_half_width_m + lat_allowance)) <= 0.25
+        lat_envelope = eff_corridor_hw + lat_allowance + 0.20
+        lat_offset = abs(x - lane_center_x)
+        w_lat = _sigmoid((lat_envelope - lat_offset) / 0.35) if y > 0.0 else 0.0
+        in_corridor_now = y > 0.0 and (lat_offset - (eff_corridor_hw + lat_allowance)) <= 0.25
 
         # Strict calibrated TTC for reporting (only when inside corridor & meaningfully closing)
         obj_ttc: Optional[float] = None
@@ -1029,16 +1077,16 @@ def assess_risk_and_safety_shield(
         y_eff = max(0.5, y - min(2.8, k_sig * 0.45 * depth_sig))
         dist_score = w_lat * approach_w * _sigmoid((11.5 - y_eff) / 3.2) if (0.0 < y < 28.0) else 0.0
         pred_score = approach_w * _sigmoid((1.2 - min_pred_corridor_dist) / 0.55) * _sigmoid((28.0 - y) / 4.0) if (0.0 < y < 34.0) else 0.0
-        base_risk = 1.0 - (1.0 - 0.72 * dist_score) * (1.0 - 0.62 * pred_score) * (1.0 - 0.94 * ttc_score)
+        base_risk = road_ctx_w * (1.0 - (1.0 - 0.72 * dist_score) * (1.0 - 0.62 * pred_score) * (1.0 - 0.94 * ttc_score))
 
         # Epistemic & perception uncertainty risk inflation strictly for forward near-corridor objects
         epistemic_boost = 0.0
-        max_lat_scope = corridor_half_width_m + 1.4
-        if uncertainty_aware and 0.0 < y < 32.0 and abs(x) < max_lat_scope:
+        max_lat_scope = eff_corridor_hw + 1.4
+        if uncertainty_aware and 0.0 < y < 32.0 and lat_offset < max_lat_scope:
             epistemic_unc = 0.45 * det_unc + 0.35 * track_unc + 0.20 * min(1.0, pred_unc_2s / 6.0)
             prox_w = _sigmoid((22.0 - y) / 5.5)
-            lat_w = max(0.0, 1.0 - abs(x) / max_lat_scope)
-            epistemic_boost = 0.36 * epistemic_unc * prox_w * lat_w
+            lat_w = max(0.0, 1.0 - lat_offset / max_lat_scope)
+            epistemic_boost = road_ctx_w * 0.36 * epistemic_unc * prox_w * lat_w
 
         obj_risk = round(min(1.0, base_risk + epistemic_boost), 3)
         obj["risk_indicator"] = obj_risk

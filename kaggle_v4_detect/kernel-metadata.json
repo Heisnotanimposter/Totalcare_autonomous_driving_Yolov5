@@ -1,0 +1,18 @@
+{
+  "id": "test013/totalcare-kitti-v4-detect",
+  "title": "TotalCare KITTI v4 Detect",
+  "code_file": "train_v4_detect_kitti.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": "true",
+  "enable_gpu": "true",
+  "enable_tpu": "false",
+  "enable_internet": "true",
+  "dataset_sources": [
+    "leducnhuan/kitti-tracking",
+    "harshpdani/kitti-stereo-image"
+  ],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": []
+}

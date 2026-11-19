@@ -347,16 +347,20 @@ def markdown_to_latex_body(md_text: str, heading_shift: int = 0) -> str:
     return "\n".join(out)
 
 
-def tex_preamble(title: str, subtitle: str) -> str:
+def tex_preamble(title: str, subtitle: str, lang: str = "ko") -> str:
+    hangul_block = (
+        "\\usepackage{kotex}\n"
+        "\\usepackage{fontspec}\n"
+        "\\setmainhangulfont{Apple SD Gothic Neo}[BoldFont={* Bold}]\n"
+        "\\setsanshangulfont{Apple SD Gothic Neo}[BoldFont={* Bold}]\n"
+        "\\setmonofont{Menlo}[Scale=0.82]\n"
+        if lang == "ko"
+        else "\\usepackage{fontspec}\n\\setmonofont{Menlo}[Scale=0.82]\n"
+    )
     return rf"""\documentclass[10.5pt,a4paper]{{article}}
-\usepackage{{kotex}}
 \usepackage{{geometry}}
 \geometry{{margin=18mm,top=20mm,bottom=20mm}}
-\usepackage{{fontspec}}
-\setmainhangulfont{{Apple SD Gothic Neo}}[BoldFont={{* Bold}}]
-\setsanshangulfont{{Apple SD Gothic Neo}}[BoldFont={{* Bold}}]
-\setmonofont{{Menlo}}[Scale=0.82]
-\usepackage{{amsmath,amssymb}}
+{hangul_block}\usepackage{{amsmath,amssymb}}
 \usepackage{{booktabs,longtable,array}}
 \usepackage{{graphicx}}
 \usepackage{{enumitem}}
@@ -394,22 +398,28 @@ def compile_tectonic(tex_path: pathlib.Path, pdf_out_path: pathlib.Path) -> None
         generated.replace(pdf_out_path)
 
 
-def main() -> None:
-    MD_DIR.mkdir(parents=True, exist_ok=True)
-    TEX_DIR.mkdir(parents=True, exist_ok=True)
-    PDF_DIR.mkdir(parents=True, exist_ok=True)
+def build_language_bundle(lang: str) -> pathlib.Path:
+    is_ko = lang == "ko"
+    src_md_dir = REPORT_DIR / ("md_ko" if is_ko else "md_en")
+    tex_sub_dir = TEX_DIR / lang
+    pdf_sub_dir = PDF_DIR / lang
+    tex_sub_dir.mkdir(parents=True, exist_ok=True)
+    pdf_sub_dir.mkdir(parents=True, exist_ok=True)
 
-    # 1. Sync root markdown files into report/md/
-    for dst_name, src_rel, _ in SOURCE_DOCS:
-        if src_rel:
-            shutil.copy2(ROOT / src_rel, MD_DIR / dst_name)
+    if is_ko:
+        for dst_name, src_rel, _ in SOURCE_DOCS:
+            if dst_name in ("01_FINAL_REPORT.md", "02_ML_LAYER_SPEC.md") and src_rel:
+                shutil.copy2(ROOT / src_rel, src_md_dir / dst_name)
+    else:
+        for dst_name, src_rel, _ in SOURCE_DOCS:
+            if dst_name in ("03_ARCHITECTURE.md", "04_DATASET_AUDIT.md", "05_EXPERIMENT_PLAN.md", "06_VISUALIZATION_SPEC.md") and src_rel:
+                shutil.copy2(ROOT / src_rel, src_md_dir / dst_name)
 
-    # 2. Convert each MD -> standalone LaTeX -> standalone PDF
     for md_name, _, doc_desc in SOURCE_DOCS:
-        md_path = MD_DIR / md_name
+        md_path = src_md_dir / md_name
         stem = md_path.stem
-        tex_path = TEX_DIR / f"{stem}.tex"
-        pdf_path = PDF_DIR / f"{stem}.pdf"
+        tex_path = tex_sub_dir / f"{stem}.tex"
+        pdf_path = pdf_sub_dir / f"{stem}.pdf"
 
         raw_md = md_path.read_text(encoding="utf-8")
         lines = raw_md.splitlines()
@@ -418,45 +428,72 @@ def main() -> None:
             title = lines[0][2:].strip()
             raw_md = "\n".join(lines[1:])
 
-        # In standalone docs, top H1 was stripped so shift `##` (-1) -> `\section`
-        tex_doc = tex_preamble(title, doc_desc) + markdown_to_latex_body(raw_md, heading_shift=-1) + "\n\\end{document}\n"
+        tex_doc = tex_preamble(title, title, lang=lang) + markdown_to_latex_body(raw_md, heading_shift=-1) + "\n\\end{document}\n"
         tex_path.write_text(tex_doc, encoding="utf-8")
         compile_tectonic(tex_path, pdf_path)
-        print(f"[OK] {md_path.name} -> {tex_path.name} -> {pdf_path.name}")
+        print(f"[OK:{lang.upper()}] {md_path.name} -> {tex_path.name} -> {pdf_path.name}")
 
-    # 3. Build Master Consolidated Final Report PDF (all 7 docs + visual figures)
-    master_tex = TEX_DIR / "Totalcare_Autonomous_Driving_Report.tex"
-    master_pdf = REPORT_DIR / "Totalcare_Autonomous_Driving_Report.pdf"
+    suffix = "KOR" if is_ko else "ENG"
+    master_tex = TEX_DIR / f"Totalcare_Autonomous_Driving_Report_{suffix}.tex"
+    master_pdf = REPORT_DIR / f"Totalcare_Autonomous_Driving_Report_{suffix}.pdf"
+
+    if is_ko:
+        m_title = "Camera-Centric Temporal Ego-centric World Model 최종 보고서 (KOR)"
+        m_sub = "KITTI Tracking 기반 검출·세그멘테이션·도로/차선·추적·World Model 및 Layer별 기술명세 통합본"
+        fig_sec = "학습 곡선 및 시연 키프레임 시각 자료"
+        figs = [
+            (ROOT / "results/v2_improved/outputs/train_results/results.png", "v2 YOLO11m @ 960 학습 손실 및 Val mAP 수렴 곡선"),
+            (ROOT / "results/v2_improved/outputs/train_results/confusion_matrix_normalized.png", "v2 YOLO11m @ 960 정규화 혼동 행렬 (Car / Pedestrian / Cyclist)"),
+            (ROOT / "results/v3_bev_fixed/world_outputs/world_model_0015_staged/keyframes/seq_0015_frame_000045_stage5.png", "v3 시퀀스 0015 Frame 45: BEV 타원 종횡비·오경보 수정 후 정상 주행(Caution 0.25)"),
+            (ROOT / "results/v3_bev_fixed/world_outputs/world_model_0019_staged/keyframes/seq_0019_frame_000055_stage5.png", "v3 시퀀스 0019 Frame 55: 우측 보도 보행자 비경보 유지 및 정면 접근 차량 Braking(0.72)"),
+            (ROOT / "results/v4_road_lane/detect_outputs/outputs/train_results/results.png", "v4 YOLO11l @ 1280 (중복 제거 KITTI-Det 병합) 학습 손실 및 Val mAP 수렴 곡선"),
+            (ROOT / "results/v4_road_lane/detect_outputs/outputs/train_results/BoxPR_curve.png", "v4 Val Precision-Recall 곡선 (TTA all classes mAP@0.5 = 0.740)"),
+            (ROOT / "results/v4_road_lane/detect_outputs/outputs/train_results/BoxF1_curve.png", "v4 Val F1-Confidence 곡선 (all classes 0.71 at conf 0.217)"),
+            (ROOT / "results/v4_road_lane/detect_outputs/outputs/train_results/confusion_matrix_normalized.png", "v4 정규화 혼동 행렬 (Car 0.90 / Pedestrian 0.87 / Cyclist 0.55)"),
+            (ROOT / "results/v4_road_lane/detect_outputs/outputs/train_results/test_BoxPR_curve.png", "v4 Held-Out Test Precision-Recall 곡선 (TTA all classes mAP@0.5 = 0.670)"),
+            (ROOT / "results/v4_road_lane/detect_outputs/outputs/train_results/test_BoxF1_curve.png", "v4 Held-Out Test F1-Confidence 곡선 (all classes 0.68 at conf 0.568)"),
+            (ROOT / "results/v4_road_lane/road_outputs/road_lane_outputs/road_lane_preview_0015_f0045.png", "v4 SegFormer-B2 도로·비도로·자차로 세그멘테이션 및 2차 다항식 차선 프리뷰 (0015 f0045)"),
+            (ROOT / "results/v4_road_lane/world_outputs/v4_world_outputs/world_model_0015_staged/keyframes/seq_0015_frame_000045_stage5.png", "v4 시퀀스 0015 Frame 45: 도로·차선 마스킹 및 BEV 도로 폴리곤·곡률 차선 통합 출력"),
+            (ROOT / "results/v4_road_lane/world_outputs/v4_world_outputs/world_model_0019_staged/keyframes/seq_0019_frame_000055_stage5.png", "v4 시퀀스 0019 Frame 55: 비도로/차선 컨텍스트 배지([LANE]/[NON-RD]) 및 Safety Shield 통합 출력"),
+        ]
+    else:
+        m_title = "Camera-Centric Temporal Ego-centric World Model Final Report (ENG)"
+        m_sub = "Consolidated KITTI Tracking Report: Detection, Segmentation, Road/Lane, Tracking, World Model, and Per-Layer Specs"
+        fig_sec = "Training Curves and Demonstration Keyframes"
+        figs = [
+            (ROOT / "results/v2_improved/outputs/train_results/results.png", "v2 YOLO11m @ 960 Training Losses and Validation mAP Convergence"),
+            (ROOT / "results/v2_improved/outputs/train_results/confusion_matrix_normalized.png", "v2 YOLO11m @ 960 Normalized Confusion Matrix (Car / Pedestrian / Cyclist)"),
+            (ROOT / "results/v3_bev_fixed/world_outputs/world_model_0015_staged/keyframes/seq_0015_frame_000045_stage5.png", "v3 Seq 0015 Frame 45: Aspect-Corrected BEV Ellipses & False-Alarm Suppression (Caution 0.25)"),
+            (ROOT / "results/v3_bev_fixed/world_outputs/world_model_0019_staged/keyframes/seq_0019_frame_000055_stage5.png", "v3 Seq 0019 Frame 55: Sidewalk Pedestrian Non-Alert & Approaching Vehicle Braking (0.72)"),
+            (ROOT / "results/v4_road_lane/detect_outputs/outputs/train_results/results.png", "v4 YOLO11l @ 1280 (Deduped KITTI-Det Merge) Training Losses and Validation mAP Convergence"),
+            (ROOT / "results/v4_road_lane/detect_outputs/outputs/train_results/BoxPR_curve.png", "v4 Val Precision-Recall Curve (TTA all classes mAP@0.5 = 0.740)"),
+            (ROOT / "results/v4_road_lane/detect_outputs/outputs/train_results/BoxF1_curve.png", "v4 Val F1-Confidence Curve (all classes 0.71 at conf 0.217)"),
+            (ROOT / "results/v4_road_lane/detect_outputs/outputs/train_results/confusion_matrix_normalized.png", "v4 Normalized Confusion Matrix (Car 0.90 / Pedestrian 0.87 / Cyclist 0.55)"),
+            (ROOT / "results/v4_road_lane/detect_outputs/outputs/train_results/test_BoxPR_curve.png", "v4 Held-Out Test Precision-Recall Curve (TTA all classes mAP@0.5 = 0.670)"),
+            (ROOT / "results/v4_road_lane/detect_outputs/outputs/train_results/test_BoxF1_curve.png", "v4 Held-Out Test F1-Confidence Curve (all classes 0.68 at conf 0.568)"),
+            (ROOT / "results/v4_road_lane/road_outputs/road_lane_outputs/road_lane_preview_0015_f0045.png", "v4 SegFormer-B2 Road/Non-Road/Ego-Lane Segmentation & Quadratic Lane Preview (0015 f0045)"),
+            (ROOT / "results/v4_road_lane/world_outputs/v4_world_outputs/world_model_0015_staged/keyframes/seq_0015_frame_000045_stage5.png", "v4 Seq 0015 Frame 45: Integrated Road/Lane Masking & BEV Road Polygon / Curvilinear Lanes"),
+            (ROOT / "results/v4_road_lane/world_outputs/v4_world_outputs/world_model_0019_staged/keyframes/seq_0019_frame_000055_stage5.png", "v4 Seq 0019 Frame 55: Road/Lane Context Badges ([LANE]/[NON-RD]) & Safety Shield Integration"),
+        ]
 
     parts: List[str] = [
-        tex_preamble(
-            "Camera-Centric Temporal Ego-centric World Model 최종 보고서",
-            "KITTI Tracking 기반 검출·세그멘테이션·추적·World Model 및 Layer별 기술명세 통합본",
-        ),
+        tex_preamble(m_title, m_sub, lang=lang),
         r"\tableofcontents",
         r"\newpage",
     ]
 
     for md_name, _, doc_desc in SOURCE_DOCS:
-        md_text = (MD_DIR / md_name).read_text(encoding="utf-8")
+        md_text = (src_md_dir / md_name).read_text(encoding="utf-8")
         lines = md_text.splitlines()
         part_title = doc_desc
         if lines and lines[0].startswith("# "):
             part_title = lines[0][2:].strip()
             md_text = "\n".join(lines[1:])
         parts.append(r"\section{" + _escape_latex_plain(part_title) + "}")
-        # Inside master book, `\section` is chapter heading so `##` (`heading_shift=0`) becomes `\subsection` cleanly!
         parts.append(markdown_to_latex_body(md_text, heading_shift=0))
         parts.append(r"\newpage")
 
-    figs = [
-        (ROOT / "results/v2_improved/outputs/train_results/results.png", "v2 YOLO11m @ 960 학습 손실 및 Val mAP 수렴 곡선"),
-        (ROOT / "results/v2_improved/outputs/train_results/confusion_matrix_normalized.png", "v2 YOLO11m @ 960 정규화 혼동 행렬 (Car / Pedestrian / Cyclist)"),
-        (ROOT / "results/v3_bev_fixed/world_outputs/world_model_0015_staged/keyframes/seq_0015_frame_000045_stage5.png", "시퀀스 0015 Frame 45: v3 BEV 타원 종횡비·오경보 수정 후 정상 주행(Caution 0.25) 및 MobileSAM 마스크"),
-        (ROOT / "results/v3_bev_fixed/world_outputs/world_model_0015_staged/keyframes/seq_0015_frame_000055_stage5.png", "시퀀스 0015 Frame 55: 전방 횡단 자전거(#53) 소형 CONFLICT 마커 및 Speed Reduction(0.48)"),
-        (ROOT / "results/v3_bev_fixed/world_outputs/world_model_0019_staged/keyframes/seq_0019_frame_000055_stage5.png", "시퀀스 0019 Frame 55: 우측 보도 보행자(#40) 비경보 유지 및 정면 접근 차량(#9) Braking Recommendation(0.72)"),
-    ]
-    parts.append(r"\section{학습 곡선 및 시연 키프레임 시각 자료}")
+    parts.append(r"\section{" + _escape_latex_plain(fig_sec) + "}")
     for fpath, cap in figs:
         if fpath.exists():
             parts.append(r"\begin{figure}[htbp]\centering")
@@ -467,7 +504,22 @@ def main() -> None:
     parts.append(r"\end{document}")
     master_tex.write_text("\n".join(parts), encoding="utf-8")
     compile_tectonic(master_tex, master_pdf)
-    print(f"[DONE] Consolidated PDF ready: {master_pdf}")
+    print(f"[DONE:{suffix}] Consolidated PDF ready: {master_pdf}")
+    return master_pdf
+
+
+def main() -> None:
+    MD_DIR.mkdir(parents=True, exist_ok=True)
+    TEX_DIR.mkdir(parents=True, exist_ok=True)
+    PDF_DIR.mkdir(parents=True, exist_ok=True)
+    ko_pdf = build_language_bundle("ko")
+    en_pdf = build_language_bundle("en")
+
+    spec_dir = ROOT / "report to specific"
+    spec_dir.mkdir(parents=True, exist_ok=True)
+    for src_pdf in (ko_pdf, en_pdf):
+        shutil.copy2(src_pdf, spec_dir / src_pdf.name)
+        print(f"[COPY] {src_pdf.name} -> {spec_dir / src_pdf.name}")
 
 
 if __name__ == "__main__":

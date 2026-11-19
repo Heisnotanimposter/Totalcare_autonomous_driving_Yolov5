@@ -1,0 +1,1358 @@
+\documentclass[10.5pt,a4paper]{article}
+\usepackage{geometry}
+\geometry{margin=18mm,top=20mm,bottom=20mm}
+\usepackage{fontspec}
+\setmonofont{Menlo}[Scale=0.82]
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,longtable,array}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue!60!black,urlcolor=blue!65!black}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\setcounter{secnumdepth}{0}
+\sloppy
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{gray}Camera-Centric Temporal Ego-centric World Model Final Report (ENG)}
+\fancyhead[R]{\small\color{gray}KITTI Tracking Temporal World Model}
+\fancyfoot[C]{\small\thepage}
+\begin{document}
+\begin{center}
+{\LARGE\bfseries Camera-Centric Temporal Ego-centric World Model Final Report (ENG)}\\[6pt]
+{\normalsize\color{gray} Consolidated KITTI Tracking Report: Detection, Segmentation, Road/Lane, Tracking, World Model, and Per-Layer Specs}\\[4pt]
+{\small\href{https://github.com/Heisnotanimposter/Totalcare_autonomous_driving_Yolov5}{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5}}
+\end{center}
+\vspace{4pt}
+\hrule
+\vspace{8pt}
+
+\tableofcontents
+\newpage
+\section{Final Project Report: Camera-Centric Temporal Ego-centric World Model}
+
+\textbf{GitHub Repository:} https:\allowbreak{}/\allowbreak{}/\allowbreak{}github.\allowbreak{}com/\allowbreak{}Heisnotanimposter/\allowbreak{}Totalcare\_\allowbreak{}autonomous\_\allowbreak{}driving\_\allowbreak{}Yolov5 \textit{(retains the initial repository name while the internal codebase is built on the Ultralytics \textbf{YOLOv8 / YOLO11} pipeline)}
+
+\textbf{Dataset:} KITTI Object Tracking (\texttt{training/\allowbreak{}image\_\allowbreak{}02}, \texttt{training/\allowbreak{}label\_\allowbreak{}02}, \texttt{calib}, \texttt{oxts}) + \texttt{data\_\allowbreak{}road} + deduped \texttt{kitti-\allowbreak{}stereo-\allowbreak{}image}
+
+\textbf{Execution Environment:} Kaggle CLI GPU (\texttt{2$\times$ Nvidia Tesla T4}, \texttt{Ultralytics 8.\allowbreak{}4.\allowbreak{}212}, \texttt{PyTorch 2.\allowbreak{}11.\allowbreak{}0+cu130}) + Google Colab CLI Integration
+
+
+> \textbf{[Framework \& Object Counting Note]} Following the course specification, this project first established a \textbf{\texttt{YOLOv8s} (\texttt{v1} Baseline)} and then scaled within the \textbf{same Ultralytics \texttt{train()} / \texttt{track()} pipeline} to \textbf{\texttt{YOLO11m} (\texttt{v2})} and \textbf{\texttt{YOLO11l} (\texttt{v4})} (\texttt{C3k2}, \texttt{C2PSA}). Per-frame active track counts (\texttt{Tracks:\allowbreak{} Observed=.\allowbreak{}.\allowbreak{}.\allowbreak{}} HUD, \texttt{trajectories.\allowbreak{}csv}, \texttt{road\_\allowbreak{}context\_\allowbreak{}stats.\allowbreak{}json}) also fulfill real-time object counting.
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{0. Instructor Evaluation Rubric Self-Check \& Document Mapping}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.382\textwidth} >{\raggedright\arraybackslash}p{0.101\textwidth} >{\raggedright\arraybackslash}p{0.382\textwidth}}
+\toprule
+\textbf{Evaluation Criterion} & \textbf{Status} & \textbf{Evidence \& Repository Location} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Evaluation Criterion} & \textbf{Status} & \textbf{Evidence \& Repository Location} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{1. Data Collection (3+ classes, 100+ images)} & \textbf{Met} & \texttt{KITTI Tracking} 21 sequences (\texttt{0000}--\texttt{0020}), \textbf{\texttt{8,\allowbreak{}008} RGB images} (\texttt{14,\allowbreak{}371} train entries in \texttt{v4}), \textbf{\texttt{3} classes} (\texttt{Car}, \texttt{Pedestrian}, \texttt{Cyclist}). \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/dataset\_audit.md}{\texttt{dataset\_\allowbreak{}audit.\allowbreak{}md}} \\
+\textbf{2. 5s+ Detection \& Tracking Demo Video} & \textbf{Met} & Split-screen World Model demos (\texttt{0015} staged \texttt{8.\allowbreak{}0s} / full \textbf{\texttt{37.\allowbreak{}6s}}, \texttt{0019} staged \texttt{8.\allowbreak{}0s} / full \textbf{\texttt{105.\allowbreak{}9s}}) + 2D ByteTrack \& SAM tracking videos. \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v4\_road\_lane/world\_outputs/v4\_world\_outputs/world\_model\_0015\_full/world\_model\_demo\_0015.mp4}{\texttt{world\_\allowbreak{}model\_\allowbreak{}demo\_\allowbreak{}0015.\allowbreak{}mp4}} \\
+\textbf{3. Trained Model \& Demo Videos Published on GitHub} & \textbf{Packaged (Push Pending)} & Trained weights \texttt{v2} \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v2\_improved/outputs/weights/best.pt}{\texttt{best.\allowbreak{}pt}} (\texttt{38.\allowbreak{}62 MB}), \texttt{v4} \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v4\_road\_lane/detect\_outputs/outputs/weights/best.pt}{\texttt{best.\allowbreak{}pt}} (\texttt{49 MB}), and demo MP4s kept within GitHub's 100MB limit via \texttt{.\allowbreak{}gitignore} (run final \texttt{git push} before submission). \\
+\textbf{4. Contents Included in Final Report} & \textbf{Met} & This report (Sections 1--6) covers data curation, detection/segmentation/tracking, road/lane perception, and World Model safety evaluation. \\
+\textbf{5. Training Process \& Performance Benchmarks Included} & \textbf{Met} & Sections 2, 3, and 6 document \texttt{v1 $\rightarrow$ v2 $\rightarrow$ v3 $\rightarrow$ v4} hyperparameters, per-epoch convergence (\texttt{results.\allowbreak{}csv}), Detection/Tracking/Depth/Prediction/Road-Lane/RQ1--RQ4 benchmarks. \\
+\textbf{6. GitHub Link \& Description Included} & \textbf{Met} & Header and Section 4 specify repository URL, directory layout, reproduction kernels, and direct artifact paths. \\
+\textbf{7. Per-Layer ML Technical Specification \& References Attached} & \textbf{Met} & Full 24-module \texttt{YOLO11m} (\texttt{231 layers}), \texttt{MobileSAM}, \texttt{ByteTrack}, \texttt{SegFormer-\allowbreak{}B2}, and \texttt{World Model} layer specs + academic references in \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/ML\_LAYER\_SPEC.md}{\texttt{ML\_\allowbreak{}LAYER\_\allowbreak{}SPEC.\allowbreak{}md}}. \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{1. Data Collection \& Sequence-Disjoint Preprocessing (\texttt{Stage 1})}
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Raw Dataset Scale}: \texttt{KITTI Tracking} 21 sequences (\texttt{0000}--\texttt{0020}), \textbf{\texttt{8,\allowbreak{}008} frames} (\texttt{1242$\times$375} and 3 adjacent resolutions, \texttt{10 Hz}, verified via \texttt{ZipFile.\allowbreak{}testzip()} / \texttt{PIL.\allowbreak{}Image.\allowbreak{}verify()} with \texttt{0} corrupt/missing files, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v2\_improved/outputs/kitti\_step2\_audit.json}{\texttt{kitti\_\allowbreak{}step2\_\allowbreak{}audit.\allowbreak{}json}}).
+\item \textbf{Target Classes (3) \& Sequence-Disjoint Split}: Strictly split by driving sequence so frames from the same sequence never leak across Train/Val/Test (\href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v2\_improved/outputs/kitti\_export\_manifest.json}{\texttt{kitti\_\allowbreak{}export\_\allowbreak{}manifest.\allowbreak{}json}}).
+\end{itemize}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.043\textwidth} >{\raggedright\arraybackslash}p{0.078\textwidth} >{\raggedright\arraybackslash}p{0.052\textwidth} >{\raggedright\arraybackslash}p{0.078\textwidth} >{\raggedright\arraybackslash}p{0.138\textwidth} >{\raggedright\arraybackslash}p{0.112\textwidth} >{\raggedright\arraybackslash}p{0.293\textwidth}}
+\toprule
+\textbf{Split} & \textbf{Sequences} & \textbf{Frames} & \textbf{\texttt{Car} Boxes} & \textbf{\texttt{Pedestrian} Boxes} & \textbf{\texttt{Cyclist} Boxes} & \textbf{Notes} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Split} & \textbf{Sequences} & \textbf{Frames} & \textbf{\texttt{Car} Boxes} & \textbf{\texttt{Pedestrian} Boxes} & \textbf{\texttt{Cyclist} Boxes} & \textbf{Notes} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{Train} & 14 & \texttt{5,\allowbreak{}568} & \texttt{23,\allowbreak{}404} & \texttt{648} & \texttt{367} & Rare-class oversampling (\texttt{train\_\allowbreak{}weighted.\allowbreak{}txt}: \texttt{6,\allowbreak{}974} entries) \\
+\textbf{Val} & 4 & \texttt{832} & \texttt{2,\allowbreak{}075} & \texttt{1,\allowbreak{}777} & \texttt{754} & \texttt{0002,\allowbreak{} 0012,\allowbreak{} 0015,\allowbreak{} 0017} \\
+\textbf{Test} & 3 & \texttt{1,\allowbreak{}608} & \texttt{1,\allowbreak{}818} & \texttt{9,\allowbreak{}044} & \texttt{817} & \texttt{0013,\allowbreak{} 0016,\allowbreak{} 0019} (completely unseen drives) \\
+\textbf{Total} & \textbf{21} & \textbf{\texttt{8,\allowbreak{}008}} & \textbf{\texttt{27,\allowbreak{}297}} & \textbf{\texttt{11,\allowbreak{}469}} & \textbf{\texttt{1,\allowbreak{}938}} & \texttt{40,\allowbreak{}704} target objects + \texttt{DontCare}/Distractor masking \\
+\end{longtable}
+\end{footnotesize}
+
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Spurious Gradient Prevention Masking}: \texttt{DontCare} and adjacent distractor classes (\texttt{Van}, \texttt{Person}, \texttt{Person\_\allowbreak{}sitting}) are masked with neutral gray (\texttt{114}) pixels during export to prevent false-negative penalties against TrackEval taxonomy.
+\end{itemize}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{2. Training Progression \& Evolution (\texttt{v1 Baseline $\rightarrow$ v2 Improved $\rightarrow$ v3 BEV Fixed})}
+
+\subsubsection{2.1 Training Setup \& Architecture Evolution}
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{\texttt{v1} Baseline (\texttt{YOLOv8s @ 640px})}: \texttt{epochs=30}, \texttt{batch=16}, \texttt{129 layers /\allowbreak{} 11.\allowbreak{}14M params /\allowbreak{} 28.\allowbreak{}6 GFLOPs}.
+\item \textbf{\texttt{v2} Improved (\texttt{YOLO11m @ 960px} + Rare-Class Oversampling + \texttt{MobileSAM})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item Upgraded input resolution from \texttt{640 $\rightarrow$ 960} with \texttt{C3k2 + C2PSA} spatial-attention \texttt{YOLO11m} (\texttt{231 layers /\allowbreak{} 20.\allowbreak{}06M params /\allowbreak{} 68.\allowbreak{}3 GFLOPs}).
+\item Applied rare-class oversampling (\texttt{6,\allowbreak{}974} weighted train entries; Val/Test untouched), \texttt{cos\_\allowbreak{}lr=True}, \texttt{mixup=0.\allowbreak{}1}, \texttt{close\_\allowbreak{}mosaic=10}, \texttt{patience=12} on \textbf{\texttt{2$\times$ Tesla T4}} DDP (early-stopped at \texttt{Epoch 24}, Best = \textbf{\texttt{Epoch 12}}, \textasciitilde{}108 min).
+\item Coupled \texttt{mobile\_\allowbreak{}sam.\allowbreak{}pt} (\texttt{38.\allowbreak{}8 MB}) Box-Prompt segmentation for pixel masks and ground-contact points (\texttt{mask\_\allowbreak{}bottom\_\allowbreak{}xy}).
+\end{itemize}
+\item \textbf{\texttt{v3} BEV Visual \& False-Alarm Fix (\texttt{world\_\allowbreak{}model.\allowbreak{}py}, \texttt{world\_\allowbreak{}visualizer.\allowbreak{}py})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item Fixed >2x lateral distortion of longitudinal uncertainty ellipses in the BEV panel via Jacobian projection $J=\text{diag}(s_x,-s_y)$, lateral covariance decoupling, approach-speed gating (\texttt{approach\_\allowbreak{}w}), and per-track EMA smoothing.
+\end{itemize}
+\end{enumerate}
+
+\subsubsection{2.2 \texttt{v2 YOLO11m @ 960} Per-Epoch Convergence (\href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v2\_improved/outputs/train\_results/results.csv}{\texttt{results.\allowbreak{}csv}})}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.037\textwidth} >{\raggedright\arraybackslash}p{0.066\textwidth} >{\raggedright\arraybackslash}p{0.096\textwidth} >{\raggedright\arraybackslash}p{0.096\textwidth} >{\raggedright\arraybackslash}p{0.096\textwidth} >{\raggedright\arraybackslash}p{0.096\textwidth} >{\raggedright\arraybackslash}p{0.074\textwidth} >{\raggedright\arraybackslash}p{0.081\textwidth} >{\raggedright\arraybackslash}p{0.118\textwidth}}
+\toprule
+\textbf{Epoch} & \textbf{Elapsed (s)} & \textbf{\texttt{train/\allowbreak{}box\_\allowbreak{}loss}} & \textbf{\texttt{train/\allowbreak{}cls\_\allowbreak{}loss}} & \textbf{\texttt{train/\allowbreak{}dfl\_\allowbreak{}loss}} & \textbf{Val \texttt{Precision}} & \textbf{Val \texttt{Recall}} & \textbf{Val \texttt{mAP@0.\allowbreak{}5}} & \textbf{Val \texttt{mAP@0.\allowbreak{}5:\allowbreak{}0.\allowbreak{}95}} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Epoch} & \textbf{Elapsed (s)} & \textbf{\texttt{train/\allowbreak{}box\_\allowbreak{}loss}} & \textbf{\texttt{train/\allowbreak{}cls\_\allowbreak{}loss}} & \textbf{\texttt{train/\allowbreak{}dfl\_\allowbreak{}loss}} & \textbf{Val \texttt{Precision}} & \textbf{Val \texttt{Recall}} & \textbf{Val \texttt{mAP@0.\allowbreak{}5}} & \textbf{Val \texttt{mAP@0.\allowbreak{}5:\allowbreak{}0.\allowbreak{}95}} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{1} & 214.4 & 1.1077 & 0.8017 & 1.0848 & 0.4067 & 0.4114 & 0.4074 & 0.2240 \\
+\textbf{5} & 1097.3 & 0.9687 & 0.6330 & 1.0241 & 0.5063 & 0.4627 & 0.4516 & 0.2611 \\
+\textbf{10} & 2197.2 & 0.8181 & 0.5107 & 0.9597 & 0.6701 & 0.4487 & 0.4886 & 0.2894 \\
+\textbf{12 (Best)} & 2637.2 & 0.7793 & 0.4813 & 0.9431 & \textbf{0.7166} & \textbf{0.4814} & \textbf{0.5231} & \textbf{0.3059} \\
+\textbf{19} & 4179.2 & 0.6791 & 0.4135 & 0.9019 & 0.7905 & 0.4846 & 0.5297 & 0.2985 \\
+\textbf{24 (Stop)} & 5278.9 & 0.6194 & 0.3725 & 0.8823 & 0.6714 & 0.4341 & 0.4539 & 0.2738 \\
+\end{longtable}
+\end{footnotesize}
+
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item Training curves \& normalized confusion matrix: \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v2\_improved/outputs/train\_results/results.png}{\texttt{results.\allowbreak{}png}}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v2\_improved/outputs/train\_results/confusion\_matrix\_normalized.png}{\texttt{confusion\_\allowbreak{}matrix\_\allowbreak{}normalized.\allowbreak{}png}}
+\end{itemize}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{3. Quantitative Performance Benchmarks}
+
+\subsubsection{3.1 Stage 2 Object Detection (\texttt{v1} vs \texttt{v2}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v2\_improved/outputs/eval\_metrics.json}{\texttt{eval\_\allowbreak{}metrics.\allowbreak{}json}})}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.222\textwidth} >{\raggedright\arraybackslash}p{0.198\textwidth} >{\raggedright\arraybackslash}p{0.198\textwidth} >{\raggedright\arraybackslash}p{0.231\textwidth}}
+\toprule
+\textbf{Split / Metric} & \textbf{\texttt{v1} (\texttt{YOLOv8s @ 640})} & \textbf{\texttt{v2} (\texttt{YOLO11m @ 960})} & \textbf{Improvement (\texttt{$\Delta$})} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Split / Metric} & \textbf{\texttt{v1} (\texttt{YOLOv8s @ 640})} & \textbf{\texttt{v2} (\texttt{YOLO11m @ 960})} & \textbf{Improvement (\texttt{$\Delta$})} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{Val \texttt{mAP@0.\allowbreak{}5} / \texttt{mAP@0.\allowbreak{}5:\allowbreak{}0.\allowbreak{}95}} & \texttt{0.\allowbreak{}4521 /\allowbreak{} 0.\allowbreak{}2471} & \textbf{\texttt{0.\allowbreak{}5235 /\allowbreak{} 0.\allowbreak{}3060}} & \textbf{\texttt{+0.\allowbreak{}0714 (+15.\allowbreak{}8\%)}} / \texttt{+0.\allowbreak{}0589} \\
+\textbf{Val \texttt{Precision /\allowbreak{} Recall}} & \texttt{0.\allowbreak{}6026 /\allowbreak{} 0.\allowbreak{}4230} & \textbf{\texttt{0.\allowbreak{}7170 /\allowbreak{} 0.\allowbreak{}4822}} & \texttt{+0.\allowbreak{}1144} / \texttt{+0.\allowbreak{}0592} \\
+\textbf{Val AP50 (\texttt{Car /\allowbreak{} Ped /\allowbreak{} Cyc})} & \texttt{0.\allowbreak{}7501 /\allowbreak{} 0.\allowbreak{}5141 /\allowbreak{} 0.\allowbreak{}0922} & \textbf{\texttt{0.\allowbreak{}8235 /\allowbreak{} 0.\allowbreak{}5871 /\allowbreak{} 0.\allowbreak{}1598}} & \texttt{+0.\allowbreak{}0734 /\allowbreak{} +0.\allowbreak{}0730 /\allowbreak{} +0.\allowbreak{}0676 (+73.\allowbreak{}3\%)} \\
+\textbf{Test \texttt{mAP@0.\allowbreak{}5} / \texttt{mAP@0.\allowbreak{}5:\allowbreak{}0.\allowbreak{}95}} & \texttt{0.\allowbreak{}3652 /\allowbreak{} 0.\allowbreak{}1695} & \textbf{\texttt{0.\allowbreak{}4269 /\allowbreak{} 0.\allowbreak{}2145}} & \textbf{\texttt{+0.\allowbreak{}0617 (+16.\allowbreak{}9\%)}} / \texttt{+0.\allowbreak{}0450} \\
+\textbf{Test AP50 (\texttt{Car /\allowbreak{} Ped /\allowbreak{} Cyc})} & \texttt{0.\allowbreak{}6294 /\allowbreak{} 0.\allowbreak{}3497 /\allowbreak{} 0.\allowbreak{}1165} & \textbf{\texttt{0.\allowbreak{}6662 /\allowbreak{} 0.\allowbreak{}3631 /\allowbreak{} 0.\allowbreak{}2513}} & \texttt{+0.\allowbreak{}0368 /\allowbreak{} +0.\allowbreak{}0134 /\allowbreak{}} \textbf{\texttt{+0.\allowbreak{}1348 (+115.\allowbreak{}7\%)}} \\
+\end{longtable}
+\end{footnotesize}
+
+
+\subsubsection{3.2 Stage 3 Tracking \& Stage 4--7 World Model (RQ1--RQ4) (\href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v3\_bev\_fixed/world\_outputs/validation\_0015.json}{\texttt{validation\_\allowbreak{}0015.\allowbreak{}json}}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v3\_bev\_fixed/world\_outputs/validation\_0019.json}{\texttt{validation\_\allowbreak{}0019.\allowbreak{}json}})}
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{MobileSAM Masking}: Seq \texttt{0015} (376f) \textbf{\texttt{1,\allowbreak{}370}} instances (\texttt{41} tracks); Seq \texttt{0019} (1059f) \textbf{\texttt{3,\allowbreak{}788}} instances (\texttt{203} tracks) (\href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v2\_improved/outputs/tracking\_summary.json}{\texttt{tracking\_\allowbreak{}summary.\allowbreak{}json}}).
+\item \textbf{Research Questions (RQ1--RQ4) Validation Summary (\texttt{v3\_\allowbreak{}bev\_\allowbreak{}fixed})}:
+\end{itemize}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.277\textwidth} >{\raggedright\arraybackslash}p{0.294\textwidth} >{\raggedright\arraybackslash}p{0.294\textwidth}}
+\toprule
+\textbf{Validation Item} & \textbf{Sequence \texttt{0015} (376 frames, \texttt{37.\allowbreak{}6s})} & \textbf{Sequence \texttt{0019} (1059 frames, \texttt{105.\allowbreak{}9s})} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Validation Item} & \textbf{Sequence \texttt{0015} (376 frames, \texttt{37.\allowbreak{}6s})} & \textbf{Sequence \texttt{0019} (1059 frames, \texttt{105.\allowbreak{}9s})} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{RQ1 Coordinate \& Ego Comp (\texttt{Ego$\leftrightarrow$World} Error / Stationary World Speed)} & \texttt{2.\allowbreak{}161e-\allowbreak{}14 m} / \textbf{\texttt{0.\allowbreak{}227 m/\allowbreak{}s}} (uncomp \texttt{1.\allowbreak{}358 m/\allowbreak{}s}) & \texttt{3.\allowbreak{}352e-\allowbreak{}14 m} / \textbf{\texttt{0.\allowbreak{}756 m/\allowbreak{}s}} (uncomp \texttt{1.\allowbreak{}849 m/\allowbreak{}s}) \\
+\textbf{RQ2 Future Prediction (\texttt{OXTS+CTRV} ADE/FDE vs Zero-Vel)} & \textbf{\texttt{3.\allowbreak{}6052 /\allowbreak{} 4.\allowbreak{}6872 m}} (vs Zero-Vel \texttt{5.\allowbreak{}2465 /\allowbreak{} 7.\allowbreak{}1198 m}) & \textbf{\texttt{2.\allowbreak{}7890 /\allowbreak{} 3.\allowbreak{}2453 m}} (vs Zero-Vel \texttt{3.\allowbreak{}2491 /\allowbreak{} 4.\allowbreak{}2215 m}) \\
+\textbf{RQ2 2D Covariance \texttt{1$\sigma$} Coverage (theory \texttt{0.\allowbreak{}3935})} & \textbf{\texttt{0.\allowbreak{}3939}} (diff \texttt{0.\allowbreak{}0004}) & \textbf{\texttt{0.\allowbreak{}4863}} \\
+\textbf{RQ3 Uncertainty Causality (\texttt{Arm A Blind $\rightarrow$ B Nominal $\rightarrow$ C Degraded})} & \textbf{\texttt{0.\allowbreak{}2220 $\rightarrow$ 0.\allowbreak{}2791 $\rightarrow$ 0.\allowbreak{}2792}} (\texttt{77 /\allowbreak{} 18} escalated) & \textbf{\texttt{0.\allowbreak{}5242 $\rightarrow$ 0.\allowbreak{}6290 $\rightarrow$ 0.\allowbreak{}6396}} (\texttt{521 /\allowbreak{} 121} escalated) \\
+\textbf{RQ4 Gradient Smoothing (\texttt{max |dR/\allowbreak{}dt|} / Spikes / Flips)} & \texttt{5.\allowbreak{}29 $\rightarrow$ 1.\allowbreak{}10 /\allowbreak{}s (-\allowbreak{}79.\allowbreak{}2\%)}, \texttt{>1.\allowbreak{}5/\allowbreak{}s} \textbf{\texttt{5 $\rightarrow$ 0 (-\allowbreak{}100\%)}}, flips \texttt{34 $\rightarrow$ 22} & \texttt{5.\allowbreak{}76 $\rightarrow$ 1.\allowbreak{}10 /\allowbreak{}s (-\allowbreak{}80.\allowbreak{}9\%)}, \texttt{>1.\allowbreak{}5/\allowbreak{}s} \textbf{\texttt{42 $\rightarrow$ 0 (-\allowbreak{}100\%)}}, flips \texttt{140 $\rightarrow$ 78} \\
+\textbf{\texttt{v2 $\rightarrow$ v3} False-Alarm Suppression (\texttt{Arm B} Mean Risk / Emergency)} & \texttt{0.\allowbreak{}6498 $\rightarrow$ 0.\allowbreak{}2791} (\textbf{\texttt{-\allowbreak{}57.\allowbreak{}0\%}}), Emergency \texttt{104 $\rightarrow$ 16} (\textbf{\texttt{-\allowbreak{}84.\allowbreak{}6\%}}) & \texttt{0.\allowbreak{}9053 $\rightarrow$ 0.\allowbreak{}6290} (\textbf{\texttt{-\allowbreak{}30.\allowbreak{}5\%}}), Emergency \texttt{849 $\rightarrow$ 216} (\textbf{\texttt{-\allowbreak{}74.\allowbreak{}6\%}}) \\
+\end{longtable}
+\end{footnotesize}
+
+
+\subsubsection{3.3 Demo Videos \& Keyframes}
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \texttt{Left Panel}: Raw camera video + 2D BBoxes + \texttt{Car}/\texttt{Pedestrian}/\texttt{Cyclist} labels + Track ID + Confidence + \textbf{MobileSAM instance polygon masks}.
+\item \texttt{Right Panel}: Ego-centric BEV (\texttt{X} lateral / \texttt{Y} forward), Ego planned path (CTRV), fading past trails, future forecast (\texttt{+0.\allowbreak{}5s\textasciitilde{}+2.\allowbreak{}0s}), Jacobian-corrected \texttt{1-\allowbreak{}sigma} covariance ellipses, occlusion cones \& rear Unknown hatching, compact \texttt{CONFLICT} rings, smoothed Safety Shield banner.
+\item Representative keyframes: \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v3\_bev\_fixed/world\_outputs/world\_model\_0015\_staged/keyframes/seq\_0015\_frame\_000045\_stage5.png}{\texttt{seq\_\allowbreak{}0015\_\allowbreak{}frame\_\allowbreak{}000045\_\allowbreak{}stage5.\allowbreak{}png}}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v3\_bev\_fixed/world\_outputs/world\_model\_0015\_staged/keyframes/seq\_0015\_frame\_000055\_stage5.png}{\texttt{seq\_\allowbreak{}0015\_\allowbreak{}frame\_\allowbreak{}000055\_\allowbreak{}stage5.\allowbreak{}png}}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v3\_bev\_fixed/world\_outputs/world\_model\_0019\_staged/keyframes/seq\_0019\_frame\_000055\_stage5.png}{\texttt{seq\_\allowbreak{}0019\_\allowbreak{}frame\_\allowbreak{}000055\_\allowbreak{}stage5.\allowbreak{}png}}
+\end{itemize}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{4. GitHub Repository \& Key Artifacts}
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Official GitHub Repository:} https:\allowbreak{}/\allowbreak{}/\allowbreak{}github.\allowbreak{}com/\allowbreak{}Heisnotanimposter/\allowbreak{}Totalcare\_\allowbreak{}autonomous\_\allowbreak{}driving\_\allowbreak{}Yolov5
+\item \textbf{Core Source Code}: \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/src/kitti\_prep.py}{\texttt{src/\allowbreak{}kitti\_\allowbreak{}prep.\allowbreak{}py}}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/src/track\_utils.py}{\texttt{src/\allowbreak{}track\_\allowbreak{}utils.\allowbreak{}py}}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/src/world\_model.py}{\texttt{src/\allowbreak{}world\_\allowbreak{}model.\allowbreak{}py}}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/src/world\_visualizer.py}{\texttt{src/\allowbreak{}world\_\allowbreak{}visualizer.\allowbreak{}py}}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/src/validation\_experiments.py}{\texttt{src/\allowbreak{}validation\_\allowbreak{}experiments.\allowbreak{}py}}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/src/road\_lane.py}{\texttt{src/\allowbreak{}road\_\allowbreak{}lane.\allowbreak{}py}}
+\item \textbf{Trained Weights}: \texttt{v2} \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v2\_improved/outputs/weights/best.pt}{\texttt{best.\allowbreak{}pt}} (\texttt{YOLO11m @ 960}, \texttt{38.\allowbreak{}62 MB}), \texttt{v4} \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v4\_road\_lane/detect\_outputs/outputs/weights/best.pt}{\texttt{best.\allowbreak{}pt}} (\texttt{YOLO11l @ 1280}, \texttt{49 MB})
+\item \textbf{Demo Videos (5s+)}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item Val Seq \texttt{0015} (\texttt{v3} 8s staged / 37.6s full): \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v3\_bev\_fixed/world\_outputs/world\_model\_0015\_staged/world\_model\_demo\_0015.mp4}{\texttt{staged MP4}} / \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v3\_bev\_fixed/world\_outputs/world\_model\_0015\_full/world\_model\_demo\_0015.mp4}{\texttt{full MP4}}
+\item Test Seq \texttt{0019} (\texttt{v3} 8s staged / 105.9s full): \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v3\_bev\_fixed/world\_outputs/world\_model\_0019\_staged/world\_model\_demo\_0019.mp4}{\texttt{staged MP4}} / \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v3\_bev\_fixed/world\_outputs/world\_model\_0019\_full/world\_model\_demo\_0019.mp4}{\texttt{full MP4}}
+\end{itemize}
+\item \textbf{Remote GPU Reproduction Kernels}: \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/kaggle/train\_track\_kitti.py}{\texttt{kaggle/\allowbreak{}train\_\allowbreak{}track\_\allowbreak{}kitti.\allowbreak{}py}}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/kaggle\_world\_model/run\_world\_model\_kaggle.py}{\texttt{kaggle\_\allowbreak{}world\_\allowbreak{}model/\allowbreak{}run\_\allowbreak{}world\_\allowbreak{}model\_\allowbreak{}kaggle.\allowbreak{}py}}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/kaggle\_v4\_road/train\_road\_lane\_kitti.py}{\texttt{kaggle\_\allowbreak{}v4\_\allowbreak{}road/\allowbreak{}train\_\allowbreak{}road\_\allowbreak{}lane\_\allowbreak{}kitti.\allowbreak{}py}}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/kaggle\_v4\_detect/train\_v4\_detect\_kitti.py}{\texttt{kaggle\_\allowbreak{}v4\_\allowbreak{}detect/\allowbreak{}train\_\allowbreak{}v4\_\allowbreak{}detect\_\allowbreak{}kitti.\allowbreak{}py}}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/kaggle\_v4\_world\_model/run\_v4\_world\_model\_kaggle.py}{\texttt{kaggle\_\allowbreak{}v4\_\allowbreak{}world\_\allowbreak{}model/\allowbreak{}run\_\allowbreak{}v4\_\allowbreak{}world\_\allowbreak{}model\_\allowbreak{}kaggle.\allowbreak{}py}}
+\end{itemize}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{5. Per-Layer ML Technical Specification \& References (Summary)}
+
+Full deep-learning, Kalman, and control layer details plus academic references are provided in \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/ML\_LAYER\_SPEC.md}{\texttt{ML\_\allowbreak{}LAYER\_\allowbreak{}SPEC.\allowbreak{}md}}.
+
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{\texttt{YOLO11m} (\texttt{231 layers}, \texttt{20.\allowbreak{}06M params}, \texttt{68.\allowbreak{}3 GFLOPs})}: Backbone (\texttt{Conv} Stem $\rightarrow$ \texttt{C3k2} CSP Bottleneck $\rightarrow$ \texttt{SPPF} $\rightarrow$ \texttt{C2PSA} Spatial Attention), Neck (\texttt{PAN-\allowbreak{}FPN}), Head (\texttt{Decoupled Anchor-\allowbreak{}Free Detect} + \texttt{DFL} + \texttt{CIoU} + \texttt{BCE}).
+\item \textbf{\texttt{MobileSAM} (\texttt{38.\allowbreak{}8 MB})}: Knowledge-Distilled \texttt{TinyViT} Image Encoder (\texttt{MBConv} + \texttt{Windowed Self-\allowbreak{}Attention}), Box Prompt Positional Encoder, Two-Way Cross-Attention Mask Decoder + \texttt{4$\times$} Transposed Conv.
+\item \textbf{\texttt{ByteTrack}}: 8D Constant-Velocity BBox Kalman Filter + Two-Stage Hungarian Bipartite Matching (\texttt{High-\allowbreak{}Conf} + \texttt{Low-\allowbreak{}Conf} occlusion recovery).
+\item \textbf{Temporal World Model \& Safety Shield}: \texttt{P2} inverse-variance depth fusion + OXTS \texttt{SE(2)} compensation + 4D World-ENU Kalman filter + Jacobian BEV covariance ellipse projection + $C^1$ hazard potential \& \texttt{CollisionRiskSmoother} slew-rate/hysteresis smoothing.
+\item \textbf{\texttt{SegFormer-\allowbreak{}B2} (\texttt{nvidia/\allowbreak{}segformer-\allowbreak{}b2-\allowbreak{}finetuned-\allowbreak{}cityscapes-\allowbreak{}1024-\allowbreak{}1024}, added in v4)}: Hierarchical MiT-B2 Mix-Transformer encoder + All-MLP decoder (\texttt{Non-\allowbreak{}Road} / \texttt{Other Road} / \texttt{Ego-\allowbreak{}Lane} 3-class head) + BEV IPM warp \& HLS+Sobel quadratic polynomial EMA lane tracker.
+\end{enumerate}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{6. Version 4 Upgrade: Road/Non-Road \& Lane Segmentation + \texttt{0.\allowbreak{}9} Accuracy (\texttt{v4\_\allowbreak{}road\_\allowbreak{}lane})}
+
+Following the \texttt{v3\_\allowbreak{}bev\_\allowbreak{}fixed} release, three dedicated Kaggle kernels (\texttt{test013/\allowbreak{}totalcare-\allowbreak{}kitti-\allowbreak{}v4-\allowbreak{}road-\allowbreak{}lane}, \texttt{test013/\allowbreak{}totalcare-\allowbreak{}kitti-\allowbreak{}v4-\allowbreak{}detect}, \texttt{test013/\allowbreak{}totalcare-\allowbreak{}kitti-\allowbreak{}v4-\allowbreak{}world-\allowbreak{}model}) were executed to add \textbf{Road vs Non-Road classification \& lane masking} and boost detection accuracy from \textbf{\texttt{\textasciitilde{}0.\allowbreak{}7} toward \texttt{\textasciitilde{}0.\allowbreak{}9}}, archived under \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/tree/main/results/v4\_road\_lane/}{\texttt{results/\allowbreak{}v4\_\allowbreak{}road\_\allowbreak{}lane/\allowbreak{}}}.
+
+
+\subsubsection{6.1 Road vs Non-Road \& Ego-Lane Segmentation (\texttt{SegFormer-\allowbreak{}B2} + BEV IPM)}
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Dataset \& Training}: Fine-tuned \texttt{SegFormer-\allowbreak{}B2} with a 3-class head (\texttt{Non-\allowbreak{}Road}, \texttt{Other Road}, \texttt{Ego-\allowbreak{}Lane}) on \texttt{tryingit/\allowbreak{}roadlane-\allowbreak{}detection-\allowbreak{}evaluation-\allowbreak{}2013} (KITTI \texttt{data\_\allowbreak{}road}, \texttt{230 train /\allowbreak{} 59 val} stratified split, 25 epochs).
+\item \textbf{Measured Performance (\href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v4\_road\_lane/road\_outputs/road\_lane\_outputs/road\_eval\_metrics.json}{\texttt{road\_\allowbreak{}eval\_\allowbreak{}metrics.\allowbreak{}json}})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Road vs Non-Road}: \textbf{ROC AUC = \texttt{0.\allowbreak{}9992}}, \textbf{Pixel Acc = \texttt{0.\allowbreak{}9910} (\texttt{99.\allowbreak{}10\%})}, \textbf{Road F1 = \texttt{0.\allowbreak{}9747}} (\texttt{Precision 0.\allowbreak{}9690} / \texttt{Recall 0.\allowbreak{}9804}), Road IoU \texttt{0.\allowbreak{}9506}, mIoU \texttt{0.\allowbreak{}9698}.
+\item \textbf{Ego-Lane (\texttt{um\_\allowbreak{}lane})}: \textbf{F1 = \texttt{0.\allowbreak{}9119}} (\texttt{Precision 0.\allowbreak{}9070} / \texttt{Recall 0.\allowbreak{}9169}), IoU \texttt{0.\allowbreak{}8381}.
+\end{itemize}
+\item \textbf{Visualization \& World Model Coupling}: Renders translucent Road (green), Non-Road (rose-plum), and Ego-Lane (cyan-teal) masks, left/right quadratic lane polylines, and per-object \texttt{[LANE]}/\texttt{[RD]}/\texttt{[NON-\allowbreak{}RD]} badges on the Left Panel, while projecting drivable road polygons, curvilinear BEV lanes, and non-road (\texttt{0.\allowbreak{}65} risk attenuation) awareness into the Right Panel Safety Shield.
+\end{itemize}
+
+\subsubsection{6.2 Detector Accuracy Upgrade (\texttt{YOLO11l @ 1280} + Deduped Merge + Multi-Scale TTA)}
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Leak-Free Dataset Expansion}: Merged \texttt{leducnhuan/\allowbreak{}kitti-\allowbreak{}tracking} with \texttt{harshpdani/\allowbreak{}kitti-\allowbreak{}stereo-\allowbreak{}image} (\texttt{7,\allowbreak{}481} images scanned; \texttt{595} MD5/dHash matches against Val/Test \texttt{0002,\allowbreak{}0012,\allowbreak{}0015,\allowbreak{}0017,\allowbreak{}0013,\allowbreak{}0016,\allowbreak{}0019} strictly excluded $\rightarrow$ \texttt{6,\allowbreak{}886} unique images added, \texttt{14,\allowbreak{}371} total train entries) with \texttt{Van}/\texttt{Person\_\allowbreak{}sitting} 114 gray masking.
+\item \textbf{Quantitative Comparison (\texttt{v2 $\rightarrow$ v4}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v4\_road\_lane/detect\_outputs/outputs/eval\_metrics\_v4.json}{\texttt{eval\_\allowbreak{}metrics\_\allowbreak{}v4.\allowbreak{}json}})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Val (\texttt{All} difficulty)}: \texttt{v2 mAP@0.\allowbreak{}5 = 0.\allowbreak{}5235} $\rightarrow$ \texttt{v4 std = 0.\allowbreak{}6889} (\texttt{Precision 0.\allowbreak{}8685}) $\rightarrow$ \textbf{\texttt{v4 TTA = 0.\allowbreak{}7400}} (\texttt{Car 0.\allowbreak{}8475 /\allowbreak{} Ped 0.\allowbreak{}7712 /\allowbreak{} Cyc 0.\allowbreak{}6014}).
+\item \textbf{Test (\texttt{All} difficulty)}: \texttt{v2 mAP@0.\allowbreak{}5 = 0.\allowbreak{}4269} $\rightarrow$ \textbf{\texttt{v4 TTA = 0.\allowbreak{}6705}} (\texttt{Precision 0.\allowbreak{}7984}, \texttt{Car 0.\allowbreak{}7804 /\allowbreak{} Ped 0.\allowbreak{}6441 /\allowbreak{} Cyc 0.\allowbreak{}5870}).
+\item \textbf{KITTI Standard Difficulty Breakdown (TTA)}: Val \textbf{Easy \texttt{mAP@0.\allowbreak{}5 = 0.\allowbreak{}8677}} (\texttt{Precision 0.\allowbreak{}9750}), Test \textbf{Easy \texttt{mAP@0.\allowbreak{}5 = 0.\allowbreak{}8966}} (\texttt{\textasciitilde{}0.\allowbreak{}90}, \texttt{Car 0.\allowbreak{}9792 /\allowbreak{} Ped 0.\allowbreak{}9206 /\allowbreak{} Cyc 0.\allowbreak{}7899}), Test \textbf{Moderate \texttt{mAP@0.\allowbreak{}5 = 0.\allowbreak{}8404}}, Test \textbf{Hard \texttt{mAP@0.\allowbreak{}5 = 0.\allowbreak{}8025}}, Test \textbf{KITTI-All \texttt{mAP@0.\allowbreak{}5 = 0.\allowbreak{}7965}} (\texttt{mean\_\allowbreak{}precision 0.\allowbreak{}8531}).
+\end{itemize}
+\item \textbf{v4 World Model Integration \& RQ1--RQ4 Verification}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item Val \texttt{0015} (\href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v4\_road\_lane/world\_outputs/v4\_world\_outputs/world\_model\_0015\_full/world\_model\_demo\_0015.mp4}{\texttt{full MP4}} / \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v4\_road\_lane/world\_outputs/v4\_world\_outputs/world\_model\_0015\_staged/world\_model\_demo\_0015.mp4}{\texttt{staged MP4}}): \texttt{ADE 3.\allowbreak{}5836 m}, RQ3 \texttt{0.\allowbreak{}2277 < 0.\allowbreak{}2838 < 0.\allowbreak{}2916}, RQ4 spikes \texttt{8 $\rightarrow$ 0 (-\allowbreak{}100\%)}.
+\item Test \texttt{0019} (\href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v4\_road\_lane/world\_outputs/v4\_world\_outputs/world\_model\_0019\_full/world\_model\_demo\_0019.mp4}{\texttt{full MP4}} / \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v4\_road\_lane/world\_outputs/v4\_world\_outputs/world\_model\_0019\_staged/world\_model\_demo\_0019.mp4}{\texttt{staged MP4}}): \texttt{ADE 2.\allowbreak{}0437 m}, RQ3 \texttt{0.\allowbreak{}5421 < 0.\allowbreak{}6261 < 0.\allowbreak{}6454}, RQ4 spikes \texttt{16 $\rightarrow$ 0 (-\allowbreak{}100\%)}, flips \texttt{124 $\rightarrow$ 53 (-\allowbreak{}57.\allowbreak{}26\%)}.
+\end{itemize}
+\end{itemize}
+
+\subsubsection{6.3 \texttt{v4} Training Dynamics, PR/F1/Confusion Matrix Analysis \& Applied ML Techniques}
+
+Academic quantitative interpretation of the 12 training and evaluation artifacts in \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/tree/main/results/v4\_road\_lane/detect\_outputs/outputs/train\_results}{\texttt{results/\allowbreak{}v4\_\allowbreak{}road\_\allowbreak{}lane/\allowbreak{}detect\_\allowbreak{}outputs/\allowbreak{}outputs/\allowbreak{}train\_\allowbreak{}results/\allowbreak{}}}:
+
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Loss Convergence \& \texttt{Close-\allowbreak{}Mosaic} Phase Transition (\texttt{results.\allowbreak{}csv}, \texttt{results.\allowbreak{}png})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \texttt{train/\allowbreak{}box\_\allowbreak{}loss} (\texttt{1.\allowbreak{}12833 $\rightarrow$ 0.\allowbreak{}53388}), \texttt{train/\allowbreak{}cls\_\allowbreak{}loss} (\texttt{0.\allowbreak{}86791 $\rightarrow$ 0.\allowbreak{}29695}), and \texttt{train/\allowbreak{}dfl\_\allowbreak{}loss} (\texttt{1.\allowbreak{}19982 $\rightarrow$ 0.\allowbreak{}89416}) decrease monotonically across 24 epochs. At \textbf{\texttt{Epoch 19}}, \texttt{close\_\allowbreak{}mosaic=7} disables 4-tile Mosaic augmentation to align training with natural KITTI image statistics, producing a sharp step-drop in \texttt{box\_\allowbreak{}loss} (\texttt{0.\allowbreak{}6653 $\rightarrow$ 0.\allowbreak{}60687}) and \texttt{cls\_\allowbreak{}loss} (\texttt{0.\allowbreak{}4043 $\rightarrow$ 0.\allowbreak{}34428}).
+\item \texttt{val/\allowbreak{}box\_\allowbreak{}loss} decreases steadily (\texttt{1.\allowbreak{}60946 $\rightarrow$ 1.\allowbreak{}29238}) without localization overfitting; \texttt{Epoch 14} peaks in \texttt{Precision = 0.\allowbreak{}92008} and \texttt{mAP@0.\allowbreak{}5 = 0.\allowbreak{}71385}, while \textbf{\texttt{Epoch 15}} achieves peak \texttt{mAP@0.\allowbreak{}5:\allowbreak{}0.\allowbreak{}95 = 0.\allowbreak{}4236} and \texttt{Recall = 0.\allowbreak{}59069} (\texttt{best.\allowbreak{}pt}).
+\end{itemize}
+\end{enumerate}
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Precision--Recall \& F1--Confidence Curves (Val vs Held-Out Test)}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Validation (\texttt{BoxPR\_\allowbreak{}curve.\allowbreak{}png}, \texttt{BoxF1\_\allowbreak{}curve.\allowbreak{}png}, \texttt{BoxP\_\allowbreak{}curve.\allowbreak{}png}, \texttt{BoxR\_\allowbreak{}curve.\allowbreak{}png})}: Under TTA, \texttt{all classes mAP@0.\allowbreak{}5 = 0.\allowbreak{}740} (\texttt{Car 0.\allowbreak{}848 /\allowbreak{} Pedestrian 0.\allowbreak{}771 /\allowbreak{} Cyclist 0.\allowbreak{}601}), peak F1 \textbf{\texttt{0.\allowbreak{}71 at conf = 0.\allowbreak{}217}}, \texttt{Precision 1.\allowbreak{}00 at conf = 0.\allowbreak{}872}, max \texttt{Recall 0.\allowbreak{}84 at conf = 0.\allowbreak{}000}. \texttt{Car} sustains an F1 plateau near \texttt{0.\allowbreak{}84} across \texttt{conf 0.\allowbreak{}25--0.\allowbreak{}70}.
+\item \textbf{Held-Out Test (\texttt{test\_\allowbreak{}BoxPR\_\allowbreak{}curve.\allowbreak{}png}, \texttt{test\_\allowbreak{}BoxF1\_\allowbreak{}curve.\allowbreak{}png}, \texttt{test\_\allowbreak{}BoxP\_\allowbreak{}curve.\allowbreak{}png}, \texttt{test\_\allowbreak{}BoxR\_\allowbreak{}curve.\allowbreak{}png})}: On completely unseen sequences (\texttt{0013,\allowbreak{} 0016,\allowbreak{} 0019}), \texttt{all classes mAP@0.\allowbreak{}5 = 0.\allowbreak{}670} (\texttt{Car 0.\allowbreak{}780 /\allowbreak{} Pedestrian 0.\allowbreak{}644 /\allowbreak{} Cyclist 0.\allowbreak{}587}), peak F1 \textbf{\texttt{0.\allowbreak{}68 at conf = 0.\allowbreak{}568}}, \texttt{Precision 1.\allowbreak{}00 at conf = 0.\allowbreak{}941}, max \texttt{Recall 0.\allowbreak{}83 at conf = 0.\allowbreak{}000}. Notably, \texttt{Cyclist} AP50 drops only \texttt{-\allowbreak{}0.\allowbreak{}014} (\texttt{0.\allowbreak{}601 $\rightarrow$ 0.\allowbreak{}587}), and the high optimal Test confidence (\texttt{0.\allowbreak{}568}) confirms strong probability calibration.
+\end{itemize}
+\end{enumerate}
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Error Decomposition via Normalized Confusion Matrix (\texttt{confusion\_\allowbreak{}matrix\_\allowbreak{}normalized.\allowbreak{}png})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item Diagonal true-positive rates reach \texttt{Car 0.\allowbreak{}90}, \texttt{Pedestrian 0.\allowbreak{}87}, and \texttt{Cyclist 0.\allowbreak{}55}, with low background miss rates (\texttt{Car 0.\allowbreak{}10}, \texttt{Pedestrian 0.\allowbreak{}08}, \texttt{Cyclist 0.\allowbreak{}16}).
+\item The dominant \texttt{Cyclist} error mode is semantic confusion with \texttt{Pedestrian} (\texttt{0.\allowbreak{}26} of \texttt{Cyclist} GT predicted as \texttt{Pedestrian}) due to rider appearance overlap, alongside background false positives (\texttt{Car 0.\allowbreak{}40}, \texttt{Pedestrian 0.\allowbreak{}42}, \texttt{Cyclist 0.\allowbreak{}18}) from unlabeled distant/distractor instances at low confidence.
+\end{itemize}
+\end{enumerate}
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Machine Learning Techniques Leveraged for Metric Improvement}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Leak-Free Hash-Deduped Dataset Expansion}: Strictly excluded \texttt{595} MD5/dHash matches against Val/Test from \texttt{kitti-\allowbreak{}stereo-\allowbreak{}image} (\texttt{7,\allowbreak{}481} images) and merged \texttt{6,\allowbreak{}886} unique images (\texttt{14,\allowbreak{}371} total train entries).
+\item \textbf{Capacity \& Resolution Scaling (\texttt{YOLO11l @ 1280px})}: Combines \texttt{C3k2} CSP bottlenecks, \texttt{SPPF}, and \texttt{C2PSA} spatial attention with \texttt{1280px} input (doubling P3/8 small-object feature resolution).
+\item \textbf{DFL + CIoU + Task-Aligned Assigner + Cosine LR / Close-Mosaic}: Distributional box-edge regression (\texttt{DFL,\allowbreak{} reg\_\allowbreak{}max=16}), dynamic alignment-based label assignment (\texttt{TAL}), 3-epoch warmup with cosine decay (\texttt{lrf=0.\allowbreak{}01}), and \texttt{close\_\allowbreak{}mosaic=7}.
+\item \textbf{Imbalance \& Gradient Hygiene (\texttt{Rare-\allowbreak{}Class Oversampling} + \texttt{114 Gray Masking})}: Weighted sampling for \texttt{Cyclist}/\texttt{Pedestrian} and neutral gray (\texttt{114}) masking over \texttt{DontCare}/\texttt{Van}/\texttt{Person\_\allowbreak{}sitting} to eliminate spurious false-negative gradients.
+\item \textbf{Multi-Scale Test-Time Augmentation (\texttt{augment=True})}: Flip and multi-scale inference ensembling boosts Val \texttt{mAP@0.\allowbreak{}5} from \texttt{0.\allowbreak{}6889 $\rightarrow$ 0.\allowbreak{}7400} (\texttt{+0.\allowbreak{}0511}).
+\end{itemize}
+\end{enumerate}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{7. Conclusions, Technical Challenges, and Reflections}
+
+Key engineering lessons, debugging experiences, and limitations encountered while iterating from \texttt{v1 $\rightarrow$ v2 $\rightarrow$ v3 $\rightarrow$ v4}:
+
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Guarding Against Temporal Data Leakage via Sequence-Disjoint Splits}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item Random frame-level splits inflate \texttt{mAP} on \texttt{10 Hz} driving video because adjacent frames are nearly identical. Enforcing a strict \texttt{14 /\allowbreak{} 4 /\allowbreak{} 3} sequence-disjoint split---and excluding \texttt{595} MD5/dHash-matched frames when merging \texttt{kitti-\allowbreak{}stereo-\allowbreak{}image} (\texttt{7,\allowbreak{}481} images)---kept Held-out Test (\texttt{0013,\allowbreak{} 0016,\allowbreak{} 0019}) evaluation scientifically valid.
+\end{itemize}
+\end{enumerate}
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Debugging the \texttt{testing/\allowbreak{}image\_\allowbreak{}02} vs \texttt{training/\allowbreak{}image\_\allowbreak{}02} Path Mismatch in \texttt{v4}}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item Visual inspection of early \texttt{v4} outputs revealed misaligned road/lane masks against the camera frames. Root-cause analysis showed \texttt{rglob('image\_\allowbreak{}02')} matched \texttt{testing/\allowbreak{}image\_\allowbreak{}02} (\texttt{0015}: \texttt{701}f, \texttt{0019}: \texttt{404}f) instead of \texttt{training/\allowbreak{}image\_\allowbreak{}02} (\texttt{0015}: \texttt{376}f, \texttt{0019}: \texttt{1,\allowbreak{}059}f). Adding an explicit \texttt{'training' in path.\allowbreak{}parts} guard and re-running fixed the 1:1 alignment, underscoring that visual sanity checks are indispensable alongside scalar metrics.
+\end{itemize}
+\end{enumerate}
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Mitigating \texttt{Cyclist} vs \texttt{Pedestrian} Confusion and \texttt{2$\times$ T4} DDP Tuning}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item The normalized confusion matrix revealed \texttt{0.\allowbreak{}26} of \texttt{Cyclist} ground truths were misclassified as \texttt{Pedestrian}. Combining \texttt{Van}/\texttt{Person\_\allowbreak{}sitting} \texttt{114}-gray masking, train-only rare-class oversampling, \texttt{1280px} scaling, \texttt{close\_\allowbreak{}mosaic=7}, and TTA raised Test Easy \texttt{mAP@0.\allowbreak{}5} to \texttt{0.\allowbreak{}8966} (\texttt{Cyclist Test Easy 0.\allowbreak{}7899}).
+\end{itemize}
+\end{enumerate}
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Resolving BEV Uncertainty Distortion \& False-Alarm Spikes}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item Early \texttt{v2} BEV plots stretched longitudinal depth uncertainty laterally across adjacent lanes, triggering false \texttt{Emergency Intervention} alerts on sidewalk pedestrians. Jacobian projection ($J=\text{diag}(s_x,-s_y)$), approach-speed gating (\texttt{approach\_\allowbreak{}w}), and \texttt{CollisionRiskSmoother} (\texttt{1.\allowbreak{}10/\allowbreak{}s} slew-rate clamp + \texttt{0.\allowbreak{}04} hysteresis) eliminated \texttt{>1.\allowbreak{}5/\allowbreak{}s} spikes by \texttt{100\%} and cut \texttt{0015} false-alarm risk by \texttt{-\allowbreak{}57.\allowbreak{}0\%}.
+\end{itemize}
+\end{enumerate}
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Limitations \& Future Work}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item Monocular flat-ground projection (\texttt{h\_\allowbreak{}cam = 1.\allowbreak{}65m}) remains sensitive to road pitch variations at long range, and KITTI Tracking lacks closed-loop vehicle dynamics, restricting Safety Shield validation to offline advisory evaluation. Future work will fuse stereo/LiDAR depth and validate closed-loop control inside CARLA.
+\end{itemize}
+\end{enumerate}
+\newpage
+\section{Per-Layer Machine Learning \& Deep Learning Technical Specification and References}
+
+\textbf{Repository:} \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5}{Totalcare\_autonomous\_driving\_Yolov5}
+
+\textbf{Target Pipeline:} \texttt{Stage 2 (YOLO11m/\allowbreak{}l + MobileSAM + SegFormer-\allowbreak{}B2) $\rightarrow$ Stage 3 (ByteTrack) $\rightarrow$ Stage 4--7 (Temporal Ego-\allowbreak{}centric World Model \& Safety Shield)}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{1. Object Detector: \texttt{YOLO11m} (\texttt{results/\allowbreak{}v2\_\allowbreak{}improved/\allowbreak{}outputs/\allowbreak{}weights/\allowbreak{}best.\allowbreak{}pt}) \& \texttt{YOLO11l} (\texttt{v4})}
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Model Specification (Measured from Kaggle \texttt{2x Tesla T4} Training Logs)}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Architecture Scale (\texttt{YOLO11m})}: \texttt{231 layers}, \texttt{20,\allowbreak{}055,\allowbreak{}321 parameters}, \texttt{68.\allowbreak{}3 GFLOPs} (fused inference: \texttt{125 layers}, \texttt{20,\allowbreak{}032,\allowbreak{}345 parameters}, \texttt{67.\allowbreak{}8 GFLOPs}).
+\item \textbf{Input Resolution}: \texttt{960 $\times$ 960} RGB in \texttt{v2} (\texttt{1280 $\times$ 1280} in \texttt{v4} \texttt{YOLO11l}, \texttt{AMP FP16} training, \texttt{nc = 3}: \texttt{Car}, \texttt{Pedestrian}, \texttt{Cyclist}).
+\item \textbf{Improvement over Baseline (\texttt{v1 YOLOv8s})}: Upgrades \texttt{YOLOv8s} (\texttt{129 layers}, \texttt{11.\allowbreak{}14M params}, \texttt{28.\allowbreak{}6 GFLOPs}, \texttt{640px}) via \texttt{C2f $\rightarrow$ C3k2} backbone efficiency, \texttt{C2PSA} Spatial Attention, and high-resolution input (\texttt{960px}/\texttt{1280px}) to preserve distant/small pedestrian and cyclist features.
+\end{itemize}
+\end{itemize}
+
+\subsubsection{1.1 \texttt{YOLO11m} Full 24-Module Layer-by-Layer Breakdown (\texttt{Layer 0} -- \texttt{Layer 23})}
+
+Exact network graph printed by Ultralytics \texttt{8.\allowbreak{}4.\allowbreak{}212} (\texttt{logs/\allowbreak{}v2\_\allowbreak{}improved/\allowbreak{}totalcare-\allowbreak{}kitti-\allowbreak{}yolo-\allowbreak{}train-\allowbreak{}and-\allowbreak{}track.\allowbreak{}log}):
+
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.032\textwidth} >{\raggedright\arraybackslash}p{0.063\textwidth} >{\raggedright\arraybackslash}p{0.139\textwidth} >{\raggedright\arraybackslash}p{0.183\textwidth} >{\raggedright\arraybackslash}p{0.063\textwidth} >{\raggedright\arraybackslash}p{0.101\textwidth} >{\raggedright\arraybackslash}p{0.214\textwidth}}
+\toprule
+\textbf{Layer} & \textbf{Input (\texttt{from})} & \textbf{Module (\texttt{Ultralytics})} & \textbf{Output Channels / Args} & \textbf{Parameters} & \textbf{Stage} & \textbf{Technical Role} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Layer} & \textbf{Input (\texttt{from})} & \textbf{Module (\texttt{Ultralytics})} & \textbf{Output Channels / Args} & \textbf{Parameters} & \textbf{Stage} & \textbf{Technical Role} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{0} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Conv} & \texttt{[3,\allowbreak{} 64,\allowbreak{} 3,\allowbreak{} 2]} & \texttt{1,\allowbreak{}856} & Backbone (Stem) & \texttt{3$\times$3} Conv (\texttt{stride=2}) + BatchNorm + SiLU for \texttt{960$\rightarrow$480} downsampling (P1/2) and low-level edge/texture extraction \\
+\textbf{1} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Conv} & \texttt{[64,\allowbreak{} 128,\allowbreak{} 3,\allowbreak{} 2]} & \texttt{73,\allowbreak{}984} & Backbone (Stage 1) & \texttt{3$\times$3} Conv (\texttt{stride=2}), \texttt{480$\rightarrow$240} reduction (P2/4) and channel expansion \\
+\textbf{2} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}C3k2} & \texttt{[128,\allowbreak{} 256,\allowbreak{} 1,\allowbreak{} True,\allowbreak{} 0.\allowbreak{}25]} & \texttt{111,\allowbreak{}872} & Backbone (Stage 1) & Cross-Stage Partial Bottleneck (\texttt{c3k=False}, \texttt{e=0.\allowbreak{}25}) reducing compute via split channels and skip fusion \\
+\textbf{3} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Conv} & \texttt{[256,\allowbreak{} 256,\allowbreak{} 3,\allowbreak{} 2]} & \texttt{590,\allowbreak{}336} & Backbone (Stage 2) & \texttt{3$\times$3} Conv (\texttt{stride=2}), \texttt{240$\rightarrow$120} reduction (P3/8 --- small-object feature map anchor) \\
+\textbf{4} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}C3k2} & \texttt{[256,\allowbreak{} 512,\allowbreak{} 1,\allowbreak{} True,\allowbreak{} 0.\allowbreak{}25]} & \texttt{444,\allowbreak{}928} & Backbone (Stage 2) & P3/8 refinement preserving contour cues for distant \texttt{Pedestrian}/\texttt{Cyclist} \\
+\textbf{5} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Conv} & \texttt{[512,\allowbreak{} 512,\allowbreak{} 3,\allowbreak{} 2]} & \texttt{2,\allowbreak{}360,\allowbreak{}320} & Backbone (Stage 3) & \texttt{3$\times$3} Conv (\texttt{stride=2}), \texttt{120$\rightarrow$60} reduction (P4/16 --- medium-object feature map) \\
+\textbf{6} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}C3k2} & \texttt{[512,\allowbreak{} 512,\allowbreak{} 1,\allowbreak{} True]} & \texttt{1,\allowbreak{}380,\allowbreak{}352} & Backbone (Stage 3) & Deep \texttt{C3k} block (\texttt{c3k=True}) abstracting mid-range vehicles and cyclists \\
+\textbf{7} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Conv} & \texttt{[512,\allowbreak{} 512,\allowbreak{} 3,\allowbreak{} 2]} & \texttt{2,\allowbreak{}360,\allowbreak{}320} & Backbone (Stage 4) & \texttt{3$\times$3} Conv (\texttt{stride=2}), \texttt{60$\rightarrow$30} reduction (P5/32 --- large near vehicles \& global context) \\
+\textbf{8} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}C3k2} & \texttt{[512,\allowbreak{} 512,\allowbreak{} 1,\allowbreak{} True]} & \texttt{1,\allowbreak{}380,\allowbreak{}352} & Backbone (Stage 4) & High-level semantic feature extraction \\
+\textbf{9} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}SPPF} & \texttt{[512,\allowbreak{} 512,\allowbreak{} 5]} & \texttt{656,\allowbreak{}896} & Backbone (Context) & Spatial Pyramid Pooling - Fast: 3 sequential \texttt{5$\times$5} MaxPool layers aggregating multi-scale receptive fields \\
+\textbf{10} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}C2PSA} & \texttt{[512,\allowbreak{} 512,\allowbreak{} 1]} & \texttt{990,\allowbreak{}976} & Backbone (Attention) & Cross-Stage Partial \textbf{Pyramid Squeeze / Spatial Attention}: Multi-head Self-Attention focusing on occluded lane objects \\
+\textbf{11} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}Upsample} & \texttt{[None,\allowbreak{} 2,\allowbreak{} 'nearest']} & \texttt{0} & Neck (Top-Down FPN) & 2x nearest-neighbor upsampling from P5 (\texttt{30$\times$30}) to P4 (\texttt{60$\times$60}) \\
+\textbf{12} & \texttt{[-\allowbreak{}1,\allowbreak{} 6]} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Concat} & \texttt{dim=1} & \texttt{0} & Neck (Top-Down FPN) & Channel concatenation of Layer 11 (semantic) and Layer 6 (P4 spatial) (\texttt{512+512$\rightarrow$1024}) \\
+\textbf{13} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}C3k2} & \texttt{[1024,\allowbreak{} 512,\allowbreak{} 1,\allowbreak{} True]} & \texttt{1,\allowbreak{}642,\allowbreak{}496} & Neck (Top-Down FPN) & Fused P4 feature refinement \\
+\textbf{14} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}Upsample} & \texttt{[None,\allowbreak{} 2,\allowbreak{} 'nearest']} & \texttt{0} & Neck (Top-Down FPN) & 2x upsampling from P4 (\texttt{60$\times$60}) to P3 (\texttt{120$\times$120}) \\
+\textbf{15} & \texttt{[-\allowbreak{}1,\allowbreak{} 4]} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Concat} & \texttt{dim=1} & \texttt{0} & Neck (Top-Down FPN) & Concatenation of Layer 14 and Layer 4 (P3 high-res) (\texttt{512+512$\rightarrow$1024}) \\
+\textbf{16} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}C3k2} & \texttt{[1024,\allowbreak{} 256,\allowbreak{} 1,\allowbreak{} True]} & \texttt{542,\allowbreak{}720} & Neck $\rightarrow$ \textbf{P3/8 Out} & Final small-object (\texttt{Pedestrian}, distant \texttt{Cyclist}) detection map (\texttt{256ch}) \\
+\textbf{17} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Conv} & \texttt{[256,\allowbreak{} 256,\allowbreak{} 3,\allowbreak{} 2]} & \texttt{590,\allowbreak{}336} & Neck (Bottom-Up PAN) & Path Aggregation bottom-up path: P3 (\texttt{120$\times$120}) $\rightarrow$ \texttt{60$\times$60} downsampling \\
+\textbf{18} & \texttt{[-\allowbreak{}1,\allowbreak{} 13]} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Concat} & \texttt{dim=1} & \texttt{0} & Neck (Bottom-Up PAN) & Combines localization (Layer 17) with semantics (Layer 13) (\texttt{256+512$\rightarrow$768}) \\
+\textbf{19} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}C3k2} & \texttt{[768,\allowbreak{} 512,\allowbreak{} 1,\allowbreak{} True]} & \texttt{1,\allowbreak{}511,\allowbreak{}424} & Neck $\rightarrow$ \textbf{P4/16 Out} & Final medium-object detection map (\texttt{512ch}) \\
+\textbf{20} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Conv} & \texttt{[512,\allowbreak{} 512,\allowbreak{} 3,\allowbreak{} 2]} & \texttt{2,\allowbreak{}360,\allowbreak{}320} & Neck (Bottom-Up PAN) & P4 (\texttt{60$\times$60}) $\rightarrow$ \texttt{30$\times$30} downsampling \\
+\textbf{21} & \texttt{[-\allowbreak{}1,\allowbreak{} 10]} & \texttt{nn.\allowbreak{}modules.\allowbreak{}conv.\allowbreak{}Concat} & \texttt{dim=1} & \texttt{0} & Neck (Bottom-Up PAN) & Fuses bottom-up P4 with Backbone C2PSA output (Layer 10) (\texttt{512+512$\rightarrow$1024}) \\
+\textbf{22} & \texttt{-\allowbreak{}1} & \texttt{nn.\allowbreak{}modules.\allowbreak{}block.\allowbreak{}C3k2} & \texttt{[1024,\allowbreak{} 512,\allowbreak{} 1,\allowbreak{} True]} & \texttt{1,\allowbreak{}642,\allowbreak{}496} & Neck $\rightarrow$ \textbf{P5/32 Out} & Final large/near vehicle (\texttt{Car}) detection map (\texttt{512ch}) \\
+\textbf{23} & \texttt{[16,\allowbreak{} 19,\allowbreak{} 22]} & \texttt{nn.\allowbreak{}modules.\allowbreak{}head.\allowbreak{}Detect} & \texttt{[nc=3,\allowbreak{} reg\_\allowbreak{}max=16,\allowbreak{} [256,\allowbreak{}512,\allowbreak{}512]]} & \texttt{1,\allowbreak{}413,\allowbreak{}337} & \textbf{Head (Decoupled)} & Anchor-Free decoupled head: regression branch (\texttt{4$\times$16=64} DFL) + classification branch (\texttt{nc=3} Depthwise Separable Conv) \\
+\end{longtable}
+\end{footnotesize}
+
+
+\subsubsection{1.2 Loss Functions \& Optimization Layers}
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Box Regression (\texttt{box=7.\allowbreak{}5}, \texttt{dfl=1.\allowbreak{}5})}: \textbf{CIoU Loss} (center distance, aspect ratio, and overlap area) + \textbf{Distribution Focal Loss (DFL, \texttt{reg\_\allowbreak{}max=16})} predicting discrete probability distributions over box edges via fixed projection \texttt{model.\allowbreak{}23.\allowbreak{}dfl.\allowbreak{}conv.\allowbreak{}weight}.
+\item \textbf{Classification (\texttt{cls=0.\allowbreak{}5})}: Per-class \textbf{Binary Cross-Entropy (BCE with Logits)} + \textbf{Task-Aligned Assigner (TAL)} dynamic positive/negative anchor assignment.
+\item \textbf{Cosine LR + MixUp + Close-Mosaic}: 3-epoch linear warmup (\texttt{warmup\_\allowbreak{}bias\_\allowbreak{}lr=0.\allowbreak{}1}), Cosine Annealing (\texttt{lrf=0.\allowbreak{}01}), and \texttt{close\_\allowbreak{}mosaic=10} for clean natural-image convergence.
+\end{itemize}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{2. Instance Segmentation: \texttt{MobileSAM} (\texttt{src/\allowbreak{}track\_\allowbreak{}utils.\allowbreak{}py})}
+
+Accepts per-track 2D Bounding Boxes from ByteTrack as \textbf{Box Prompts} to produce pixel-level foreground masks, providing ground-contact anchors (\texttt{mask\_\allowbreak{}bottom\_\allowbreak{}xy}) and occupancy ratios (\texttt{mask\_\allowbreak{}fill\_\allowbreak{}ratio}) for Stage 4 monocular depth fusion.
+
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.212\textwidth} >{\raggedright\arraybackslash}p{0.212\textwidth} >{\raggedright\arraybackslash}p{0.212\textwidth} >{\raggedright\arraybackslash}p{0.212\textwidth}}
+\toprule
+\textbf{Module (MobileSAM)} & \textbf{Internal Layer Mechanism} & \textbf{I/O Specification} & \textbf{Role in Pipeline} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Module (MobileSAM)} & \textbf{Internal Layer Mechanism} & \textbf{I/O Specification} & \textbf{Role in Pipeline} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{1. Image Encoder (\texttt{TinyViT})} & \texttt{PatchEmbed} (Conv$\times$2) $\rightarrow$ \textbf{Stage 1} (\texttt{MBConv} local channel-spatial) $\rightarrow$ \textbf{Stage 2--4} (\texttt{Windowed Multi-\allowbreak{}Head Self-\allowbreak{}Attention} + \texttt{MLP} + Patch Merging) $\rightarrow$ Neck (\texttt{1$\times$1} + \texttt{3$\times$3} Conv) & \texttt{BGR} image (\texttt{1242$\times$375}) $\rightarrow$ \texttt{64$\times$64$\times$256} Feature Embedding & Lightweight \texttt{TinyViT} backbone (\texttt{38.\allowbreak{}8 MB}) via decoupled distillation from ViT-H \\
+\textbf{2. Prompt Encoder} & \textbf{Random Fourier Positional Encoding} + learned corner-type embeddings on Box Prompt \texttt{[x1,\allowbreak{} y1,\allowbreak{} x2,\allowbreak{} y2]} & Bounding Box coords $\rightarrow$ \texttt{(N,\allowbreak{} 2,\allowbreak{} 256)} Sparse Prompt Tokens & Encodes detector boxes as spatial prompts to suppress background clutter \\
+\textbf{3. Two-Way Transformer Mask Decoder} & \textbf{Cross-Attention} (\texttt{Prompt$\rightarrow$Image}, \texttt{Image$\rightarrow$Prompt}) 2 blocks + MLP $\rightarrow$ \textbf{\texttt{ConvTranspose2d} (\texttt{4$\times$} Upsampling)} $\rightarrow$ Hypernetwork MLP Inner Product & Sparse Tokens + \texttt{64$\times$64$\times$256} $\rightarrow$ Binary Mask + Polygon Contour & \texttt{cv2.\allowbreak{}findContours} extracts polygons (\texttt{trajectories\_\allowbreak{}masks.\allowbreak{}json}), \texttt{mask\_\allowbreak{}fill\_\allowbreak{}ratio}, and \texttt{mask\_\allowbreak{}bottom\_\allowbreak{}x/\allowbreak{}y} \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{3. Multi-Object Tracking Layer: \texttt{ByteTrack} (\texttt{src/\allowbreak{}track\_\allowbreak{}utils.\allowbreak{}py})}
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{State Estimation Filter (Linear Kalman Filter)}: 8D constant-velocity image-plane state $\mathbf{x} = [c_x, c_y, a, h, \dot{c}_x, \dot{c}_y, \dot{a}, \dot{h}]^T$ (center, aspect ratio, height, and velocities).
+\item \textbf{Two-Stage Hungarian Association}:
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{High-Confidence Matching (\texttt{conf >= 0.\allowbreak{}5})}: Applies \texttt{linear\_\allowbreak{}sum\_\allowbreak{}assignment} on the IoU cost matrix between active tracks and high-confidence boxes.
+\item \textbf{Low-Confidence Recovery (\texttt{0.\allowbreak{}1 <= conf < 0.\allowbreak{}5})}: Re-associates lower-confidence detections caused by partial occlusion or backlight to unmatched tracks, reducing ID switches.
+\end{enumerate}
+\item \textbf{Sequence Isolation Audit (\texttt{compute\_\allowbreak{}track\_\allowbreak{}trajectories})}: Resets tracker state at sequence boundaries, indexes by composite \texttt{(sequence\_\allowbreak{}id,\allowbreak{} track\_\allowbreak{}id)}, and logs any frame-order, duplicate, or class-flip anomalies.
+\end{itemize}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{4. Road \& Lane Segmentation Layer: \texttt{SegFormer-\allowbreak{}B2} + BEV IPM (\texttt{src/\allowbreak{}road\_\allowbreak{}lane.\allowbreak{}py}, \texttt{v4})}
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Semantic Segmentation (\texttt{nvidia/\allowbreak{}segformer-\allowbreak{}b2-\allowbreak{}finetuned-\allowbreak{}cityscapes-\allowbreak{}1024-\allowbreak{}1024})}: Hierarchical \textbf{Mix-Transformer (MiT-B2)} encoder with Overlapped Patch Merging and Efficient Self-Attention + lightweight \textbf{All-MLP} decoder fine-tuned on KITTI \texttt{data\_\allowbreak{}road} with a 3-class head (\texttt{Non-\allowbreak{}Road}, \texttt{Other Road}, \texttt{Ego-\allowbreak{}Lane}).
+\item \textbf{Curvilinear Lane Extraction (\texttt{TemporalRoadLaneProcessor})}: Inverse Perspective Mapping (IPM) to BEV + HLS/Sobel lane-marking filtering + Ego-Lane boundary fallback + quadratic polynomial ($x = a y^2 + b y + c$) EMA temporal smoothing.
+\end{itemize}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{5. Temporal Ego-centric World Model \& Safety Shield Layer (\texttt{src/\allowbreak{}world\_\allowbreak{}model.\allowbreak{}py}, \texttt{src/\allowbreak{}world\_\allowbreak{}visualizer.\allowbreak{}py})}
+
+Differentiable Kalman-based backend unifying perception outputs into metric physics and temporal continuity:
+
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{P2 Inverse-Variance Depth Fusion Layer (\texttt{KittiCalibration.\allowbreak{}ground\_\allowbreak{}plane\_\allowbreak{}bev\_\allowbreak{}fusion})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item Combines flat-ground projection ($Y_{\text{ground}} = f_y h_{\text{cam}} / (v - c_y)$) anchored at \texttt{mask\_\allowbreak{}bottom\_\allowbreak{}xy} (\texttt{mask\_\allowbreak{}fill\_\allowbreak{}ratio >= 0.\allowbreak{}25}) with pitch-invariant class-height depth ($Y_{\text{height}} = f_y H_c / h_{\text{px}}$) via $Y_{\text{fused}} = \frac{w_g Y_g + w_h Y_h}{w_g + w_h}$.
+\end{itemize}
+\item \textbf{OXTS \texttt{SE(2)} Ego-Motion Compensation \& CTRV Layer (\texttt{EgoPose2D}, \texttt{KittiOxtsOdometry})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item Mercator-projected \texttt{World-\allowbreak{}ENU} transform removes Ego translation and yaw ($\psi, v_f, w_z$) to eliminate false velocities on stationary objects (\texttt{round-\allowbreak{}trip error < 4e-\allowbreak{}14 m}).
+\end{itemize}
+\item \textbf{4D World-ENU Linear Kalman Filter (\texttt{ObjectWorldTrack})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item State $\mathbf{x}_w = [X_w, Y_w, v_{X,w}, v_{Y,w}]^T$, white-noise acceleration process noise ($\sigma_a = 1.1\text{ m/s}^2$), rotated measurement covariance $R_w$ scaled inversely by confidence and mask fill ratio, projected to BEV pixels via Jacobian $J=\text{diag}(s_x,-s_y)$.
+\end{itemize}
+\item \textbf{$C^1$ Continuous Hazard Potential + \texttt{CollisionRiskSmoother} Layer}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item Lateral-covariance (\texttt{lateral\_\allowbreak{}uncertainty\_\allowbreak{}m}) corridor intrusion, approach-speed gating (\texttt{approach\_\allowbreak{}w}), non-road attenuation (\texttt{0.\allowbreak{}65} in \texttt{v4}), calibrated TTC, and probabilistic soft-union $1 - \prod_i (1 - r_i)$.
+\item Asymmetric EMA (\texttt{alpha\_\allowbreak{}up=0.\allowbreak{}36}, \texttt{alpha\_\allowbreak{}down=0.\allowbreak{}22}), slew-rate clamping (\texttt{1.\allowbreak{}10/\allowbreak{}s}, \texttt{-\allowbreak{}0.\allowbreak{}85/\allowbreak{}s}), per-track EMA (\texttt{per\_\allowbreak{}track\_\allowbreak{}ema}), low-TTC debouncing (\texttt{low\_\allowbreak{}ttc\_\allowbreak{}streak}), and hysteresis (\texttt{0.\allowbreak{}04}) eliminate \texttt{>1.\allowbreak{}5/\allowbreak{}s} spikes by \texttt{100\%}.
+\end{itemize}
+\end{enumerate}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{6. References}
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Ultralytics YOLO11 / YOLOv8}: Jocher, G., Chaurasia, A., \& Qiu, J. (2023--2025). \textit{Ultralytics YOLO (\texttt{YOLO11}, \texttt{C3k2}, \texttt{C2PSA}, \texttt{YOLOv8})} --- https:\allowbreak{}/\allowbreak{}/\allowbreak{}docs.\allowbreak{}ultralytics.\allowbreak{}com/\allowbreak{}models/\allowbreak{}yolo11/\allowbreak{}
+\item \textbf{SegFormer}: Xie, E., Wang, W., Yu, Z., Anandkumar, A., Alvarez, J. M., \& Luo, P. (2021). \textit{SegFormer: Simple and Efficient Design for Semantic Segmentation with Transformers} (\texttt{NeurIPS 2021}, \texttt{arXiv:\allowbreak{}2105.\allowbreak{}15203}).\allowbreak{} --- https:\allowbreak{}/\allowbreak{}/\allowbreak{}arxiv.\allowbreak{}org/\allowbreak{}abs/\allowbreak{}2105.\allowbreak{}15203
+\item \textbf{MobileSAM}: Zhang, C., Han, D., Qiao, Y., Kim, J. U., Bae, S.-H., Lee, S., \& Hong, C. S. (2023). \textit{Faster Segment Anything: Towards Lightweight SAM for Mobile Applications} (\texttt{arXiv:\allowbreak{}2306.\allowbreak{}14289}).\allowbreak{} --- https:\allowbreak{}/\allowbreak{}/\allowbreak{}arxiv.\allowbreak{}org/\allowbreak{}abs/\allowbreak{}2306.\allowbreak{}14289
+\item \textbf{Segment Anything (SAM)}: Kirillov, A., Mintun, E., Ravi, N., et al. (2023). \textit{Segment Anything} (\texttt{ICCV 2023}, \texttt{arXiv:\allowbreak{}2304.\allowbreak{}02643}).\allowbreak{} --- https:\allowbreak{}/\allowbreak{}/\allowbreak{}arxiv.\allowbreak{}org/\allowbreak{}abs/\allowbreak{}2304.\allowbreak{}02643
+\item \textbf{ByteTrack}: Zhang, Y., Sun, P., Jiang, Y., Yu, D., Weng, F., Yuan, Z., Luo, P., Liu, W., \& Wang, X. (2022). \textit{ByteTrack: Multi-Object Tracking by Associating Every Detection Box} (\texttt{ECCV 2022}).\allowbreak{} --- https:\allowbreak{}/\allowbreak{}/\allowbreak{}arxiv.\allowbreak{}org/\allowbreak{}abs/\allowbreak{}2110.\allowbreak{}06864
+\item \textbf{KITTI Object Tracking \& Road Benchmark}: Geiger, A., Lenz, P., \& Urtasun, R. (2012). \textit{Are we ready for Autonomous Driving? The KITTI Vision Benchmark Suite} (\texttt{CVPR 2012}).\allowbreak{} --- https:\allowbreak{}/\allowbreak{}/\allowbreak{}www.\allowbreak{}cvlibs.\allowbreak{}net/\allowbreak{}datasets/\allowbreak{}kitti/\allowbreak{}eval\_\allowbreak{}tracking.\allowbreak{}php
+\item \textbf{Kalman Filter \& CTRV Motion Modeling}: Kalman, R. E. (1960). \textit{A New Approach to Linear Filtering and Prediction Problems}; Schubert, R., et al. (2008). \textit{Comparison and Evaluation of Advanced Motion Models for Vehicle Tracking} (\texttt{FUSION 2008}).
+\item \textbf{DFL \& Task-Aligned Assigner}: Li, X., et al. (2020). \textit{Generalized Focal Loss} (\texttt{NeurIPS 2020}); Feng, C., et al. (2021). \textit{TOOD: Task-aligned One-stage Object Detection} (\texttt{ICCV 2021}).
+\end{enumerate}
+\newpage
+\section{Architecture: Camera-Centric Temporal Ego-centric World Model}
+
+\subsection{1. System Overview}
+
+This project implements a 7-stage pipeline transforming a single forward-facing camera stream into a structured \textbf{Temporal Ego-centric World Model}, multi-horizon trajectory predictions, risk indicators, and an advisory Safety Shield output:
+
+
+\begin{quote}\begin{footnotesize}\begin{verbatim}
+[Stage 1: Input Video (KITTI 10 Hz)]
+        |
+        v
+[Stage 2: Visual Perception (src/kitti_prep.py & YOLO11m @ 960px + MobileSAM)]
+        |  2D BBox, Class (Car, Pedestrian, Cyclist), Detection Confidence
+        |  Rare-Class Train Oversampling (Cyclist x4, Pedestrian x2) + Instance Polygons
+        v
+[Stage 3: Temporal Understanding (src/track_utils.py, ByteTrack @ 960px + MobileSAM)]
+        |  Sequence-scoped Track ID, Frame ID, Timestamp, mask_area_px, mask_fill_ratio, mask_bottom_xy
+        v
+[Stage 4: Ego-centric World Model (src/world_model.py)]
+        |  P2 Inverse-Variance Depth Fusion (Flat Ground + Class-Height Prior + Mask Bottom Contact)
+        |  OXTS IMU/GPS Ego-Motion Compensation (EgoPose2D: Ego <-> World ENU)
+        |  State Machine: Past <-> Present <-> Future | Observed / Inferred / Occluded / Unknown
+        v
+[Stage 5: Future Prediction (src/world_model.py, World-ENU Kalman + CTRV Ego)]
+        |  t + 0.5s, 1.0s, 1.5s, 2.0s Means + Confidence/Mask-Scaled 1-sigma Covariance Ellipses
+        v
+[Stage 6: Risk Assessment (src/world_model.py, C1 Potential + CollisionRiskSmoother)]
+        |  Smooth Sigmoid Hazard Potential + Asymmetric EMA + Slew-Rate |dR/dt| Clamp + Calibrated TTC
+        v
+[Stage 7: Safety-aware Control (src/world_model.py & src/world_visualizer.py)]
+           Hysteresis-Debounced Advisory Safety Shield + Split-Screen (Masks + BEV World)
+\end{verbatim}\end{footnotesize}\end{quote}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{2. Coordinate Systems \& Transformations}
+
+\subsubsection{2.1 KITTI Camera Coordinate Frame}
+In KITTI Tracking (\texttt{calib/\allowbreak{}XXXX.\allowbreak{}txt}, \texttt{label\_\allowbreak{}02/\allowbreak{}XXXX.\allowbreak{}txt}):
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item $X_{\text{cam}}$: right ($+$)
+\item $Y_{\text{cam}}$: down ($+$)
+\item $Z_{\text{cam}}$: forward along optical axis ($+$)
+\end{itemize}
+
+\subsubsection{2.2 Ego-centric BEV Coordinate Frame}
+Defined in \texttt{KittiCalibration} (\href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/src/world\_model.py}{src/world\_model.py}):
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item $X_{\text{ego}}$: lateral right ($+$), meters
+\item $Y_{\text{ego}}$: longitudinal forward ($+$), meters
+\item $Z_{\text{ego}}$: height upward ($+$), meters
+\end{itemize}
+
+Under nominal level mounting ($h_{\text{cam}} = 1.65\text{ m}$, zero pitch/roll assumption):
+
+\[X_{\text{ego}} = X_{\text{cam}}, \quad Y_{\text{ego}} = Z_{\text{cam}}, \quad Z_{\text{ego}} = h_{\text{cam}} - Y_{\text{cam}}\]
+
+\subsubsection{2.3 Calibrated Inverse-Variance Depth Fusion \& Analytical Uncertainty}
+Given KITTI intrinsics $P_2$ ($f_x, f_y, c_x, c_y$), contact point $(u_{\text{mid}}, v_{\text{bottom}})$ (using MobileSAM foreground bottom \texttt{mask\_\allowbreak{}bottom\_\allowbreak{}xy} when \texttt{mask\_\allowbreak{}fill\_\allowbreak{}ratio >= 0.\allowbreak{}25}, else the 2D box bottom-center), and class canonical height prior $H_c$ (\texttt{CLASS\_\allowbreak{}HEIGHT\_\allowbreak{}PRIORS\_\allowbreak{}M}: \texttt{Car=1.\allowbreak{}52m}, \texttt{Pedestrian=1.\allowbreak{}72m}, \texttt{Cyclist=1.\allowbreak{}68m}):
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Flat-Ground Projection ($Y_{\text{ground}}$)} with pitch uncertainty $\sigma_\theta = 0.012\text{ rad}$:
+\end{enumerate}
+\[Y_{\text{ground}} = \frac{f_y \cdot h_{\text{cam}}}{v_{\text{bottom}} - c_y}, \qquad \sigma_{\text{ground}} = \sqrt{\left(\frac{Y_{\text{ground}}^2}{f_y h_{\text{cam}}}\sigma_v\right)^2 + \left(\frac{Y_{\text{ground}}^2}{h_{\text{cam}}}\sigma_\theta\right)^2}\]
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Pitch-Invariant Height-Prior Depth ($Y_{\text{height}}$)} on non-truncated boxes:
+\end{enumerate}
+\[Y_{\text{height}} = \frac{f_y \cdot H_c}{h_{\text{px}}}, \qquad X_{\text{ego}} = \frac{(u_{\text{mid}} - c_x) \cdot Y_{\text{fused}}}{f_x}\]
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Inverse-Variance Fusion}:
+\end{enumerate}
+\[w_g = \sigma_{\text{ground}}^{-2}, \quad w_h = \sigma_{\text{height}}^{-2}, \qquad Y_{\text{fused}} = \frac{w_g Y_{\text{ground}} + w_h Y_{\text{height}}}{w_g + w_h}, \qquad \sigma_Y = (w_g + w_h)^{-1/2}\]
+Measurement covariance $R_w$ in World-ENU Kalman filtering is further scaled inversely by detection confidence and MobileSAM mask fill quality (\texttt{conf}, \texttt{mask\_\allowbreak{}fill\_\allowbreak{}ratio}).
+
+
+\textbf{Integrity Rules:}
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item If $P_2$ calibration is missing, \texttt{TemporalWorldModel} sets \texttt{calibrated = False} and \textbf{refuses} to compute metric speed (\texttt{m/\allowbreak{}s}) or Time-to-Collision (\texttt{TTC}).
+\item Projected 3D locations are always categorized as \textbf{Inferred} (monocular ground-plane/height-fused estimate), never \textbf{Observed}.
+\end{itemize}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{3. Ego-Motion Compensation \& Temporal World Model (\texttt{Past $\rightarrow$ Present $\rightarrow$ Future})}
+
+Implemented in \texttt{EgoPose2D}, \texttt{KittiOxtsOdometry}, \texttt{TemporalWorldModel}, and \texttt{ObjectWorldTrack} (\href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/src/world\_model.py}{src/world\_model.py}):
+
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{OXTS Ego-Motion Compensation (\texttt{Ego $\leftrightarrow$ World ENU})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \texttt{KittiOxtsOdometry} converts KITTI \texttt{oxts/\allowbreak{}<seq>.\allowbreak{}txt} \texttt{(lat,\allowbreak{} lon,\allowbreak{} yaw,\allowbreak{} vf,\allowbreak{} vl,\allowbreak{} wz)} into local metric \textbf{East-North (ENU)} coordinates via Mercator projection anchored at frame 0.
+\item \texttt{EgoPose2D.\allowbreak{}ego\_\allowbreak{}to\_\allowbreak{}world\_\allowbreak{}xy} and \texttt{world\_\allowbreak{}to\_\allowbreak{}ego\_\allowbreak{}xy} transform instantaneous Ego-centric detections (\texttt{+X} right, \texttt{+Y} forward) into a stationary World-ENU frame (observed round-trip error \texttt{< 4e-\allowbreak{}14 m}).
+\item Object velocities and 4D Kalman states \texttt{[X\_\allowbreak{}w,\allowbreak{} Y\_\allowbreak{}w,\allowbreak{} vX\_\allowbreak{}w,\allowbreak{} vY\_\allowbreak{}w]} are filtered in \textbf{World-ENU} (subtracting Ego translation and yaw rotation), while Ego's planned corridor uses a Constant Turn Rate and Velocity (\texttt{predict\_\allowbreak{}ctrv}) rollout from \texttt{vf} and \texttt{wz}.
+\end{itemize}
+\end{enumerate}
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Temporal State Transition (\texttt{Future\_\allowbreak{}prev $\rightarrow$ Present $\rightarrow$ Past})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item At timestamp $t_k$, each active track's World-frame 4D kinematic Kalman state and covariance $P$ are propagated forward by $\Delta t = t_k - t_{k-1}$ and projected back into Ego $t_k$'s BEV frame.
+\item Tracks matched to current detections are updated with rotated measurement covariance $R_w = R_{\text{ego}\to w} \, \text{diag}(\sigma_X^2, \sigma_Y^2) \, R_{\text{ego}\to w}^T$ and assigned \texttt{observation\_\allowbreak{}state = "Observed"}.
+\item Tracks not observed at $t_k$ within \texttt{max\_\allowbreak{}coast\_\allowbreak{}sec} ($1.0\text{ s}$) transition to \texttt{observation\_\allowbreak{}state = "Occluded"} with exponential confidence decay $\exp(-\Delta t_{\text{miss}} / 0.6)$.
+\item Tracks missing beyond \texttt{max\_\allowbreak{}coast\_\allowbreak{}sec} archive into \texttt{past\_\allowbreak{}world.\allowbreak{}expired\_\allowbreak{}tracks} with their \texttt{last\_\allowbreak{}seen\_\allowbreak{}ts} and World-anchored position history.
+\item Because \texttt{Past}, \texttt{Present}, and \texttt{Future} are indexed by timestamp relative to $t_k$ and maintained in World-ENU, their semantics remain invariant under Ego rotation or reversing.
+\end{itemize}
+\end{enumerate}
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Spatial Information States (\texttt{Observed /\allowbreak{} Inferred /\allowbreak{} Occluded /\allowbreak{} Unknown})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Observed}: Direct 2D camera measurements and active tracked detections inside the front camera FOV.
+\item \textbf{Inferred}: Ground-plane BEV positions, kinematic velocities, Kalman future trajectories (\texttt{+0.\allowbreak{}5s} to \texttt{+2.\allowbreak{}0s}), and Risk Indicators.
+\item \textbf{Occluded}: Angular shadow sectors ray-cast behind foreground objects (\texttt{compute\_\allowbreak{}occlusion\_\allowbreak{}sectors}) and temporarily coasting tracks.
+\item \textbf{Unknown}: Regions behind Ego ($Y_{\text{ego}} < 0$) and outside the front camera horizontal FOV (\texttt{2 * atan2(W /\allowbreak{} 2,\allowbreak{} fx)}).
+\end{itemize}
+\end{enumerate}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{4. Safety Shield Policy \& Collision Detector Gradient Smoothing (Advisory Only)}
+
+\texttt{assess\_\allowbreak{}risk\_\allowbreak{}and\_\allowbreak{}safety\_\allowbreak{}shield} combines:
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{$C^1$-Continuous Differentiable Risk Potential}: Per-object hazard scores use smooth \texttt{\_\allowbreak{}sigmoid} curves over true \textbf{lateral covariance} (\texttt{lateral\_\allowbreak{}uncertainty\_\allowbreak{}m}, \texttt{cov\_\allowbreak{}future\_\allowbreak{}ego[0][0]}) corridor intrusion bounds, approach-gated longitudinal distance (\texttt{approach\_\allowbreak{}w}, preventing stationary-vehicle and sidewalk false alarms), calibrated TTC, and compact earliest-horizon \texttt{conflict\_\allowbreak{}zones} (\texttt{[1.\allowbreak{}0,\allowbreak{} 2.\allowbreak{}2] m}, max 1 per track), aggregated via probabilistic soft-union $1 - \prod_i (1 - r_i)$.
+\item \textbf{Aspect-Corrected BEV Uncertainty Ellipses (\texttt{BevCanvasMapper.\allowbreak{}cov\_\allowbreak{}to\_\allowbreak{}pixel\_\allowbreak{}ellipse})}: Projects World-ENU $2\times 2$ covariance into BEV pixel coordinates via Jacobian $J = \text{diag}(s_x, -s_y)$ so elongated longitudinal covariance is never stretched laterally across lanes, rendered as soft translucent horizon fills (\texttt{t = +1.\allowbreak{}0s,\allowbreak{} +2.\allowbreak{}0s}) and a single outer \texttt{+2.\allowbreak{}0s} contour.
+\item \textbf{Gradient Smoothing (\texttt{CollisionRiskSmoother})}: Eliminates high-frequency detector/depth spikes across frames via asymmetric EMA (\texttt{alpha\_\allowbreak{}up=0.\allowbreak{}36}, \texttt{alpha\_\allowbreak{}down=0.\allowbreak{}22}), explicit slew-rate clamping (\texttt{max\_\allowbreak{}rise\_\allowbreak{}per\_\allowbreak{}sec=1.\allowbreak{}10/\allowbreak{}s}, \texttt{max\_\allowbreak{}fall\_\allowbreak{}per\_\allowbreak{}sec=0.\allowbreak{}85/\allowbreak{}s}), per-track risk EMA (\texttt{per\_\allowbreak{}track\_\allowbreak{}ema}), low-TTC debouncing, and hysteresis (\texttt{hysteresis\_\allowbreak{}margin=0.\allowbreak{}04}) across Safety Shield thresholds.
+\end{enumerate}
+
+Outputs are strictly \textbf{advisory}:
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \texttt{Normal Driving}
+\item \texttt{Caution}
+\item \texttt{Speed Reduction}
+\item \texttt{Braking Recommendation}
+\item \texttt{Emergency Intervention}
+\end{itemize}
+\newpage
+\section{Dataset Audit: KITTI Tracking (`image\_02` \& `label\_02`)}
+
+\subsection{1. Dataset Structure}
+
+The perception and temporal world model pipeline uses the \textbf{KITTI Object Tracking} training benchmark:
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Images}: \texttt{training/\allowbreak{}image\_\allowbreak{}02/\allowbreak{}<seq>/\allowbreak{}<frame>.\allowbreak{}png} (\texttt{data\_\allowbreak{}tracking\_\allowbreak{}image\_\allowbreak{}2.\allowbreak{}zip}, \texttt{14.\allowbreak{}73 GiB}, \texttt{10 Hz} sequential RGB frames)
+\item \textbf{Labels}: \texttt{training/\allowbreak{}label\_\allowbreak{}02/\allowbreak{}<seq>.\allowbreak{}txt} (\texttt{data\_\allowbreak{}tracking\_\allowbreak{}label\_\allowbreak{}2.\allowbreak{}zip}, \texttt{2.\allowbreak{}15 MiB}, 17-column format)
+\item \textbf{Calibration}: \texttt{training/\allowbreak{}calib/\allowbreak{}<seq>.\allowbreak{}txt} (\texttt{data\_\allowbreak{}tracking\_\allowbreak{}calib.\allowbreak{}zip}, containing \texttt{P2} camera projection matrix for ground-plane ego transformation)
+\end{itemize}
+
+Canonical Google Drive directory preserved from Colab workflow (\href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/untitled63.py}{untitled63.py}, \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/colab/01\_kitti\_colab\_audit\_and\_prep.ipynb}{01\_kitti\_colab\_audit\_and\_prep.ipynb}):
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \texttt{/\allowbreak{}content/\allowbreak{}drive/\allowbreak{}MyDrive/\allowbreak{}KITTI\_\allowbreak{}Tracking/\allowbreak{}}
+\end{itemize}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{2. Integrity Verification Protocol}
+
+Implemented in \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/src/kitti\_prep.py}{src/kitti\_prep.py} (\texttt{audit\_\allowbreak{}images\_\allowbreak{}and\_\allowbreak{}labels}) and initially audited in \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/untitled63.py}{untitled63.py}:
+
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Archive CRC \& Decode Check}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \texttt{ZipFile.\allowbreak{}testzip()} verifies zero corrupt archive members.
+\item \texttt{PIL.\allowbreak{}Image.\allowbreak{}verify()} checks image readability across all \texttt{8,\allowbreak{}008} training frames across \texttt{21} sequences (\texttt{0000}--\texttt{0020}).
+\end{itemize}
+\item \textbf{1:1 Image-Label Correspondence}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item Every sequence ID in \texttt{training/\allowbreak{}image\_\allowbreak{}02/\allowbreak{}} matches \texttt{training/\allowbreak{}label\_\allowbreak{}02/\allowbreak{}}.
+\item Counts \texttt{missing\_\allowbreak{}image\_\allowbreak{}count}, \texttt{extra\_\allowbreak{}image\_\allowbreak{}count}, \texttt{duplicate\_\allowbreak{}image\_\allowbreak{}frame\_\allowbreak{}count}, and \texttt{label\_\allowbreak{}frame\_\allowbreak{}without\_\allowbreak{}image\_\allowbreak{}count}.
+\item Frames with zero annotated objects (empty label frames) are retained as valid negative frames in YOLO export.
+\end{itemize}
+\item \textbf{Label Row Validation}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item Enforces 17 fields per row, finite numeric values, and \texttt{x2 > x1}, \texttt{y2 > y1}.
+\end{itemize}
+\item \textbf{Sequence-Scoped Track IDs}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item KITTI \texttt{track\_\allowbreak{}id} values reset per sequence and are always treated as composite \texttt{(sequence\_\allowbreak{}id,\allowbreak{} track\_\allowbreak{}id)}.
+\end{itemize}
+\item \textbf{DontCare \& Distractor Masking}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item Target classes: \texttt{Car}, \texttt{Pedestrian}, \texttt{Cyclist}.
+\item Adjacent KITTI classes (\texttt{Van} for \texttt{Car}; \texttt{Person}, \texttt{Person\_\allowbreak{}sitting} for \texttt{Pedestrian}) and \texttt{DontCare} regions are masked with neutral pixel value \texttt{114} during YOLO export (\texttt{pixel\_\allowbreak{}mask\_\allowbreak{}policy = dontcare\_\allowbreak{}and\_\allowbreak{}distractors}), preventing false negative penalties against TrackEval distractor taxonomy.
+\end{itemize}
+\end{enumerate}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{3. Sequence-Disjoint Data Split}
+
+To prevent temporal data leakage, frames from the same sequence are \textbf{never} split across Train, Validation, and Test sets (\texttt{validate\_\allowbreak{}disjoint\_\allowbreak{}sequences} in \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/src/kitti\_prep.py}{src/kitti\_prep.py}):
+
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.049\textwidth} >{\raggedright\arraybackslash}p{0.136\textwidth} >{\raggedright\arraybackslash}p{0.331\textwidth} >{\raggedright\arraybackslash}p{0.331\textwidth}}
+\toprule
+\textbf{Split} & \textbf{Sequence Count} & \textbf{Sequence IDs} & \textbf{Purpose} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Split} & \textbf{Sequence Count} & \textbf{Sequence IDs} & \textbf{Purpose} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{Train} & 14 & \texttt{0000,\allowbreak{} 0001,\allowbreak{} 0003,\allowbreak{} 0004,\allowbreak{} 0005,\allowbreak{} 0006,\allowbreak{} 0007,\allowbreak{} 0008,\allowbreak{} 0009,\allowbreak{} 0010,\allowbreak{} 0011,\allowbreak{} 0014,\allowbreak{} 0018,\allowbreak{} 0020} & Detector training (\texttt{Car}, \texttt{Pedestrian}, \texttt{Cyclist}) \\
+\textbf{Val} & 4 & \texttt{0002,\allowbreak{} 0012,\allowbreak{} 0015,\allowbreak{} 0017} & Epoch validation \& tracking tuning (\texttt{0015}) \\
+\textbf{Test} & 3 & \texttt{0013,\allowbreak{} 0016,\allowbreak{} 0019} & Held-out generalization \& world-model demo (\texttt{0019}) \\
+\end{longtable}
+\end{footnotesize}
+
+
+Exact per-sequence frame counts, per-split class distributions, and empty-frame ratios are generated automatically by \texttt{kitti\_\allowbreak{}prep.\allowbreak{}py} into \texttt{results/\allowbreak{}kitti\_\allowbreak{}step2\_\allowbreak{}audit.\allowbreak{}json} and \texttt{results/\allowbreak{}kitti\_\allowbreak{}export\_\allowbreak{}manifest.\allowbreak{}json} during remote Colab/Kaggle execution.
+
+\newpage
+\section{Experiment Plan: Camera-Centric Temporal Ego-centric World Model}
+
+\subsection{1. Research Hypotheses}
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{H1 (Sequence-Disjoint Integrity \& Masking):} Sequence-disjoint splitting combined with \texttt{DontCare} + distractor (\texttt{Van}, \texttt{Person}, \texttt{Person\_\allowbreak{}sitting}) masking prevents temporal overfitting and spurious false-negative gradients compared to unmasked or frame-random splits.
+\item \textbf{H2 (Temporal Continuity):} Associating 2D detections with ByteTrack (\texttt{src/\allowbreak{}track\_\allowbreak{}utils.\allowbreak{}py}) and filtering ego-centric trajectories via a kinematic Kalman filter (\texttt{src/\allowbreak{}world\_\allowbreak{}model.\allowbreak{}py}) stabilizes noisy monocular ground-plane depth estimates and preserves object identity across brief occlusions.
+\item \textbf{H3 (Uncertainty-Aware Prediction \& Risk):} Separating detection, depth, tracking, and motion prediction uncertainties yields calibrated multi-horizon trajectory bounds (\texttt{t + 0.\allowbreak{}5s} to \texttt{+2.\allowbreak{}0s}) and more consistent risk indicators than naive linear bounding-box extrapolation.
+\end{itemize}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{2. Baselines \& Ablation Studies}
+
+\subsubsection{Baselines}
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{B0 --- Frame-Independent Detection (\texttt{src/\allowbreak{}detect.\allowbreak{}py})}: Per-frame 2D bounding boxes with no temporal identity or ego-centric spatial projection.
+\item \textbf{B1 --- Detector + 2D Tracker (\texttt{YOLOv8s + ByteTrack}, \texttt{src/\allowbreak{}track\_\allowbreak{}utils.\allowbreak{}py})}: 2D image-plane tracking with \texttt{px/\allowbreak{}sec} velocity only.
+\item \textbf{B2 --- Temporal Ego-centric World Model (\texttt{src/\allowbreak{}world\_\allowbreak{}model.\allowbreak{}py})}: Calibrated \texttt{P2} ground-plane projection + 4D kinematic Kalman filter + \texttt{Observed/\allowbreak{}Inferred/\allowbreak{}Occluded/\allowbreak{}Unknown} state machine + Safety Shield.
+\end{enumerate}
+
+\subsubsection{Planned Ablations}
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.226\textwidth} >{\raggedright\arraybackslash}p{0.320\textwidth} >{\raggedright\arraybackslash}p{0.320\textwidth}}
+\toprule
+\textbf{Study} & \textbf{Variants} & \textbf{Target Observation} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Study} & \textbf{Variants} & \textbf{Target Observation} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{A1: Label Masking Policy} & \texttt{raw} vs \texttt{dontcare\_\allowbreak{}only} vs \texttt{dontcare\_\allowbreak{}and\_\allowbreak{}distractors} & Impact on \texttt{Car}/\texttt{Pedestrian} precision and false-positive rate on vans/sitting persons \\
+\textbf{A2: Tracker Association} & \texttt{bytetrack.\allowbreak{}yaml} vs \texttt{botsort.\allowbreak{}yaml} & Track continuity (\texttt{IDF1}, \texttt{IDSW}) and coasting stability \\
+\textbf{A3: Motion Model} & Naive linear extrapolation vs 4D Kalman filter (\texttt{accel\_\allowbreak{}sigma} tuned) & Multi-horizon \texttt{ADE} / \texttt{FDE} at \texttt{+0.\allowbreak{}5s .\allowbreak{}.\allowbreak{} +2.\allowbreak{}0s} \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{3. Evaluation Metrics \& Ground-Truth Availability}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.133\textwidth} >{\raggedright\arraybackslash}p{0.238\textwidth} >{\raggedright\arraybackslash}p{0.238\textwidth} >{\raggedright\arraybackslash}p{0.238\textwidth}}
+\toprule
+\textbf{Module} & \textbf{Metrics} & \textbf{KITTI Tracking GT Availability} & \textbf{Tooling} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Module} & \textbf{Metrics} & \textbf{KITTI Tracking GT Availability} & \textbf{Tooling} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{Detection} & Precision, Recall, \texttt{mAP@0.\allowbreak{}5}, \texttt{mAP@0.\allowbreak{}5:\allowbreak{}0.\allowbreak{}95} & \textbf{Available} (\texttt{label\_\allowbreak{}02} 2D boxes) & \texttt{ultralytics} \texttt{val} on Val \& Test splits \\
+\textbf{Tracking} & HOTA, IDF1, ID Switches & \textbf{Available} (\texttt{label\_\allowbreak{}02} 2D + \texttt{track\_\allowbreak{}id}, official \texttt{Car}/\texttt{Pedestrian} scope) & TrackEval / \texttt{kitti\_\allowbreak{}preds/\allowbreak{}<seq>.\allowbreak{}txt} \\
+\textbf{Depth (Monocular)} & \texttt{Abs Rel}, \texttt{RMSE} (m) & \textbf{Available} (\texttt{label\_\allowbreak{}02} cols 13--15 3D \texttt{x,\allowbreak{} y,\allowbreak{} z}) & \texttt{evaluate\_\allowbreak{}world\_\allowbreak{}model\_\allowbreak{}against\_\allowbreak{}kitti\_\allowbreak{}gt} \\
+\textbf{Motion Prediction} & \texttt{ADE}, \texttt{FDE} (m, \texttt{0.\allowbreak{}5s--2.\allowbreak{}0s}) & \textbf{Available} (future \texttt{label\_\allowbreak{}02} 3D positions) & \texttt{evaluate\_\allowbreak{}world\_\allowbreak{}model\_\allowbreak{}against\_\allowbreak{}kitti\_\allowbreak{}gt} \\
+\textbf{Risk Assessment} & Risk Indicator distribution, Calibration & \textbf{No direct GT label} in KITTI Tracking & Proxy replay audit only (labeled heuristic) \\
+\textbf{Safety Intervention} & Collision Rate, Intervention Rate & \textbf{Not available} (offline video only, no closed-loop sim) & Offline advisory logging only \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{4. Experimental Execution Conditions}
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Execution Environment}: Kaggle CLI GPU (\texttt{NvidiaTeslaT4}, auto-DP \texttt{2x T4} supported) and/or Google Colab CLI (local CPU lacks PyTorch/CUDA).
+\item \textbf{Target Classes}: \texttt{Car}, \texttt{Pedestrian}, \texttt{Cyclist} (\texttt{nc = 3}).
+\item \textbf{Training Hyperparameters (v1 Baseline)}: \texttt{yolov8s.\allowbreak{}pt}, \texttt{epochs=30}, \texttt{imgsz=640}, \texttt{batch=16}, \texttt{patience=10}, \texttt{device=0}.
+\item \textbf{Training Hyperparameters (v2 Improved)}: \texttt{yolo11m.\allowbreak{}pt}, \texttt{epochs=40} (early-stopped at 24, best epoch 12), \texttt{imgsz=960}, \texttt{batch=16} (\texttt{8 x 2 GPUs}), \texttt{patience=12}, \texttt{cos\_\allowbreak{}lr=True}, \texttt{close\_\allowbreak{}mosaic=10}, \texttt{mixup=0.\allowbreak{}1}, \texttt{oversample\_\allowbreak{}rare\_\allowbreak{}classes=True} (\texttt{Cyclist x4}, \texttt{Pedestrian x2}, \texttt{6,\allowbreak{}974} weighted train entries; \texttt{val}/\texttt{test} untouched).
+\item \textbf{Tracking, Masking \& World Model Params}: \texttt{ByteTrack} @ \texttt{imgsz=960}, \texttt{conf=0.\allowbreak{}25}, \texttt{mask\_\allowbreak{}model=mobile\_\allowbreak{}sam.\allowbreak{}pt}, \texttt{fps=10.\allowbreak{}0}, \texttt{camera\_\allowbreak{}height\_\allowbreak{}m=1.\allowbreak{}65}, \texttt{max\_\allowbreak{}coast\_\allowbreak{}sec=1.\allowbreak{}0}, \texttt{horizons=(0.\allowbreak{}5,\allowbreak{} 1.\allowbreak{}0,\allowbreak{} 1.\allowbreak{}5,\allowbreak{} 2.\allowbreak{}0)}, \texttt{CollisionRiskSmoother} (\texttt{alpha\_\allowbreak{}up=0.\allowbreak{}36}, \texttt{alpha\_\allowbreak{}down=0.\allowbreak{}22}, \texttt{max\_\allowbreak{}rise\_\allowbreak{}per\_\allowbreak{}sec=1.\allowbreak{}10}, \texttt{max\_\allowbreak{}fall\_\allowbreak{}per\_\allowbreak{}sec=0.\allowbreak{}85}, \texttt{hysteresis\_\allowbreak{}margin=0.\allowbreak{}04}).
+\end{itemize}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{5. Core Research Validation Results (\texttt{src/\allowbreak{}validation\_\allowbreak{}experiments.\allowbreak{}py}, Kaggle v5)}
+
+Evaluated using \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/src/validation\_experiments.py}{src/validation\_experiments.py} on \texttt{training/\allowbreak{}} sequences \texttt{0015} (376 frames) and \texttt{0019} (1059 frames); raw outputs stored in \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/world\_model/world\_outputs/validation\_rq1\_rq2\_rq3.json}{validation\_rq1\_rq2\_rq3.json}.
+
+
+\subsubsection{RQ1: Coordinate Transform \& Ego-Motion Compensation}
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.373\textwidth} >{\raggedright\arraybackslash}p{0.241\textwidth} >{\raggedright\arraybackslash}p{0.252\textwidth}}
+\toprule
+\textbf{Metric} & \textbf{Seq \texttt{0015} (376 frames)} & \textbf{Seq \texttt{0019} (1059 frames)} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Metric} & \textbf{Seq \texttt{0015} (376 frames)} & \textbf{Seq \texttt{0019} (1059 frames)} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+Ego Travel Distance (\texttt{oxts}) & \texttt{71.\allowbreak{}61 m} & \texttt{238.\allowbreak{}10 m} \\
+Max \texttt{ego $\leftrightarrow$ world} Round-Trip Error & \texttt{2.\allowbreak{}161e-\allowbreak{}14 m} & \texttt{3.\allowbreak{}352e-\allowbreak{}14 m} \\
+Stationary GT Tracks / Matched Samples & \texttt{5} tracks / \texttt{369} samples & \texttt{36} tracks / \texttt{602} samples \\
+Apparent Speed on Stationary Objects (Uncompensated Ego-Rel Mean) & \texttt{1.\allowbreak{}409 m/\allowbreak{}s} & \texttt{3.\allowbreak{}370 m/\allowbreak{}s} \\
+Apparent Speed on Stationary Objects (OXTS World-Comp Mean) & \texttt{0.\allowbreak{}618 m/\allowbreak{}s} (\texttt{-\allowbreak{}56.\allowbreak{}1\%}) & \texttt{2.\allowbreak{}350 m/\allowbreak{}s} (\texttt{-\allowbreak{}30.\allowbreak{}3\%}) \\
+\end{longtable}
+\end{footnotesize}
+
+
+\subsubsection{RQ2: Future Prediction (\texttt{+0.\allowbreak{}5s} to \texttt{+2.\allowbreak{}0s}) vs Real Future GT Observations}
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.337\textwidth} >{\raggedright\arraybackslash}p{0.265\textwidth} >{\raggedright\arraybackslash}p{0.265\textwidth}}
+\toprule
+\textbf{Model Variant} & \textbf{Seq \texttt{0015} Future-Ego ADE / FDE (m)} & \textbf{Seq \texttt{0019} Future-Ego ADE / FDE (m)} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Model Variant} & \textbf{Seq \texttt{0015} Future-Ego ADE / FDE (m)} & \textbf{Seq \texttt{0019} Future-Ego ADE / FDE (m)} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{Zero-Velocity Baseline} & \texttt{10.\allowbreak{}1950 /\allowbreak{} 11.\allowbreak{}4531} & \texttt{4.\allowbreak{}0831 /\allowbreak{} 5.\allowbreak{}2281} \\
+\textbf{Ego-Relative Kalman (No OXTS)} & \texttt{8.\allowbreak{}7443 /\allowbreak{} 9.\allowbreak{}3002} & \texttt{3.\allowbreak{}6625 /\allowbreak{} 4.\allowbreak{}7413} \\
+\textbf{OXTS World Kalman + CTRV Ego} & \textbf{\texttt{8.\allowbreak{}3848 /\allowbreak{} 8.\allowbreak{}8193}} (World \texttt{8.\allowbreak{}3388 /\allowbreak{} 8.\allowbreak{}6873}) & \textbf{\texttt{3.\allowbreak{}4873 /\allowbreak{} 4.\allowbreak{}4877}} (World \texttt{3.\allowbreak{}3824 /\allowbreak{} 4.\allowbreak{}2587}) \\
+\end{longtable}
+\end{footnotesize}
+
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Uncertainty Calibration (2D Mahalanobis \texttt{1$\sigma$ /\allowbreak{} 2$\sigma$} vs Theoretical \texttt{0.\allowbreak{}3935 /\allowbreak{} 0.\allowbreak{}8647})}: \texttt{0019} achieves \texttt{0.\allowbreak{}4138 /\allowbreak{} 0.\allowbreak{}6149} (\texttt{9,\allowbreak{}156} samples); \texttt{0015} achieves \texttt{0.\allowbreak{}1451 /\allowbreak{} 0.\allowbreak{}3602} (\texttt{3,\allowbreak{}301} samples, limited by monocular ground-plane depth RMSE \texttt{12.\allowbreak{}484 m} vs \texttt{4.\allowbreak{}2726 m} on \texttt{0019}).
+\end{itemize}
+
+\subsubsection{RQ3: Epistemic \& Aleatoric Uncertainty Causality on Risk \& Safety Shield}
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.314\textwidth} >{\raggedright\arraybackslash}p{0.276\textwidth} >{\raggedright\arraybackslash}p{0.276\textwidth}}
+\toprule
+\textbf{Counterfactual Arm} & \textbf{Seq \texttt{0015} Mean Risk / Non-Normal Rate} & \textbf{Seq \texttt{0019} Mean Risk / Non-Normal Rate} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Counterfactual Arm} & \textbf{Seq \texttt{0015} Mean Risk / Non-Normal Rate} & \textbf{Seq \texttt{0019} Mean Risk / Non-Normal Rate} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{Arm A: Uncertainty-Blind} & \texttt{0.\allowbreak{}3076 /\allowbreak{} 41.\allowbreak{}76\%} (\texttt{Emergency=0}) & \texttt{0.\allowbreak{}5325 /\allowbreak{} 84.\allowbreak{}70\%} (\texttt{Emergency=98}) \\
+\textbf{Arm B: Uncertainty-Aware (Nominal)} & \texttt{0.\allowbreak{}5189 /\allowbreak{} 90.\allowbreak{}43\%} (\texttt{248/\allowbreak{}376} escalated, \texttt{Emergency=10}) & \texttt{0.\allowbreak{}6990 /\allowbreak{} 89.\allowbreak{}52\%} (\texttt{377/\allowbreak{}1059} escalated, \texttt{Emergency=227}) \\
+\textbf{Arm C: Uncertainty-Aware (Degraded)} & \texttt{0.\allowbreak{}5428 /\allowbreak{} 90.\allowbreak{}96\%} (\texttt{254/\allowbreak{}376} higher risk, \texttt{23} escalated) & \texttt{0.\allowbreak{}7003 /\allowbreak{} 89.\allowbreak{}14\%} (\texttt{592/\allowbreak{}1059} higher risk, \texttt{77} escalated, \texttt{Emergency=242}) \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{6. v2 Upgrade Verification (\texttt{v1/\allowbreak{}v5 Baseline} vs \texttt{v2 Improved})}
+
+All v2 artifacts were executed on Kaggle 2x T4 GPU and stored in \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/tree/main/results/v2\_improved/outputs}{results/v2\_improved/outputs/}.
+
+
+\subsubsection{6.1 Stage 2 Detection Accuracy (\texttt{eval\_\allowbreak{}metrics.\allowbreak{}json})}
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.222\textwidth} >{\raggedright\arraybackslash}p{0.198\textwidth} >{\raggedright\arraybackslash}p{0.198\textwidth} >{\raggedright\arraybackslash}p{0.231\textwidth}}
+\toprule
+\textbf{Split / Metric} & \textbf{v1 Baseline (\texttt{yolov8s @ 640})} & \textbf{v2 Improved (\texttt{yolo11m @ 960 + Oversampling})} & \textbf{Delta} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Split / Metric} & \textbf{v1 Baseline (\texttt{yolov8s @ 640})} & \textbf{v2 Improved (\texttt{yolo11m @ 960 + Oversampling})} & \textbf{Delta} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{Val \texttt{mAP@0.\allowbreak{}5} / \texttt{mAP@0.\allowbreak{}5:\allowbreak{}0.\allowbreak{}95}} & \texttt{0.\allowbreak{}4521 /\allowbreak{} 0.\allowbreak{}2471} & \textbf{\texttt{0.\allowbreak{}5235 /\allowbreak{} 0.\allowbreak{}3060}} & \textbf{\texttt{+0.\allowbreak{}0714 (+15.\allowbreak{}8\%)} / \texttt{+0.\allowbreak{}0589}} \\
+\textbf{Val AP50 (\texttt{Car /\allowbreak{} Ped /\allowbreak{} Cyc})} & \texttt{0.\allowbreak{}7501 /\allowbreak{} 0.\allowbreak{}5141 /\allowbreak{} 0.\allowbreak{}0922} & \textbf{\texttt{0.\allowbreak{}8235 /\allowbreak{} 0.\allowbreak{}5871 /\allowbreak{} 0.\allowbreak{}1598}} & \texttt{+0.\allowbreak{}0734 /\allowbreak{} +0.\allowbreak{}0730 /\allowbreak{} +0.\allowbreak{}0676 (+73.\allowbreak{}3\%)} \\
+\textbf{Test \texttt{mAP@0.\allowbreak{}5} / \texttt{mAP@0.\allowbreak{}5:\allowbreak{}0.\allowbreak{}95}} & \texttt{0.\allowbreak{}3652 /\allowbreak{} 0.\allowbreak{}1695} & \textbf{\texttt{0.\allowbreak{}4269 /\allowbreak{} 0.\allowbreak{}2145}} & \textbf{\texttt{+0.\allowbreak{}0617 (+16.\allowbreak{}9\%)} / \texttt{+0.\allowbreak{}0450}} \\
+\textbf{Test AP50 (\texttt{Car /\allowbreak{} Ped /\allowbreak{} Cyc})} & \texttt{0.\allowbreak{}6294 /\allowbreak{} 0.\allowbreak{}3497 /\allowbreak{} 0.\allowbreak{}1165} & \textbf{\texttt{0.\allowbreak{}6662 /\allowbreak{} 0.\allowbreak{}3631 /\allowbreak{} 0.\allowbreak{}2513}} & \texttt{+0.\allowbreak{}0368 /\allowbreak{} +0.\allowbreak{}0134 /\allowbreak{} +0.\allowbreak{}1348 (+115.\allowbreak{}7\%)} \\
+\end{longtable}
+\end{footnotesize}
+
+
+\subsubsection{6.2 Stage 2--3 SAM Instance Object Masking (\texttt{tracking\_\allowbreak{}summary.\allowbreak{}json})}
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Mask Backend}: \texttt{mobile\_\allowbreak{}sam.\allowbreak{}pt} box-prompted over ByteTrack tracks (\texttt{trajectories\_\allowbreak{}masks.\allowbreak{}json} + CSV \texttt{mask\_\allowbreak{}area\_\allowbreak{}px}, \texttt{mask\_\allowbreak{}fill\_\allowbreak{}ratio}, \texttt{mask\_\allowbreak{}bottom\_\allowbreak{}x/\allowbreak{}y}).
+\item \textbf{Seq \texttt{0015} (376 frames)}: \texttt{1,\allowbreak{}370} masked instances (\texttt{41} unique tracks).
+\item \textbf{Seq \texttt{0019} (1059 frames)}: \texttt{3,\allowbreak{}788} masked instances (\texttt{203} unique tracks).
+\end{itemize}
+
+\subsubsection{6.3 Stage 4--5 World Model Depth, Ego-Motion \& Future Prediction (\texttt{validation\_\allowbreak{}0015.\allowbreak{}json}, \texttt{validation\_\allowbreak{}0019.\allowbreak{}json})}
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.289\textwidth} >{\raggedright\arraybackslash}p{0.289\textwidth} >{\raggedright\arraybackslash}p{0.289\textwidth}}
+\toprule
+\textbf{Metric (Full Sequence)} & \textbf{Seq \texttt{0015} v5 $\rightarrow$ v2} & \textbf{Seq \texttt{0019} v5 $\rightarrow$ v2} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Metric (Full Sequence)} & \textbf{Seq \texttt{0015} v5 $\rightarrow$ v2} & \textbf{Seq \texttt{0019} v5 $\rightarrow$ v2} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{RQ1 Stationary World Speed Mean} & \texttt{0.\allowbreak{}618 $\rightarrow$ 0.\allowbreak{}264 m/\allowbreak{}s} (\texttt{-\allowbreak{}57.\allowbreak{}3\%}) & \texttt{2.\allowbreak{}350 $\rightarrow$ 0.\allowbreak{}834 m/\allowbreak{}s} (\texttt{-\allowbreak{}64.\allowbreak{}5\%}) \\
+\textbf{RQ2 Depth \texttt{Abs Rel /\allowbreak{} RMSE}} & \texttt{0.\allowbreak{}5207 /\allowbreak{} 12.\allowbreak{}484m $\rightarrow$ 0.\allowbreak{}2720 /\allowbreak{} 2.\allowbreak{}756m} (\texttt{-\allowbreak{}77.\allowbreak{}9\%} RMSE) & \texttt{0.\allowbreak{}1803 /\allowbreak{} 4.\allowbreak{}2726m $\rightarrow$ 0.\allowbreak{}1560 /\allowbreak{} 3.\allowbreak{}3568m} (\texttt{-\allowbreak{}21.\allowbreak{}4\%} RMSE) \\
+\textbf{RQ2 Future-Ego \texttt{ADE /\allowbreak{} FDE}} & \texttt{8.\allowbreak{}3848 /\allowbreak{} 8.\allowbreak{}8193m $\rightarrow$ 3.\allowbreak{}4999 /\allowbreak{} 4.\allowbreak{}5694m} (\texttt{-\allowbreak{}58.\allowbreak{}3\%} ADE) & \texttt{3.\allowbreak{}4873 /\allowbreak{} 4.\allowbreak{}4877m $\rightarrow$ 2.\allowbreak{}7907 /\allowbreak{} 3.\allowbreak{}2671m} (\texttt{-\allowbreak{}20.\allowbreak{}0\%} ADE) \\
+\textbf{RQ2 2D Uncertainty Calibration (\texttt{1$\sigma$ /\allowbreak{} 2$\sigma$})} & \texttt{0.\allowbreak{}1451 /\allowbreak{} 0.\allowbreak{}3602 $\rightarrow$ 0.\allowbreak{}4584 /\allowbreak{} 0.\allowbreak{}6941} & \texttt{0.\allowbreak{}4138 /\allowbreak{} 0.\allowbreak{}6149 $\rightarrow$ 0.\allowbreak{}5808 /\allowbreak{} 0.\allowbreak{}7500} \\
+\textbf{RQ3 Blind $\rightarrow$ Nominal $\rightarrow$ Degraded Mean Risk} & \texttt{0.\allowbreak{}4637 $\rightarrow$ 0.\allowbreak{}6498 $\rightarrow$ 0.\allowbreak{}6898} (\texttt{258} / \texttt{334} frames) & \texttt{0.\allowbreak{}7518 $\rightarrow$ 0.\allowbreak{}9053 $\rightarrow$ 0.\allowbreak{}9107} (\texttt{609} / \texttt{595} frames) \\
+\end{longtable}
+\end{footnotesize}
+
+
+\subsubsection{6.4 RQ4: Collision Detector Gradient Smoothing (\texttt{validation\_\allowbreak{}0015.\allowbreak{}json}, \texttt{validation\_\allowbreak{}0019.\allowbreak{}json})}
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.054\textwidth} >{\raggedright\arraybackslash}p{0.228\textwidth} >{\raggedright\arraybackslash}p{0.187\textwidth} >{\raggedright\arraybackslash}p{0.181\textwidth} >{\raggedright\arraybackslash}p{0.181\textwidth}}
+\toprule
+\textbf{Sequence} & \textbf{Metric} & \textbf{Unsmoothed (Raw Potential)} & \textbf{Gradient-Smoothed (\texttt{CollisionRiskSmoother})} & \textbf{Reduction} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Sequence} & \textbf{Metric} & \textbf{Unsmoothed (Raw Potential)} & \textbf{Gradient-Smoothed (\texttt{CollisionRiskSmoother})} & \textbf{Reduction} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{\texttt{0015} (376f)} & \texttt{mean |dR/\allowbreak{}dt|} / \texttt{p95 |dR/\allowbreak{}dt|} / \texttt{max |dR/\allowbreak{}dt|} & \texttt{0.\allowbreak{}1656 /\allowbreak{} 0.\allowbreak{}7430 /\allowbreak{} 2.\allowbreak{}2500 /\allowbreak{}s} & \texttt{0.\allowbreak{}1290 /\allowbreak{} 0.\allowbreak{}4130 /\allowbreak{} 1.\allowbreak{}0400 /\allowbreak{}s} & \textbf{\texttt{-\allowbreak{}22.\allowbreak{}10\% /\allowbreak{} -\allowbreak{}44.\allowbreak{}41\% /\allowbreak{} -\allowbreak{}53.\allowbreak{}78\%}} \\
+\textbf{\texttt{0015} (376f)} & Spikes (\texttt{> 1.\allowbreak{}5/\allowbreak{}s}) / Decision Flips & \texttt{3} / \texttt{24} & \textbf{\texttt{0}} / \texttt{18} & \textbf{\texttt{-\allowbreak{}100.\allowbreak{}0\%} / \texttt{-\allowbreak{}25.\allowbreak{}0\%}} \\
+\textbf{\texttt{0019} (1059f)} & \texttt{mean |dR/\allowbreak{}dt|} / \texttt{p95 |dR/\allowbreak{}dt|} / \texttt{max |dR/\allowbreak{}dt|} & \texttt{0.\allowbreak{}2236 /\allowbreak{} 0.\allowbreak{}9000 /\allowbreak{} 10.\allowbreak{}0000 /\allowbreak{}s} & \texttt{0.\allowbreak{}1188 /\allowbreak{} 0.\allowbreak{}5200 /\allowbreak{} 1.\allowbreak{}2500 /\allowbreak{}s} & \textbf{\texttt{-\allowbreak{}46.\allowbreak{}87\% /\allowbreak{} -\allowbreak{}42.\allowbreak{}22\% /\allowbreak{} -\allowbreak{}87.\allowbreak{}50\%}} \\
+\textbf{\texttt{0019} (1059f)} & Spikes (\texttt{> 1.\allowbreak{}5/\allowbreak{}s}) / Decision Flips & \texttt{23} / \texttt{74} & \textbf{\texttt{0}} / \texttt{40} & \textbf{\texttt{-\allowbreak{}100.\allowbreak{}0\%} / \texttt{-\allowbreak{}45.\allowbreak{}95\%}} \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{7. v3 Right-Panel BEV Visual \& False-Positive Collision Fix (\texttt{v2\_\allowbreak{}improved} $\rightarrow$ \texttt{v3\_\allowbreak{}bev\_\allowbreak{}fixed}, Kaggle v7)}
+
+Outputs archived in \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/tree/main/results/v3\_bev\_fixed/world\_outputs}{results/v3\_bev\_fixed/world\_outputs/} (\texttt{mask\_\allowbreak{}backend:\allowbreak{} "mobile\_\allowbreak{}sam.\allowbreak{}pt"}).
+
+
+\subsubsection{7.1 False-Alarm Suppression \& Intervention Precision (\texttt{Arm B} Nominal)}
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.065\textwidth} >{\raggedright\arraybackslash}p{0.277\textwidth} >{\raggedright\arraybackslash}p{0.122\textwidth} >{\raggedright\arraybackslash}p{0.122\textwidth} >{\raggedright\arraybackslash}p{0.244\textwidth}}
+\toprule
+\textbf{Sequence} & \textbf{Metric} & \textbf{v2 Before Fix} & \textbf{v3 After Fix} & \textbf{Delta} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Sequence} & \textbf{Metric} & \textbf{v2 Before Fix} & \textbf{v3 After Fix} & \textbf{Delta} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{\texttt{0015} (376f)} & Mean Risk Indicator / Non-Normal Rate & \texttt{0.\allowbreak{}6498 /\allowbreak{} 95.\allowbreak{}21\%} & \textbf{\texttt{0.\allowbreak{}2791 /\allowbreak{} 47.\allowbreak{}07\%}} & \textbf{\texttt{-\allowbreak{}57.\allowbreak{}0\%} Risk / \texttt{-\allowbreak{}48.\allowbreak{}14\%p}} \\
+\textbf{\texttt{0015} (376f)} & Normal Driving / Emergency Intervention Frames & \texttt{18 /\allowbreak{} 104} & \textbf{\texttt{199 /\allowbreak{} 16}} & \textbf{\texttt{+181 Normal} / \texttt{-\allowbreak{}84.\allowbreak{}6\% Emergency}} \\
+\textbf{\texttt{0019} (1059f)} & Mean Risk Indicator / Emergency Intervention Frames & \texttt{0.\allowbreak{}9053 /\allowbreak{} 849} & \textbf{\texttt{0.\allowbreak{}6290 /\allowbreak{} 216}} & \textbf{\texttt{-\allowbreak{}30.\allowbreak{}5\%} Risk / \texttt{-\allowbreak{}74.\allowbreak{}6\% Emergency}} \\
+\end{longtable}
+\end{footnotesize}
+
+
+\subsubsection{7.2 Preserved RQ1--RQ4 Validation Metrics (\texttt{v3\_\allowbreak{}bev\_\allowbreak{}fixed})}
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.289\textwidth} >{\raggedright\arraybackslash}p{0.289\textwidth} >{\raggedright\arraybackslash}p{0.289\textwidth}}
+\toprule
+\textbf{RQ} & \textbf{Sequence \texttt{0015} (376f)} & \textbf{Sequence \texttt{0019} (1059f)} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{RQ} & \textbf{Sequence \texttt{0015} (376f)} & \textbf{Sequence \texttt{0019} (1059f)} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{RQ1 Round-Trip / Stationary World Speed} & \texttt{2.\allowbreak{}161e-\allowbreak{}14 m} / \texttt{0.\allowbreak{}227 m/\allowbreak{}s} (vs uncomp \texttt{1.\allowbreak{}358 m/\allowbreak{}s}) & \texttt{3.\allowbreak{}352e-\allowbreak{}14 m} / \texttt{0.\allowbreak{}756 m/\allowbreak{}s} (vs uncomp \texttt{1.\allowbreak{}849 m/\allowbreak{}s}) \\
+\textbf{RQ2 OXTS+CTRV \texttt{ADE /\allowbreak{} FDE} (vs No-OXTS / Zero-Vel)} & \texttt{3.\allowbreak{}6052 /\allowbreak{} 4.\allowbreak{}6872 m} (vs \texttt{4.\allowbreak{}275 /\allowbreak{} 5.\allowbreak{}6099}, \texttt{5.\allowbreak{}2465 /\allowbreak{} 7.\allowbreak{}1198}) & \texttt{2.\allowbreak{}7890 /\allowbreak{} 3.\allowbreak{}2453 m} (vs \texttt{2.\allowbreak{}9277 /\allowbreak{} 3.\allowbreak{}5301}, \texttt{3.\allowbreak{}2491 /\allowbreak{} 4.\allowbreak{}2215}) \\
+\textbf{RQ2 2D Empirical Coverage (\texttt{1$\sigma$ /\allowbreak{} 2$\sigma$})} & \texttt{0.\allowbreak{}3939 /\allowbreak{} 0.\allowbreak{}5779} (theory \texttt{0.\allowbreak{}3935 /\allowbreak{} 0.\allowbreak{}8647}) & \texttt{0.\allowbreak{}4863 /\allowbreak{} 0.\allowbreak{}6826} \\
+\textbf{RQ3 Blind $\rightarrow$ Nominal $\rightarrow$ Degraded Mean Risk} & \texttt{0.\allowbreak{}2220 $\rightarrow$ 0.\allowbreak{}2791 $\rightarrow$ 0.\allowbreak{}2792} (\texttt{77 /\allowbreak{} 18} escalated, \texttt{259/\allowbreak{}376} inc) & \texttt{0.\allowbreak{}5242 $\rightarrow$ 0.\allowbreak{}6290 $\rightarrow$ 0.\allowbreak{}6396} (\texttt{521 /\allowbreak{} 121} escalated, \texttt{732/\allowbreak{}1059} inc) \\
+\textbf{RQ4 Max \texttt{|dR/\allowbreak{}dt|} / Spikes (\texttt{>1.\allowbreak{}5/\allowbreak{}s}) / Flips} & \texttt{5.\allowbreak{}29 $\rightarrow$ 1.\allowbreak{}10 /\allowbreak{}s (-\allowbreak{}79.\allowbreak{}21\%)} / \texttt{5 $\rightarrow$ 0 (-\allowbreak{}100\%)} / \texttt{34 $\rightarrow$ 22 (-\allowbreak{}35.\allowbreak{}29\%)} & \texttt{5.\allowbreak{}76 $\rightarrow$ 1.\allowbreak{}10 /\allowbreak{}s (-\allowbreak{}80.\allowbreak{}90\%)} / \texttt{42 $\rightarrow$ 0 (-\allowbreak{}100\%)} / \texttt{140 $\rightarrow$ 78 (-\allowbreak{}44.\allowbreak{}29\%)} \\
+\end{longtable}
+\end{footnotesize}
+
+
+
+\newpage
+\section{Visualization Specification: Temporal Ego-centric World Model}
+
+Implemented in \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/src/world\_visualizer.py}{src/world\_visualizer.py}.
+
+
+\subsection{1. Split-Screen Layout}
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Total Composite Resolution}: \texttt{1360 $\times$ 632} (\texttt{Left:\allowbreak{} 720 $\times$ 540} | \texttt{Right:\allowbreak{} 640 $\times$ 540} | \texttt{Bottom Telemetry HUD:\allowbreak{} 1360 $\times$ 92}) at \texttt{10 Hz} (matching KITTI native frame rate).
+\end{itemize}
+
+\subsubsection{Left Panel --- Observed World}
+Displays \textbf{only} direct camera-frame observations:
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item Original KITTI \texttt{image\_\allowbreak{}02} RGB frame
+\item 2D Bounding Boxes color-coded by class (\texttt{Car}, \texttt{Pedestrian}, \texttt{Cyclist})
+\item Class Label, sequence-scoped Track ID (\texttt{\#id}), and Detection Confidence (\texttt{0.\allowbreak{}00--1.\allowbreak{}00})
+\end{itemize}
+
+\subsubsection{Right Panel --- Inferred World}
+Structured Ego-centric Bird's-Eye-View (\texttt{X:\allowbreak{} [-\allowbreak{}18m,\allowbreak{} +18m]}, \texttt{Y:\allowbreak{} [-\allowbreak{}10m,\allowbreak{} +52m]}):
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Ego Vehicle}: Yellow triangle anchored at \texttt{(0,\allowbreak{} 0)}
+\item \textbf{Surrounding Objects}: Class-colored BEV footprints with ID and forward distance (\texttt{m})
+\item \textbf{Relative Position}: Metric range rings (\texttt{10m}--\texttt{50m}) in Ego coordinates
+\item \textbf{Movement Direction \& Calibrated Velocity}: Arrow \& \texttt{m/\allowbreak{}s} label shown \textbf{only} when \texttt{P2} calibration is active and track hits \texttt{>= 3}
+\item \textbf{Predicted Trajectory}: \texttt{+0.\allowbreak{}5s}, \texttt{+1.\allowbreak{}0s}, \texttt{+1.\allowbreak{}5s}, \texttt{+2.\allowbreak{}0s} Kalman forecast nodes
+\item \textbf{Ego Planned Path}: Forward corridor (\texttt{$\pm$1.\allowbreak{}6m} half-width, \texttt{0--35m} horizon)
+\item \textbf{Road Structure}: Nominal lane boundaries aligned to Ego corridor
+\item \textbf{Occupancy / Obstacles}: Solid occupied regions vs angular shadow cones
+\item \textbf{Collision Risk}: Conflict zone circles (\texttt{CONFLICT +t\_\allowbreak{}s}) and risk highlight when \texttt{Risk Indicator >= 0.\allowbreak{}45}
+\item \textbf{Uncertainty Visualization}: \texttt{1$\sigma$} covariance ellipses around each future horizon node + HUD breakdown (\texttt{Det}, \texttt{Depth $\pm$m}, \texttt{Track}, \texttt{Pred +2s $\pm$m})
+\item \textbf{Temporal State Separation}: Fading \texttt{Past World} trails (exponentially decayed weight) vs \texttt{Present World} boxes vs \texttt{Future World} probabilistic cones
+\item \textbf{Spatial Limits}: Rear area (\texttt{Y < 0}) and outside camera horizontal FOV explicitly hatched and labeled \texttt{UNKNOWN (Outside Front Camera FOV)}
+\end{enumerate}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{2. Information State Encoding}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.091\textwidth} >{\raggedright\arraybackslash}p{0.387\textwidth} >{\raggedright\arraybackslash}p{0.387\textwidth}}
+\toprule
+\textbf{State} & \textbf{Visual Encoding} & \textbf{Semantics} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{State} & \textbf{Visual Encoding} & \textbf{Semantics} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{Observed} & Solid filled BEV marker + white border; Left Panel 2D box & Directly detected in current frame inside FOV \\
+\textbf{Inferred} & Hollow outline \texttt{[INF]}, velocity arrows, future ellipses, conflict circles & Estimated by ground-plane projection or Kalman kinematics \\
+\textbf{Occluded} & Dark angular shadow wedges behind foreground vehicles; hollow coasting boxes & Line-of-sight blocked or temporarily missed (\texttt{<= 1.\allowbreak{}0s}) \\
+\textbf{Unknown} & Dark diagonal hatched background (\texttt{Y < 0} and outside FOV cone) & Unobservable by single front camera; never hallucinated \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{3. Five-Second Staged Demonstration Timeline (\texttt{-\allowbreak{}-\allowbreak{}staged-\allowbreak{}demo})}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.167\textwidth} >{\raggedright\arraybackslash}p{0.182\textwidth} >{\raggedright\arraybackslash}p{0.517\textwidth}}
+\toprule
+\textbf{Time Window} & \textbf{Frames (\texttt{10 Hz})} & \textbf{Active Layers} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Time Window} & \textbf{Frames (\texttt{10 Hz})} & \textbf{Active Layers} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{0.0--1.0s} & \texttt{0--9} & \textbf{Raw Observation}: Camera video + Ego \texttt{(0,\allowbreak{}0)} + FOV / \texttt{Unknown} initialization \\
+\textbf{1.0--2.0s} & \texttt{10--19} & \textbf{Object Perception}: + 2D BBox, Class, Confidence, Track IDs, BEV detections, Occlusion cones \\
+\textbf{2.0--3.0s} & \texttt{20--29} & \textbf{Temporal Understanding}: + Past World fading trails, calibrated velocity vectors \\
+\textbf{3.0--4.0s} & \texttt{30--39} & \textbf{Future Prediction}: + Multi-horizon trajectories (\texttt{0.\allowbreak{}5s--2.\allowbreak{}0s}), \texttt{1$\sigma$} covariance ellipses, Ego planned path \\
+\textbf{4.0--5.0s+} & \texttt{40+} & \textbf{Risk Assessment \& Safety Shield}: + Risk Indicator gauge, Conflict zones, Advisory Safety Shield Decision \\
+\end{longtable}
+\end{footnotesize}
+
+
+Full-overlay mode (\texttt{-\allowbreak{}-\allowbreak{}full-\allowbreak{}overlay}) renders all layers starting from \texttt{t = 0.\allowbreak{}0s}.
+
+\newpage
+\section{Source, Kernel, Report, and Metrics Consolidated Index (Appendix)}
+
+This appendix provides a complete index of \textbf{source modules (\texttt{src/\allowbreak{}})}, \textbf{remote GPU/CPU kernels (\texttt{kaggle/\allowbreak{}}, \texttt{kaggle\_\allowbreak{}world\_\allowbreak{}model/\allowbreak{}}, \texttt{kaggle\_\allowbreak{}v4\_\allowbreak{}*}, \texttt{colab/\allowbreak{}})}, \textbf{reports \& technical specs}, and \textbf{quantitative artifacts (\texttt{results/\allowbreak{}}, \texttt{logs/\allowbreak{}})} across the repository.
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{1. Source Code Modules (\texttt{src/\allowbreak{}})}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.398\textwidth} >{\raggedright\arraybackslash}p{0.070\textwidth} >{\raggedright\arraybackslash}p{0.398\textwidth}}
+\toprule
+\textbf{File} & \textbf{Lines} & \textbf{Core Role \& Implementation} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{File} & \textbf{Lines} & \textbf{Core Role \& Implementation} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\texttt{src/\allowbreak{}kitti\_\allowbreak{}prep.\allowbreak{}py} & 624 & KITTI Zip/directory CRC \& image decode integrity audit, sequence-disjoint 14/4/3 split, \texttt{DontCare}+Distractor (\texttt{Van}, \texttt{Person}, \texttt{Person\_\allowbreak{}sitting}) 114-pixel masking, train-only rare-class oversampling (\texttt{train\_\allowbreak{}weighted.\allowbreak{}txt}, \texttt{6,\allowbreak{}974} entries) \\
+\texttt{src/\allowbreak{}track\_\allowbreak{}utils.\allowbreak{}py} & 620 & ByteTrack (\texttt{imgsz=960}/\texttt{1280}, \texttt{conf=0.\allowbreak{}25}) multi-object tracking, \texttt{MobileSAM} (\texttt{mobile\_\allowbreak{}sam.\allowbreak{}pt}) Box-Prompt instance segmentation (\texttt{trajectories\_\allowbreak{}masks.\allowbreak{}json}), ground-contact point (\texttt{mask\_\allowbreak{}bottom\_\allowbreak{}xy}), KITTI 18-column TrackEval export \\
+\texttt{src/\allowbreak{}road\_\allowbreak{}lane.\allowbreak{}py} & --- & \texttt{P2RoadMapper}, \texttt{parse\_\allowbreak{}kitti\_\allowbreak{}road\_\allowbreak{}gt\_\allowbreak{}mask}, \texttt{TemporalRoadLaneProcessor} (BEV IPM warp + HLS/Sobel lane detection + quadratic polynomial EMA smoothing), \texttt{query\_\allowbreak{}object\_\allowbreak{}road\_\allowbreak{}lane\_\allowbreak{}context} \\
+\texttt{src/\allowbreak{}world\_\allowbreak{}model.\allowbreak{}py} & 1,235+ & \texttt{P2} inverse-variance depth fusion (\texttt{ground\_\allowbreak{}plane\_\allowbreak{}bev\_\allowbreak{}fusion}), \texttt{EgoPose2D} \texttt{SE(2)} OXTS ENU compensation \& CTRV rollout, 4D World-ENU Kalman filter (\texttt{+0.\allowbreak{}5s\textasciitilde{}+2.\allowbreak{}0s}), \texttt{Observed/\allowbreak{}Inferred/\allowbreak{}Occluded/\allowbreak{}Unknown} state machine, lateral-covariance \& road-context (\texttt{0.\allowbreak{}65} non-road attenuation) risk + \texttt{CollisionRiskSmoother} \\
+\texttt{src/\allowbreak{}world\_\allowbreak{}visualizer.\allowbreak{}py} & 710+ & \texttt{1360$\times$632} split-screen renderer (\texttt{Left:\allowbreak{} Camera + MobileSAM + Road/\allowbreak{}Lane Masks} | \texttt{Right:\allowbreak{} BEV Inferred World}), Jacobian $J=\text{diag}(s_x,-s_y)$ \texttt{cov\_\allowbreak{}to\_\allowbreak{}pixel\_\allowbreak{}ellipse}, \texttt{-\allowbreak{}-\allowbreak{}staged-\allowbreak{}demo} and \texttt{-\allowbreak{}-\allowbreak{}full-\allowbreak{}overlay} MP4/keyframe export \\
+\texttt{src/\allowbreak{}validation\_\allowbreak{}experiments.\allowbreak{}py} & 499 & Automated \textbf{RQ1} (round-trip \& stationary ego-motion compensation), \textbf{RQ2} (future prediction \texttt{OXTS+CTRV} vs \texttt{No-\allowbreak{}OXTS} vs \texttt{Zero-\allowbreak{}Vel} \& 2D Mahalanobis coverage), \textbf{RQ3} (uncertainty causality \texttt{Arm A/\allowbreak{}B/\allowbreak{}C}), \textbf{RQ4} (gradient smoothing spike/flip reduction) \\
+\texttt{src/\allowbreak{}dataset\_\allowbreak{}prep.\allowbreak{}py}, \texttt{src/\allowbreak{}detect.\allowbreak{}py}, \texttt{src/\allowbreak{}train.\allowbreak{}py}, \texttt{src/\allowbreak{}export.\allowbreak{}py} & 377 & Baseline 9-class dashcam YOLO conversion, inference/risk banner visualization, YOLOv5/Ultralytics training \& ONNX/TensorRT export utilities \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{2. Remote GPU/CPU Training \& Execution Kernels}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.320\textwidth} >{\raggedright\arraybackslash}p{0.226\textwidth} >{\raggedright\arraybackslash}p{0.320\textwidth}}
+\toprule
+\textbf{Kernel / Notebook} & \textbf{Environment} & \textbf{Executed Pipeline \& Outputs} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Kernel / Notebook} & \textbf{Environment} & \textbf{Executed Pipeline \& Outputs} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\texttt{kaggle/\allowbreak{}train\_\allowbreak{}track\_\allowbreak{}kitti.\allowbreak{}py} & Kaggle \texttt{2$\times$ Tesla T4} (15GB$\times$2) & \texttt{test013/\allowbreak{}totalcare-\allowbreak{}kitti-\allowbreak{}yolo-\allowbreak{}train-\allowbreak{}and-\allowbreak{}track} (v2 \texttt{COMPLETE}): Audit $\rightarrow$ YOLO Export $\rightarrow$ \texttt{YOLO11m @ 960} DDP (24ep, \textasciitilde{}108 min) $\rightarrow$ Val/Test Eval $\rightarrow$ \texttt{0015}/\texttt{0019} ByteTrack + MobileSAM $\rightarrow$ World Model validation \\
+\texttt{kaggle\_\allowbreak{}world\_\allowbreak{}model/\allowbreak{}run\_\allowbreak{}world\_\allowbreak{}model\_\allowbreak{}kaggle.\allowbreak{}py} & Kaggle CPU (\texttt{kernel\_\allowbreak{}sources}) & \texttt{test013/\allowbreak{}totalcare-\allowbreak{}kitti-\allowbreak{}world-\allowbreak{}model-\allowbreak{}demo} (v7 \texttt{COMPLETE}): Mounts v2 \texttt{trajectories.\allowbreak{}csv} + \texttt{trajectories\_\allowbreak{}masks.\allowbreak{}json} $\rightarrow$ \texttt{v3} BEV Jacobian ellipse \& false-alarm fix re-render (4 MP4s) $\rightarrow$ RQ1--RQ4 verification \\
+\texttt{kaggle\_\allowbreak{}v4\_\allowbreak{}road/\allowbreak{}train\_\allowbreak{}road\_\allowbreak{}lane\_\allowbreak{}kitti.\allowbreak{}py} & Kaggle GPU (\texttt{Tesla P100}/\texttt{T4}) & \texttt{test013/\allowbreak{}totalcare-\allowbreak{}kitti-\allowbreak{}v4-\allowbreak{}road-\allowbreak{}lane} (\texttt{COMPLETE}): Fine-tunes \texttt{SegFormer-\allowbreak{}B2} 3-class head on \texttt{data\_\allowbreak{}road} (\texttt{230/\allowbreak{}59}, 25ep) $\rightarrow$ infers \texttt{road\_\allowbreak{}lane\_\allowbreak{}0015.\allowbreak{}json} \& \texttt{0019.\allowbreak{}json} \\
+\texttt{kaggle\_\allowbreak{}v4\_\allowbreak{}detect/\allowbreak{}train\_\allowbreak{}v4\_\allowbreak{}detect\_\allowbreak{}kitti.\allowbreak{}py} & Kaggle \texttt{2$\times$ Tesla T4} & \texttt{test013/\allowbreak{}totalcare-\allowbreak{}kitti-\allowbreak{}v4-\allowbreak{}detect} (\texttt{COMPLETE}): Deduped \texttt{kitti-\allowbreak{}stereo-\allowbreak{}image} merge (\texttt{14,\allowbreak{}371} train) $\rightarrow$ \texttt{YOLO11l @ 1280} (24ep) $\rightarrow$ Val/Test std \& TTA + KITTI Easy/Mod/Hard eval $\rightarrow$ ByteTrack + MobileSAM \\
+\texttt{kaggle\_\allowbreak{}v4\_\allowbreak{}world\_\allowbreak{}model/\allowbreak{}run\_\allowbreak{}v4\_\allowbreak{}world\_\allowbreak{}model\_\allowbreak{}kaggle.\allowbreak{}py} & Kaggle CPU (\texttt{kernel\_\allowbreak{}sources}) & \texttt{test013/\allowbreak{}totalcare-\allowbreak{}kitti-\allowbreak{}v4-\allowbreak{}world-\allowbreak{}model} (v2 \texttt{COMPLETE}): Integrates \texttt{v4} road/lane + \texttt{YOLO11l} tracks $\rightarrow$ renders 4 \texttt{v4} MP4s + RQ1--RQ4 validation \\
+\texttt{colab/\allowbreak{}01\_\allowbreak{}kitti\_\allowbreak{}colab\_\allowbreak{}audit\_\allowbreak{}and\_\allowbreak{}prep.\allowbreak{}ipynb}, \texttt{02\_\allowbreak{}traffic\_\allowbreak{}detect\_\allowbreak{}track\_\allowbreak{}colab.\allowbreak{}ipynb} & Google Colab CLI / Drive & \texttt{/\allowbreak{}content/\allowbreak{}drive/\allowbreak{}MyDrive/\allowbreak{}KITTI\_\allowbreak{}Tracking/\allowbreak{}} Stage 1 audit, YOLO export, and tracking notebooks \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{3. Reports \& Technical Documentation}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.338\textwidth} >{\raggedright\arraybackslash}p{0.546\textwidth}}
+\toprule
+\textbf{Document} & \textbf{Summary} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Document} & \textbf{Summary} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\texttt{FINAL\_\allowbreak{}REPORT.\allowbreak{}md} & Final report mapped 1:1 to all 7 instructor evaluation items plus v4 road/lane \& \texttt{0.\allowbreak{}9} accuracy results \\
+\texttt{ML\_\allowbreak{}LAYER\_\allowbreak{}SPEC.\allowbreak{}md} & Layer-by-layer specification of \texttt{YOLO11m} (\texttt{Layer 0--23}), \texttt{MobileSAM}, \texttt{ByteTrack}, \texttt{SegFormer-\allowbreak{}B2}, \texttt{World Model \& Safety Shield}, and 8 academic references \\
+\texttt{architecture.\allowbreak{}md} & 7-stage system architecture, \texttt{P2} camera$\leftrightarrow$Ego equations, \texttt{Past$\rightarrow$Present$\rightarrow$Future} state transitions, and \texttt{CollisionRiskSmoother} design \\
+\texttt{dataset\_\allowbreak{}audit.\allowbreak{}md} & KITTI \texttt{8,\allowbreak{}008}-frame integrity audit, \texttt{DontCare}/Distractor masking, and 14/4/3 sequence-disjoint split \\
+\texttt{experiment\_\allowbreak{}plan.\allowbreak{}md} & Research hypotheses (H1--H3), baselines (B0--B2), \texttt{v1$\rightarrow$v2$\rightarrow$v3} benchmarks, and RQ1--RQ4 empirical results \\
+\texttt{visualization\_\allowbreak{}spec.\allowbreak{}md} & \texttt{1360$\times$632} split-screen encoding spec and 5-second staged demonstration timeline \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{4. Key Quantitative Metrics \& Artifact Archive (\texttt{results/\allowbreak{}}, \texttt{logs/\allowbreak{}})}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.226\textwidth} >{\raggedright\arraybackslash}p{0.320\textwidth} >{\raggedright\arraybackslash}p{0.320\textwidth}}
+\toprule
+\textbf{Category} & \textbf{Artifact Path} & \textbf{Key Quantitative Summary} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Category} & \textbf{Artifact Path} & \textbf{Key Quantitative Summary} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{Stage 2 Detector (\texttt{v2})} & \texttt{results/\allowbreak{}v2\_\allowbreak{}improved/\allowbreak{}outputs/\allowbreak{}weights/\allowbreak{}best.\allowbreak{}pt} (\texttt{38.\allowbreak{}62 MB}) & \texttt{YOLO11m @ 960} (\texttt{231 layers}, \texttt{20.\allowbreak{}06M params}), \textbf{Val \texttt{mAP@0.\allowbreak{}5 = 0.\allowbreak{}5235}} (\texttt{+15.\allowbreak{}8\%} vs \texttt{v1 0.\allowbreak{}4521}), \textbf{Test \texttt{mAP@0.\allowbreak{}5 = 0.\allowbreak{}4269}} \\
+\textbf{Stage 4--7 Demo (\texttt{v3})} & \texttt{results/\allowbreak{}v3\_\allowbreak{}bev\_\allowbreak{}fixed/\allowbreak{}world\_\allowbreak{}outputs/\allowbreak{}world\_\allowbreak{}model\_\allowbreak{}*} & \texttt{0015} (\texttt{37.\allowbreak{}6s}, \texttt{11.\allowbreak{}58 MB}) / \texttt{0019} (\texttt{105.\allowbreak{}9s}, \texttt{53.\allowbreak{}48 MB}) + \texttt{8.\allowbreak{}0s} staged MP4s; \texttt{v3} Arm B risk \texttt{-\allowbreak{}57.\allowbreak{}0\%} (\texttt{0015}) / \texttt{-\allowbreak{}30.\allowbreak{}5\%} (\texttt{0019}), RQ4 spikes \texttt{-\allowbreak{}100\%} \\
+\textbf{v4 Road \& Lane (\texttt{SegFormer-\allowbreak{}B2})} & \texttt{results/\allowbreak{}v4\_\allowbreak{}road\_\allowbreak{}lane/\allowbreak{}road\_\allowbreak{}outputs/\allowbreak{}road\_\allowbreak{}lane\_\allowbreak{}outputs/\allowbreak{}road\_\allowbreak{}eval\_\allowbreak{}metrics.\allowbreak{}json} & Road vs Non-Road \textbf{ROC AUC \texttt{0.\allowbreak{}9992}}, \textbf{Pixel Acc \texttt{0.\allowbreak{}9910}}, \textbf{Road F1 \texttt{0.\allowbreak{}9747}}, \textbf{Ego-Lane F1 \texttt{0.\allowbreak{}9119}} \\
+\textbf{v4 Detector (\texttt{YOLO11l @ 1280})} & \texttt{results/\allowbreak{}v4\_\allowbreak{}road\_\allowbreak{}lane/\allowbreak{}detect\_\allowbreak{}outputs/\allowbreak{}outputs/\allowbreak{}eval\_\allowbreak{}metrics\_\allowbreak{}v4.\allowbreak{}json}, \texttt{weights/\allowbreak{}best.\allowbreak{}pt} (\texttt{49 MB}) & Val TTA \textbf{\texttt{mAP@0.\allowbreak{}5 = 0.\allowbreak{}7400}} (std \texttt{Precision 0.\allowbreak{}8685}), Test TTA \texttt{0.\allowbreak{}6705}, \textbf{Test Easy \texttt{mAP@0.\allowbreak{}5 = 0.\allowbreak{}8966}} (\texttt{\textasciitilde{}0.\allowbreak{}90}), \textbf{Test Mod \texttt{0.\allowbreak{}8404}} \\
+\textbf{v4 World Model \& RQ1--RQ4} & \texttt{results/\allowbreak{}v4\_\allowbreak{}road\_\allowbreak{}lane/\allowbreak{}world\_\allowbreak{}outputs/\allowbreak{}v4\_\allowbreak{}world\_\allowbreak{}outputs/\allowbreak{}world\_\allowbreak{}model\_\allowbreak{}*} & \texttt{0015} (\texttt{37M}/\texttt{6.\allowbreak{}1M}) \& \texttt{0019} (\texttt{25M}/\texttt{3.\allowbreak{}4M}) integrated road+lane+BEV demos; RQ4 spikes \texttt{8$\rightarrow$0}, \texttt{16$\rightarrow$0} (\texttt{-\allowbreak{}100\%}), flips \texttt{-\allowbreak{}57.\allowbreak{}26\%} \\
+\textbf{Execution Logs} & \texttt{logs/\allowbreak{}v1\_\allowbreak{}detect\_\allowbreak{}track/\allowbreak{}}, \texttt{logs/\allowbreak{}v2\_\allowbreak{}improved/\allowbreak{}}, \texttt{logs/\allowbreak{}v3\_\allowbreak{}bev\_\allowbreak{}fixed/\allowbreak{}} & Full Kaggle DDP training (\texttt{231 layers} summary) and World Model console logs \\
+\end{longtable}
+\end{footnotesize}
+
+\newpage
+\section{Training Curves and Demonstration Keyframes}
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.92\textwidth]{/Users/seungwonlee/Documents/GitHub/Totalcare_autonomous_driving_Yolov5/results/v2_improved/outputs/train_results/results.png}
+\caption{v2 YOLO11m @ 960 Training Losses and Validation mAP Convergence}
+\end{figure}
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.92\textwidth]{/Users/seungwonlee/Documents/GitHub/Totalcare_autonomous_driving_Yolov5/results/v2_improved/outputs/train_results/confusion_matrix_normalized.png}
+\caption{v2 YOLO11m @ 960 Normalized Confusion Matrix (Car / Pedestrian / Cyclist)}
+\end{figure}
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.92\textwidth]{/Users/seungwonlee/Documents/GitHub/Totalcare_autonomous_driving_Yolov5/results/v3_bev_fixed/world_outputs/world_model_0015_staged/keyframes/seq_0015_frame_000045_stage5.png}
+\caption{v3 Seq 0015 Frame 45: Aspect-Corrected BEV Ellipses \& False-Alarm Suppression (Caution 0.25)}
+\end{figure}
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.92\textwidth]{/Users/seungwonlee/Documents/GitHub/Totalcare_autonomous_driving_Yolov5/results/v3_bev_fixed/world_outputs/world_model_0019_staged/keyframes/seq_0019_frame_000055_stage5.png}
+\caption{v3 Seq 0019 Frame 55: Sidewalk Pedestrian Non-Alert \& Approaching Vehicle Braking (0.72)}
+\end{figure}
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.92\textwidth]{/Users/seungwonlee/Documents/GitHub/Totalcare_autonomous_driving_Yolov5/results/v4_road_lane/detect_outputs/outputs/train_results/results.png}
+\caption{v4 YOLO11l @ 1280 (Deduped KITTI-Det Merge) Training Losses and Validation mAP Convergence}
+\end{figure}
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.92\textwidth]{/Users/seungwonlee/Documents/GitHub/Totalcare_autonomous_driving_Yolov5/results/v4_road_lane/detect_outputs/outputs/train_results/BoxPR_curve.png}
+\caption{v4 Val Precision-Recall Curve (TTA all classes mAP@0.5 = 0.740)}
+\end{figure}
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.92\textwidth]{/Users/seungwonlee/Documents/GitHub/Totalcare_autonomous_driving_Yolov5/results/v4_road_lane/detect_outputs/outputs/train_results/BoxF1_curve.png}
+\caption{v4 Val F1-Confidence Curve (all classes 0.71 at conf 0.217)}
+\end{figure}
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.92\textwidth]{/Users/seungwonlee/Documents/GitHub/Totalcare_autonomous_driving_Yolov5/results/v4_road_lane/detect_outputs/outputs/train_results/confusion_matrix_normalized.png}
+\caption{v4 Normalized Confusion Matrix (Car 0.90 / Pedestrian 0.87 / Cyclist 0.55)}
+\end{figure}
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.92\textwidth]{/Users/seungwonlee/Documents/GitHub/Totalcare_autonomous_driving_Yolov5/results/v4_road_lane/detect_outputs/outputs/train_results/test_BoxPR_curve.png}
+\caption{v4 Held-Out Test Precision-Recall Curve (TTA all classes mAP@0.5 = 0.670)}
+\end{figure}
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.92\textwidth]{/Users/seungwonlee/Documents/GitHub/Totalcare_autonomous_driving_Yolov5/results/v4_road_lane/detect_outputs/outputs/train_results/test_BoxF1_curve.png}
+\caption{v4 Held-Out Test F1-Confidence Curve (all classes 0.68 at conf 0.568)}
+\end{figure}
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.92\textwidth]{/Users/seungwonlee/Documents/GitHub/Totalcare_autonomous_driving_Yolov5/results/v4_road_lane/road_outputs/road_lane_outputs/road_lane_preview_0015_f0045.png}
+\caption{v4 SegFormer-B2 Road/Non-Road/Ego-Lane Segmentation \& Quadratic Lane Preview (0015 f0045)}
+\end{figure}
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.92\textwidth]{/Users/seungwonlee/Documents/GitHub/Totalcare_autonomous_driving_Yolov5/results/v4_road_lane/world_outputs/v4_world_outputs/world_model_0015_staged/keyframes/seq_0015_frame_000045_stage5.png}
+\caption{v4 Seq 0015 Frame 45: Integrated Road/Lane Masking \& BEV Road Polygon / Curvilinear Lanes}
+\end{figure}
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.92\textwidth]{/Users/seungwonlee/Documents/GitHub/Totalcare_autonomous_driving_Yolov5/results/v4_road_lane/world_outputs/v4_world_outputs/world_model_0019_staged/keyframes/seq_0019_frame_000055_stage5.png}
+\caption{v4 Seq 0019 Frame 55: Road/Lane Context Badges ([LANE]/[NON-RD]) \& Safety Shield Integration}
+\end{figure}
+\end{document}

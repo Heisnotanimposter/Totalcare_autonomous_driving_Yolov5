@@ -1,0 +1,30 @@
+[{"stream_name":"stderr","time":3.01616078,"data":"  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n"}
+,{"stream_name":"stderr","time":3.016238743,"data":"                                 Dload  Upload   Total   Spent    Left  Speed\n"}
+,{"stream_name":"stderr","time":4.161662438,"data":"\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\r 65 2206k   65 1444k    0     0  1263k      0  0:00:01  0:00:01 --:--:-- 1263k\r100 2206k  100 2206k    0     0  1925k      0  0:00:01  0:00:01 --:--:-- 1925k\n"}
+,{"stream_name":"stderr","time":4.179505219,"data":"  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n"}
+,{"stream_name":"stderr","time":4.179595179,"data":"                                 Dload  Upload   Total   Spent    Left  Speed\n"}
+,{"stream_name":"stderr","time":4.7102841909999995,"data":"\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\r100 89829  100 89829    0     0   165k      0 --:--:-- --:--:-- --:--:--  165k\n"}
+,{"stream_name":"stderr","time":4.720549479,"data":"  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n"}
+,{"stream_name":"stderr","time":4.720585404,"data":"                                 Dload  Upload   Total   Spent    Left  Speed\n"}
+,{"stream_name":"stderr","time":6.013071929,"data":"\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\r  0 8157k    0 17022    0     0  42427      0  0:03:16 --:--:--  0:03:16 42343\r100 8157k  100 8157k    0     0  6310k      0  0:00:01  0:00:01 --:--:-- 6313k\n"}
+,{"stream_name":"stdout","time":266.151084591,"data":"[DONE v4 World Model] {\n"}
+,{"stream_name":"stdout","time":266.151124725,"data":"  \"0015\": {\n"}
+,{"stream_name":"stdout","time":266.151131601,"data":"    \"total_object_observations\": 2195,\n"}
+,{"stream_name":"stdout","time":266.151136906,"data":"    \"ego_lane_objects\": 172,\n"}
+,{"stream_name":"stdout","time":266.151141827,"data":"    \"adjacent_road_objects\": 350,\n"}
+,{"stream_name":"stdout","time":266.151146676,"data":"    \"non_road_objects\": 1673\n"}
+,{"stream_name":"stdout","time":266.151151583,"data":"  },\n"}
+,{"stream_name":"stdout","time":266.151155309,"data":"  \"0019\": {\n"}
+,{"stream_name":"stdout","time":266.151158408,"data":"    \"total_object_observations\": 11738,\n"}
+,{"stream_name":"stdout","time":266.151161511,"data":"    \"ego_lane_objects\": 3262,\n"}
+,{"stream_name":"stdout","time":266.151164695,"data":"    \"adjacent_road_objects\": 1376,\n"}
+,{"stream_name":"stdout","time":266.151167785,"data":"    \"non_road_objects\": 7100\n"}
+,{"stream_name":"stdout","time":266.151170818,"data":"  }\n"}
+,{"stream_name":"stdout","time":266.151173708,"data":"}\n"}
+,{"stream_name":"stderr","time":269.305876005,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":269.305919617,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":269.717305097,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":269.717339272,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":272.034373049,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":273.500767815,"data":"[NbConvertApp] Writing 364901 bytes to __results__.html\n"}
+]

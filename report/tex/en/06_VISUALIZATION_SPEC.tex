@@ -1,0 +1,127 @@
+\documentclass[10.5pt,a4paper]{article}
+\usepackage{geometry}
+\geometry{margin=18mm,top=20mm,bottom=20mm}
+\usepackage{fontspec}
+\setmonofont{Menlo}[Scale=0.82]
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,longtable,array}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue!60!black,urlcolor=blue!65!black}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\setcounter{secnumdepth}{0}
+\sloppy
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{gray}Visualization Specification: Temporal Ego-centric World Model}
+\fancyhead[R]{\small\color{gray}KITTI Tracking Temporal World Model}
+\fancyfoot[C]{\small\thepage}
+\begin{document}
+\begin{center}
+{\LARGE\bfseries Visualization Specification: Temporal Ego-centric World Model}\\[6pt]
+{\normalsize\color{gray} Visualization Specification: Temporal Ego-centric World Model}\\[4pt]
+{\small\href{https://github.com/Heisnotanimposter/Totalcare_autonomous_driving_Yolov5}{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5}}
+\end{center}
+\vspace{4pt}
+\hrule
+\vspace{8pt}
+
+Implemented in \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/src/world\_visualizer.py}{src/world\_visualizer.py}.
+
+
+\section{1. Split-Screen Layout}
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Total Composite Resolution}: \texttt{1360 $\times$ 632} (\texttt{Left:\allowbreak{} 720 $\times$ 540} | \texttt{Right:\allowbreak{} 640 $\times$ 540} | \texttt{Bottom Telemetry HUD:\allowbreak{} 1360 $\times$ 92}) at \texttt{10 Hz} (matching KITTI native frame rate).
+\end{itemize}
+
+\subsection{Left Panel --- Observed World}
+Displays \textbf{only} direct camera-frame observations:
+
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item Original KITTI \texttt{image\_\allowbreak{}02} RGB frame
+\item 2D Bounding Boxes color-coded by class (\texttt{Car}, \texttt{Pedestrian}, \texttt{Cyclist})
+\item Class Label, sequence-scoped Track ID (\texttt{\#id}), and Detection Confidence (\texttt{0.\allowbreak{}00--1.\allowbreak{}00})
+\end{itemize}
+
+\subsection{Right Panel --- Inferred World}
+Structured Ego-centric Bird's-Eye-View (\texttt{X:\allowbreak{} [-\allowbreak{}18m,\allowbreak{} +18m]}, \texttt{Y:\allowbreak{} [-\allowbreak{}10m,\allowbreak{} +52m]}):
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Ego Vehicle}: Yellow triangle anchored at \texttt{(0,\allowbreak{} 0)}
+\item \textbf{Surrounding Objects}: Class-colored BEV footprints with ID and forward distance (\texttt{m})
+\item \textbf{Relative Position}: Metric range rings (\texttt{10m}--\texttt{50m}) in Ego coordinates
+\item \textbf{Movement Direction \& Calibrated Velocity}: Arrow \& \texttt{m/\allowbreak{}s} label shown \textbf{only} when \texttt{P2} calibration is active and track hits \texttt{>= 3}
+\item \textbf{Predicted Trajectory}: \texttt{+0.\allowbreak{}5s}, \texttt{+1.\allowbreak{}0s}, \texttt{+1.\allowbreak{}5s}, \texttt{+2.\allowbreak{}0s} Kalman forecast nodes
+\item \textbf{Ego Planned Path}: Forward corridor (\texttt{$\pm$1.\allowbreak{}6m} half-width, \texttt{0--35m} horizon)
+\item \textbf{Road Structure}: Nominal lane boundaries aligned to Ego corridor
+\item \textbf{Occupancy / Obstacles}: Solid occupied regions vs angular shadow cones
+\item \textbf{Collision Risk}: Conflict zone circles (\texttt{CONFLICT +t\_\allowbreak{}s}) and risk highlight when \texttt{Risk Indicator >= 0.\allowbreak{}45}
+\item \textbf{Uncertainty Visualization}: \texttt{1$\sigma$} covariance ellipses around each future horizon node + HUD breakdown (\texttt{Det}, \texttt{Depth $\pm$m}, \texttt{Track}, \texttt{Pred +2s $\pm$m})
+\item \textbf{Temporal State Separation}: Fading \texttt{Past World} trails (exponentially decayed weight) vs \texttt{Present World} boxes vs \texttt{Future World} probabilistic cones
+\item \textbf{Spatial Limits}: Rear area (\texttt{Y < 0}) and outside camera horizontal FOV explicitly hatched and labeled \texttt{UNKNOWN (Outside Front Camera FOV)}
+\end{enumerate}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{2. Information State Encoding}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.091\textwidth} >{\raggedright\arraybackslash}p{0.387\textwidth} >{\raggedright\arraybackslash}p{0.387\textwidth}}
+\toprule
+\textbf{State} & \textbf{Visual Encoding} & \textbf{Semantics} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{State} & \textbf{Visual Encoding} & \textbf{Semantics} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{Observed} & Solid filled BEV marker + white border; Left Panel 2D box & Directly detected in current frame inside FOV \\
+\textbf{Inferred} & Hollow outline \texttt{[INF]}, velocity arrows, future ellipses, conflict circles & Estimated by ground-plane projection or Kalman kinematics \\
+\textbf{Occluded} & Dark angular shadow wedges behind foreground vehicles; hollow coasting boxes & Line-of-sight blocked or temporarily missed (\texttt{<= 1.\allowbreak{}0s}) \\
+\textbf{Unknown} & Dark diagonal hatched background (\texttt{Y < 0} and outside FOV cone) & Unobservable by single front camera; never hallucinated \\
+\end{longtable}
+\end{footnotesize}
+
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\section{3. Five-Second Staged Demonstration Timeline (\texttt{-\allowbreak{}-\allowbreak{}staged-\allowbreak{}demo})}
+
+
+\begin{footnotesize}
+\setlength{\tabcolsep}{4pt}
+\setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.167\textwidth} >{\raggedright\arraybackslash}p{0.182\textwidth} >{\raggedright\arraybackslash}p{0.517\textwidth}}
+\toprule
+\textbf{Time Window} & \textbf{Frames (\texttt{10 Hz})} & \textbf{Active Layers} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Time Window} & \textbf{Frames (\texttt{10 Hz})} & \textbf{Active Layers} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{0.0--1.0s} & \texttt{0--9} & \textbf{Raw Observation}: Camera video + Ego \texttt{(0,\allowbreak{}0)} + FOV / \texttt{Unknown} initialization \\
+\textbf{1.0--2.0s} & \texttt{10--19} & \textbf{Object Perception}: + 2D BBox, Class, Confidence, Track IDs, BEV detections, Occlusion cones \\
+\textbf{2.0--3.0s} & \texttt{20--29} & \textbf{Temporal Understanding}: + Past World fading trails, calibrated velocity vectors \\
+\textbf{3.0--4.0s} & \texttt{30--39} & \textbf{Future Prediction}: + Multi-horizon trajectories (\texttt{0.\allowbreak{}5s--2.\allowbreak{}0s}), \texttt{1$\sigma$} covariance ellipses, Ego planned path \\
+\textbf{4.0--5.0s+} & \texttt{40+} & \textbf{Risk Assessment \& Safety Shield}: + Risk Indicator gauge, Conflict zones, Advisory Safety Shield Decision \\
+\end{longtable}
+\end{footnotesize}
+
+
+Full-overlay mode (\texttt{-\allowbreak{}-\allowbreak{}full-\allowbreak{}overlay}) renders all layers starting from \texttt{t = 0.\allowbreak{}0s}.
+
+\end{document}

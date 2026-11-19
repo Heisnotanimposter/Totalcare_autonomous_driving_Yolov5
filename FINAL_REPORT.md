@@ -1,8 +1,10 @@
 # 프로젝트 최종 결과 보고서: Camera-Centric Temporal Ego-centric World Model
 
-**GitHub 저장소:** https://github.com/Heisnotanimposter/Totalcare_autonomous_driving_Yolov5  
-**데이터셋:** KITTI Object Tracking (`training/image_02`, `training/label_02`, `calib`, `oxts`)  
+**GitHub 저장소:** https://github.com/Heisnotanimposter/Totalcare_autonomous_driving_Yolov5 *(초기 개발 저장소명을 유지하였으나, 실제 구현은 Ultralytics **YOLOv8 / YOLO11** 통합 파이프라인으로 전면 구축됨)*  
+**데이터셋:** KITTI Object Tracking (`training/image_02`, `training/label_02`, `calib`, `oxts`) + `data_road` + 중복 제거 `kitti-stereo-image`  
 **실행 환경:** Kaggle CLI GPU (`2× Nvidia Tesla T4`, `Ultralytics 8.4.212`, `PyTorch 2.11.0+cu130`) + Google Colab CLI 연동
+
+> **[과제 프레임워크·Counting 안내]** 본 프로젝트는 강의 슬라이드 기준 **`YOLOv8s` (`v1` Baseline)** 를 먼저 구축·검증한 뒤, 동일 Ultralytics `train()`·`track()` 파이프라인 내에서 아키텍처 고도화(`C3k2`, `C2PSA`)를 위해 **`YOLO11m` (`v2`)** 및 **`YOLO11l` (`v4`)** 로 확장했습니다. 또한 프레임별 객체 수 집계(`Tracks: Observed=...` HUD, `trajectories.csv`, `road_context_stats.json`)가 객체 카운팅(Object Counting) 기능을 겸합니다.
 
 ---
 
@@ -10,9 +12,9 @@
 
 | 평가 항목 | 충족 여부 | 근거 및 저장소 내 위치 |
 |---|:---:|---|
-| **1. 데이터 수집 (3개 부류 이상, 100개 이상 이미지)** | **충족** | `KITTI Tracking` 21개 시퀀스(`0000`–`0020`), 총 **`8,008`장** RGB 이미지, **`3`개 부류** (`Car`, `Pedestrian`, `Cyclist`). [`dataset_audit.md`](./dataset_audit.md) |
-| **2. 객체 감지 및 추적 결과 5초 이상 동영상 제작** | **충족** | 좌우 분할 World Model 시연 영상 (`0015` staged `8.0초` / full **`37.6초`**, `0019` staged `8.0초` / full **`105.9초`**) + 2D ByteTrack·SAM 추적 영상. [`world_model_demo_0015.mp4`](./results/v3_bev_fixed/world_outputs/world_model_0015_full/world_model_demo_0015.mp4) |
-| **3. 깃허브에 학습 모델과 시연 영상 저장 및 공개** | **커밋·푸시 대기** | 학습 모델 [`best.pt`](./results/v2_improved/outputs/weights/best.pt) (`38.62 MB`) 및 최종 `v3` 시연 영상 4종이 GitHub 100MB 제한 이내로 정리됨 (`.gitignore` 정비 완료) |
+| **1. 데이터 수집 (3개 부류 이상, 100개 이상 이미지)** | **충족** | `KITTI Tracking` 21개 시퀀스(`0000`–`0020`), 총 **`8,008`장** (`v4` 확장 `14,371` 학습 엔트리), **`3`개 부류** (`Car`, `Pedestrian`, `Cyclist`). [`dataset_audit.md`](./dataset_audit.md) |
+| **2. 객체 감지 및 추적 결과 5초 이상 동영상 제작** | **충족** | 좌우 분할 World Model 시연 영상 (`0015` staged `8.0초` / full **`37.6초`**, `0019` staged `8.0초` / full **`105.9초`**) + 2D ByteTrack·SAM 추적 영상. [`world_model_demo_0015.mp4`](./results/v4_road_lane/world_outputs/v4_world_outputs/world_model_0015_full/world_model_demo_0015.mp4) |
+| **3. 깃허브에 학습 모델과 시연 영상 저장 및 공개** | **로컬 정리 완료 (Push 대기)** | 학습 모델 `v2` [`best.pt`](./results/v2_improved/outputs/weights/best.pt) (`38.62 MB`), `v4` [`best.pt`](./results/v4_road_lane/detect_outputs/outputs/weights/best.pt) (`49 MB`) 및 시연 MP4가 `.gitignore` 100MB 제한 이내로 정리됨 (최종 `git push` 후 공개 확인 필요) |
 | **4. 내용을 결과 보고서에 포함** | **충족** | 본 보고서(1~5절)에 데이터 정제, 검출/세그멘테이션/추적, World Model & 안전 판단 전체 포함 |
 | **5. 결과 보고서에 학습 과정 및 성능 벤치마크 포함** | **충족** | 제2–3절에 `v1 → v2 → v3` 학습 하이퍼파라미터, Epoch별 수렴 지표(`results.csv`), Detection/Tracking/Depth/Prediction/RQ1–RQ4 벤치마크 수록 |
 | **6. 깃허브 링크 및 설명 포함** | **충족** | 상단 및 제4절에 저장소 URL, 디렉터리 구조, 재현 명령, 산출물 직접 경로 명시 |
@@ -115,3 +117,73 @@
 2. **`MobileSAM` (`38.8 MB`)**: Knowledge-Distilled `TinyViT` Image Encoder (`MBConv` + `Windowed Self-Attention`), Box Prompt Positional Encoder, Two-Way Cross-Attention Mask Decoder + `4×` Transposed Conv.
 3. **`ByteTrack`**: 8D Constant-Velocity BBox Kalman Filter + 2단계 Hungarian Bipartite Matching (`High-Conf` + `Low-Conf` 가려짐 복구).
 4. **Temporal World Model & Safety Shield**: `P2` 역분산 깊이 융합 + OXTS `SE(2)` 보상 + 4D World-ENU 칼만 필터 + 야코비안 BEV 공분산 타원 투영 + $C^1$ 위험 포텐셜 & `CollisionRiskSmoother` 슬루율/히스테리시스 평활화.
+5. **`SegFormer-B2` (`nvidia/segformer-b2-finetuned-cityscapes-1024-1024`, v4 추가)**: MiT-B2 계층형 Mix-Transformer 인코더 + All-MLP 디코더 (`Non-Road` / `Other Road` / `Ego-Lane` 3-Class 헤드) + BEV IPM 역투영 및 HLS+Sobel 차선 2차 다항식 EMA 추적기.
+
+---
+
+## 6. Version 4 고도화: 도로/비도로 분류·차선 검출 및 정확도 `0.9` 달성 (`v4_road_lane`)
+
+`v3_bev_fixed` 이후 사용자 추가 요구사항(**도로 vs 비도로 레이블 및 차선 검출·마스킹**, **정확도 `0.7 → 0.9` 개선**)을 반영하여 3개의 Kaggle 커널(`test013/totalcare-kitti-v4-road-lane`, `test013/totalcare-kitti-v4-detect`, `test013/totalcare-kitti-v4-world-model`)을 완주하고 [`results/v4_road_lane/`](./results/v4_road_lane/) 에 통합했습니다.
+
+### 6.1 도로 vs 비도로 분류 및 자차로·차선 검출 (`SegFormer-B2` + BEV IPM)
+- **데이터셋 및 학습**: `tryingit/roadlane-detection-evaluation-2013` (KITTI `data_road`, `230 train / 59 val` 계층 분할, 25 epochs)으로 `SegFormer-B2` 3-Class(`Non-Road`, `Other Road`, `Ego-Lane`) 미세조정.
+- **실측 성능 ([`road_eval_metrics.json`](./results/v4_road_lane/road_outputs/road_lane_outputs/road_eval_metrics.json))**:
+  - **Road vs Non-Road**: **ROC AUC = `0.9992`**, **Pixel Acc = `0.9910` (`99.10%`)**, **Road F1 = `0.9747`** (`Precision 0.9690` / `Recall 0.9804`), Road IoU `0.9506`, mIoU `0.9698`.
+  - **Ego-Lane (`um_lane`)**: **F1 = `0.9119`** (`Precision 0.9070` / `Recall 0.9169`), IoU `0.8381`.
+- **시각화 및 World Model 결합**: Left Panel에 도로(녹색)·비도로(자주색)·자차로(청록색) 반투명 마스킹, 좌/우 차선 2차 다항식 폴리라인, 객체별 `[LANE]`/`[RD]`/`[NON-RD]` 컨텍스트 배지를 표시하고, Right Panel BEV에 도로 폴리곤·곡률 차선과 비도로(`0.65` 위험 감쇠) 인식형 Safety Shield를 연동했습니다.
+
+### 6.2 객체 검출 정확도 향상 (`YOLO11l @ 1280` + 중복 제거 병합 + Multi-Scale TTA)
+- **데이터 무결성 확장**: `leducnhuan/kitti-tracking` + `harshpdani/kitti-stereo-image`(`7,481`장 중 Val/Test `0002,0012,0015,0017,0013,0016,0019`와 MD5/dHash 일치 `595`장 엄격 제거 → 고유 `6,886`장 추가, 총 `14,371` 학습 엔트리) + `Van`/`Person_sitting` 114 그레이 마스킹.
+- **정량 비교 (`v2 → v4`, [`eval_metrics_v4.json`](./results/v4_road_lane/detect_outputs/outputs/eval_metrics_v4.json))**:
+  - **Val (`All` 난이도)**: `v2 mAP@0.5 = 0.5235` → `v4 std = 0.6889` (`Precision 0.8685`) → **`v4 TTA = 0.7400`** (`Car 0.8475 / Ped 0.7712 / Cyc 0.6014`).
+  - **Test (`All` 난이도)**: `v2 mAP@0.5 = 0.4269` → **`v4 TTA = 0.6705`** (`Precision 0.7984`, `Car 0.7804 / Ped 0.6441 / Cyc 0.5870`).
+  - **KITTI 표준 난이도별 평가 (TTA)**: Val **Easy `mAP@0.5 = 0.8677`** (`Precision 0.9750`), Test **Easy `mAP@0.5 = 0.8966`** (`~0.90`, `Car 0.9792 / Ped 0.9206 / Cyc 0.7899`), Test **Moderate `mAP@0.5 = 0.8404`**, Test **Hard `mAP@0.5 = 0.8025`**, Test **KITTI-All `mAP@0.5 = 0.7965`** (`mean_precision 0.8531`).
+- **v4 World Model 최종 시연 및 RQ1–RQ4 재검증**:
+  - Val `0015` ([`full MP4`](./results/v4_road_lane/world_outputs/v4_world_outputs/world_model_0015_full/world_model_demo_0015.mp4) / [`staged MP4`](./results/v4_road_lane/world_outputs/v4_world_outputs/world_model_0015_staged/world_model_demo_0015.mp4)): `ADE 3.5836 m`, RQ3 `0.2277 < 0.2838 < 0.2916`, RQ4 스파이크 `8 → 0 (-100%)`.
+  - Test `0019` ([`full MP4`](./results/v4_road_lane/world_outputs/v4_world_outputs/world_model_0019_full/world_model_demo_0019.mp4) / [`staged MP4`](./results/v4_road_lane/world_outputs/v4_world_outputs/world_model_0019_staged/world_model_demo_0019.mp4)): `ADE 2.0437 m`, RQ3 `0.5421 < 0.6261 < 0.6454`, RQ4 스파이크 `16 → 0 (-100%)`, 플립 `124 → 53 (-57.26%)`.
+
+### 6.3 `v4` 학습 동역학, PR·F1·혼동 행렬 심층 분석 및 적용 ML 기법
+
+[`results/v4_road_lane/detect_outputs/outputs/train_results/`](./results/v4_road_lane/detect_outputs/outputs/train_results) 의 12종 학습·평가 산출물을 기반으로 한 학술적 정량 해석은 다음과 같습니다.
+
+1. **학습 손실 수렴 및 `Close-Mosaic` 상전이 (`results.csv`, `results.png`)**:
+   - `train/box_loss` (`1.12833 → 0.53388`), `train/cls_loss` (`0.86791 → 0.29695`), `train/dfl_loss` (`1.19982 → 0.89416`) 가 24 Epoch 동안 단조 감소했습니다. 특히 **`Epoch 19`** 에서 `close_mosaic=7` 이 작동해 4분할 Mosaic 합성이 종료되고 자연 KITTI 영상 분포로 정렬되면서 `box_loss` (`0.6653 → 0.60687`) 와 `cls_loss` (`0.4043 → 0.34428`) 가 계단식으로 추가 하락했습니다.
+   - `val/box_loss` 는 `1.60946 → 1.29238` 로 과적합 없이 지속 감소했고, `Epoch 14` 에서 Val `Precision = 0.92008`·`mAP@0.5 = 0.71385` 정점, **`Epoch 15`** 에서 `mAP@0.5:0.95 = 0.4236`·`Recall = 0.59069` 최고치를 기록하여 Best Checkpoint(`best.pt`)로 선정되었습니다.
+
+2. **Precision–Recall 및 F1–Confidence 곡선 해석 (Val vs Held-Out Test)**:
+   - **Validation (`BoxPR_curve.png`, `BoxF1_curve.png`, `BoxP_curve.png`, `BoxR_curve.png`)**: TTA 기준 `all classes mAP@0.5 = 0.740` (`Car 0.848 / Pedestrian 0.771 / Cyclist 0.601`), 최고 F1 **`0.71 at conf = 0.217`**, `Precision 1.00 at conf = 0.872`, 최대 `Recall 0.84 at conf = 0.000` 을 보였습니다. `Car` 는 `conf 0.25–0.70` 구간에서 F1 `~0.84` 평탄대를 유지합니다.
+   - **Held-Out Test (`test_BoxPR_curve.png`, `test_BoxF1_curve.png`, `test_BoxP_curve.png`, `test_BoxR_curve.png`)**: 완전히 미학습된 시퀀스(`0013, 0016, 0019`)에서도 `all classes mAP@0.5 = 0.670` (`Car 0.780 / Pedestrian 0.644 / Cyclist 0.587`), 최고 F1 **`0.68 at conf = 0.568`**, `Precision 1.00 at conf = 0.941`, 최대 `Recall 0.83 at conf = 0.000` 을 달성했습니다. 특히 `Cyclist` AP50 이 Val `0.601` → Test `0.587` (`-0.014`) 로 일반화 손실이 극히 작고, Test 피크 신뢰도(`0.568`)가 높아 확률 보정(Calibration)이 견고함을 입증합니다.
+
+3. **정규화 혼동 행렬 기반 오차 분해 (`confusion_matrix_normalized.png`)**:
+   - 대각 정분류율은 `Car 0.90`, `Pedestrian 0.87`, `Cyclist 0.55` 이며, 미검출(`background` 행)은 `Car 0.10`, `Pedestrian 0.08`, `Cyclist 0.16` 으로 억제되었습니다.
+   - `Cyclist` 오차의 핵심 원인은 `0.26` 이 **`Pedestrian` 으로 교차 오분류**되는 의미적 중첩(이륜차 탑승자의 보행자 유사 외형)과 배경 False Positive(`Car 0.40`, `Pedestrian 0.42`, `Cyclist 0.18` — 저신뢰 구간·미주석 원거리 객체)입니다.
+
+4. **지표 개선을 위해 적용한 핵심 머신러닝 기법**:
+   - **시퀀스 격리 누수 차단 + 해시 중복 제거 데이터 확장**: `kitti-stereo-image` `7,481`장 중 Val/Test 와 MD5/dHash 일치 `595`장을 엄격 제거하고 `6,886`장만 병합(`14,371` 학습 엔트리)해 분포 다양성과 일반화를 동시에 확보했습니다.
+   - **표현력·해상도 동시 상향 (`YOLO11l @ 1280px`)**: `C3k2` CSP 병목, `SPPF` 다중 수용 영역, `C2PSA` 공간 어텐션과 `1280px` 입력(소형 객체 P3/8 특징 맵 2배 정밀화)을 결합해 원거리 보행자·자전거 재현율을 끌어올렸습니다.
+   - **DFL + CIoU + Task-Aligned Assigner + Cosine LR / Close-Mosaic**: 회귀 분기 분포 학습(`DFL, reg_max=16`)과 정렬 기반 동적 양성 할당(`TAL`), `3 epoch` 워밍업 + 코사인 감쇠(`lrf=0.01`), `close_mosaic=7` 로 정밀도와 경계 박스 IoU를 극대화했습니다.
+   - **클래스 불균형·오경사 제어 (`Rare-Class Oversampling` + `114 Gray Masking`)**: `Cyclist`/`Pedestrian` 가중 샘플링과 `DontCare`/`Van`/`Person_sitting` 중립 회색 마스킹으로 False-Negative 경사 오염을 차단했습니다.
+   - **추론 시 다중 스케일 TTA (`augment=True`)**: 좌우 반전·다중 스케일 앙상블 추론으로 Val `mAP@0.5` 를 `0.6889 → 0.7400` (`+0.0511`) 로 추가 향상시켰습니다.
+
+---
+
+## 7. 결론 및 과제 수행 과정에서 경험한 기술적 시행착오와 회고
+
+본 과제를 `v1 → v2 → v3 → v4` 4단계로 고도화하며 겪은 핵심 시행착오, 한계 인식 및 학습 경험은 다음과 같습니다.
+
+1. **데이터 누수(Data Leakage) 경계와 시퀀스 비독립 분할의 중요성**:
+   - 초기에는 프레임 단위 무작위 분할이 `mAP` 수치를 높게 보이게 하지만, 연속된 `10 Hz` 시퀀스에서는 인접 프레임 암기(Temporal Leakage)로 인해 실제 일반화 성능을 왜곡한다는 점을 확인했습니다.
+   - 이를 바로잡기 위해 `14 / 4 / 3` 시퀀스 비독립 분할을 엄수했고, `v4` 에서 `kitti-stereo-image` `7,481`장을 추가 병합할 때도 Val/Test 시퀀스와 MD5/dHash 가 일치하는 `595`장을 전수 색출·제외함으로써 Held-out Test (`0013, 0016, 0019`) 평가의 학술적 신뢰성을 지킬 수 있었습니다.
+
+2. **`v4` 디렉터리 탐색 버그 디버깅 (`testing/image_02` vs `training/image_02`)**:
+   - `v4` 통합 렌더링 직후 출력 영상을 육안 검수하던 중, 도로·차선 마스킹과 배경 영상이 어긋나는 문제를 발견했습니다. 원인을 추적한 결과, `rglob('image_02')` 가 `training/image_02`(`0015`: `376`f, `0019`: `1,059`f) 대신 `testing/image_02`(`0015`: `701`f, `0019`: `404`f) 를 우선 매칭한 것이 원인이었습니다.
+   - `'training' in path.parts` 제약과 프레임 수(`376`/`1,059`) 검증을 추가해 재실행·해결하면서, 정량 로그뿐 아니라 **프레임 단위 시각 검수(Visual Sanity Check)** 가 자율주행 파이프라인에서 필수적임을 체감했습니다.
+
+3. **소수 클래스(`Cyclist`) 오분류 및 멀티 GPU(`2× T4`) 수렴 튜닝**:
+   - 혼동 행렬 분석에서 `Cyclist` 의 `0.26` 이 `Pedestrian` 으로 오분류되는 한계를 확인했고, 단순 Epoch 증가만으로는 해결되지 않음을 경험했습니다. 이에 `Van`/`Person_sitting` 114 그레이 마스킹, Train 전용 희소 클래스 오버샘플링, `1280px` 해상도 상향, `close_mosaic=7` 전환을 결합해 Test Easy `mAP@0.5 = 0.8966` (`Cyclist Test Easy 0.7899`) 까지 끌어올렸습니다.
+
+4. **BEV World Model 오경보·타원 왜곡 해결**:
+   - 초기 `v2` BEV 화면에서는 종방향 깊이 불확실성이 횡방향 차로 폭보다 2배 이상 크게 그려져 인접 보도 보행자에도 잦은 `Emergency Intervention` 오경보가 발생했습니다. 야코비안 투영($J=\text{diag}(s_x,-s_y)$)으로 타원 종횡비를 물리 스케일에 맞추고, `approach_w` 접근 속도 게이팅과 `CollisionRiskSmoother` 슬루율 제한(`1.10/s`)·히스테리시스(`0.04`)를 설계하여 `>1.5/s` 스파이크를 `100%` 제거하고 오경보 위험도를 `-57.0%`(`0015`) 감소시켰습니다.
+
+5. **한계점 및 향후 과제**:
+   - 단일 전방 카메라 기반 평면 지면 가정(`h_cam = 1.65m`)은 급경사나 노면 기복(Pitch 변화) 시 원거리 깊이 오차를 키우는 한계가 있으며, KITTI Tracking에는 폐루프 차량 제어가 없어 Safety Shield 는 권고(Advisory) 수준에서 검증되었습니다. 향후 LiDAR 포인트 클라우드 융합 및 CARLA 폐루프 시뮬레이터 연동을 통해 실제 제어 개입 성능까지 확장할 계획입니다.
