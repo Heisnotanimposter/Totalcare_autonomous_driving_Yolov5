@@ -38,11 +38,14 @@
 \newpage
 \section{프로젝트 최종 결과 보고서: Camera-Centric Temporal Ego-centric World Model}
 
-\textbf{GitHub 저장소:} https:\allowbreak{}/\allowbreak{}/\allowbreak{}github.\allowbreak{}com/\allowbreak{}Heisnotanimposter/\allowbreak{}Totalcare\_\allowbreak{}autonomous\_\allowbreak{}driving\_\allowbreak{}Yolov5
+\textbf{GitHub 저장소:} https:\allowbreak{}/\allowbreak{}/\allowbreak{}github.\allowbreak{}com/\allowbreak{}Heisnotanimposter/\allowbreak{}Totalcare\_\allowbreak{}autonomous\_\allowbreak{}driving\_\allowbreak{}Yolov5 \textit{(초기 개발 저장소명을 유지하였으나, 실제 구현은 Ultralytics \textbf{YOLOv8 / YOLO11} 통합 파이프라인으로 전면 구축됨)}
 
-\textbf{데이터셋:} KITTI Object Tracking (\texttt{training/\allowbreak{}image\_\allowbreak{}02}, \texttt{training/\allowbreak{}label\_\allowbreak{}02}, \texttt{calib}, \texttt{oxts})
+\textbf{데이터셋:} KITTI Object Tracking (\texttt{training/\allowbreak{}image\_\allowbreak{}02}, \texttt{training/\allowbreak{}label\_\allowbreak{}02}, \texttt{calib}, \texttt{oxts}) + \texttt{data\_\allowbreak{}road} + 중복 제거 \texttt{kitti-\allowbreak{}stereo-\allowbreak{}image}
 
 \textbf{실행 환경:} Kaggle CLI GPU (\texttt{2$\times$ Nvidia Tesla T4}, \texttt{Ultralytics 8.\allowbreak{}4.\allowbreak{}212}, \texttt{PyTorch 2.\allowbreak{}11.\allowbreak{}0+cu130}) + Google Colab CLI 연동
+
+
+> \textbf{[과제 프레임워크·Counting 안내]} 본 프로젝트는 강의 슬라이드 기준 \textbf{\texttt{YOLOv8s} (\texttt{v1} Baseline)} 를 먼저 구축·검증한 뒤, 동일 Ultralytics \texttt{train()}·\texttt{track()} 파이프라인 내에서 아키텍처 고도화(\texttt{C3k2}, \texttt{C2PSA})를 위해 \textbf{\texttt{YOLO11m} (\texttt{v2})} 및 \textbf{\texttt{YOLO11l} (\texttt{v4})} 로 확장했습니다. 또한 프레임별 객체 수 집계(\texttt{Tracks:\allowbreak{} Observed=.\allowbreak{}.\allowbreak{}.\allowbreak{}} HUD, \texttt{trajectories.\allowbreak{}csv}, \texttt{road\_\allowbreak{}context\_\allowbreak{}stats.\allowbreak{}json})가 객체 카운팅(Object Counting) 기능을 겸합니다.
 
 
 \par\noindent\rule{\textwidth}{0.4pt}\par\medskip
@@ -53,7 +56,7 @@
 \begin{footnotesize}
 \setlength{\tabcolsep}{4pt}
 \setlength{\LTleft}{0pt}\setlength{\LTright}{0pt}
-\begin{longtable}{>{\raggedright\arraybackslash}p{0.361\textwidth} >{\raggedright\arraybackslash}p{0.096\textwidth} >{\raggedright\arraybackslash}p{0.409\textwidth}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.356\textwidth} >{\raggedright\arraybackslash}p{0.107\textwidth} >{\raggedright\arraybackslash}p{0.403\textwidth}}
 \toprule
 \textbf{평가 항목} & \textbf{충족 여부} & \textbf{근거 및 저장소 내 위치} \\
 \midrule
@@ -64,9 +67,9 @@
 \endhead
 \bottomrule
 \endfoot
-\textbf{1. 데이터 수집 (3개 부류 이상, 100개 이상 이미지)} & \textbf{충족} & \texttt{KITTI Tracking} 21개 시퀀스(\texttt{0000}--\texttt{0020}), 총 \textbf{\texttt{8,\allowbreak{}008}장} RGB 이미지, \textbf{\texttt{3}개 부류} (\texttt{Car}, \texttt{Pedestrian}, \texttt{Cyclist}). \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/dataset\_audit.md}{\texttt{dataset\_\allowbreak{}audit.\allowbreak{}md}} \\
-\textbf{2. 객체 감지 및 추적 결과 5초 이상 동영상 제작} & \textbf{충족} & 좌우 분할 World Model 시연 영상 (\texttt{0015} staged \texttt{8.\allowbreak{}0초} / full \textbf{\texttt{37.\allowbreak{}6초}}, \texttt{0019} staged \texttt{8.\allowbreak{}0초} / full \textbf{\texttt{105.\allowbreak{}9초}}) + 2D ByteTrack·SAM 추적 영상. \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v3\_bev\_fixed/world\_outputs/world\_model\_0015\_full/world\_model\_demo\_0015.mp4}{\texttt{world\_\allowbreak{}model\_\allowbreak{}demo\_\allowbreak{}0015.\allowbreak{}mp4}} \\
-\textbf{3. 깃허브에 학습 모델과 시연 영상 저장 및 공개} & \textbf{커밋·푸시 대기} & 학습 모델 \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v2\_improved/outputs/weights/best.pt}{\texttt{best.\allowbreak{}pt}} (\texttt{38.\allowbreak{}62 MB}) 및 최종 \texttt{v3} 시연 영상 4종이 GitHub 100MB 제한 이내로 정리됨 (\texttt{.\allowbreak{}gitignore} 정비 완료) \\
+\textbf{1. 데이터 수집 (3개 부류 이상, 100개 이상 이미지)} & \textbf{충족} & \texttt{KITTI Tracking} 21개 시퀀스(\texttt{0000}--\texttt{0020}), 총 \textbf{\texttt{8,\allowbreak{}008}장} (\texttt{v4} 확장 \texttt{14,\allowbreak{}371} 학습 엔트리), \textbf{\texttt{3}개 부류} (\texttt{Car}, \texttt{Pedestrian}, \texttt{Cyclist}). \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/dataset\_audit.md}{\texttt{dataset\_\allowbreak{}audit.\allowbreak{}md}} \\
+\textbf{2. 객체 감지 및 추적 결과 5초 이상 동영상 제작} & \textbf{충족} & 좌우 분할 World Model 시연 영상 (\texttt{0015} staged \texttt{8.\allowbreak{}0초} / full \textbf{\texttt{37.\allowbreak{}6초}}, \texttt{0019} staged \texttt{8.\allowbreak{}0초} / full \textbf{\texttt{105.\allowbreak{}9초}}) + 2D ByteTrack·SAM 추적 영상. \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v4\_road\_lane/world\_outputs/v4\_world\_outputs/world\_model\_0015\_full/world\_model\_demo\_0015.mp4}{\texttt{world\_\allowbreak{}model\_\allowbreak{}demo\_\allowbreak{}0015.\allowbreak{}mp4}} \\
+\textbf{3. 깃허브에 학습 모델과 시연 영상 저장 및 공개} & \textbf{로컬 정리 완료 (Push 대기)} & 학습 모델 \texttt{v2} \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v2\_improved/outputs/weights/best.pt}{\texttt{best.\allowbreak{}pt}} (\texttt{38.\allowbreak{}62 MB}), \texttt{v4} \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v4\_road\_lane/detect\_outputs/outputs/weights/best.pt}{\texttt{best.\allowbreak{}pt}} (\texttt{49 MB}) 및 시연 MP4가 \texttt{.\allowbreak{}gitignore} 100MB 제한 이내로 정리됨 (최종 \texttt{git push} 후 공개 확인 필요) \\
 \textbf{4. 내용을 결과 보고서에 포함} & \textbf{충족} & 본 보고서(1\textasciitilde{}5절)에 데이터 정제, 검출/세그멘테이션/추적, World Model \& 안전 판단 전체 포함 \\
 \textbf{5. 결과 보고서에 학습 과정 및 성능 벤치마크 포함} & \textbf{충족} & 제2--3절에 \texttt{v1 $\rightarrow$ v2 $\rightarrow$ v3} 학습 하이퍼파라미터, Epoch별 수렴 지표(\texttt{results.\allowbreak{}csv}), Detection/Tracking/Depth/Prediction/RQ1--RQ4 벤치마크 수록 \\
 \textbf{6. 깃허브 링크 및 설명 포함} & \textbf{충족} & 상단 및 제4절에 저장소 URL, 디렉터리 구조, 재현 명령, 산출물 직접 경로 명시 \\
@@ -294,6 +297,90 @@
 \item Test \texttt{0019} (\href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v4\_road\_lane/world\_outputs/v4\_world\_outputs/world\_model\_0019\_full/world\_model\_demo\_0019.mp4}{\texttt{full MP4}} / \href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/blob/main/results/v4\_road\_lane/world\_outputs/v4\_world\_outputs/world\_model\_0019\_staged/world\_model\_demo\_0019.mp4}{\texttt{staged MP4}}): \texttt{ADE 2.\allowbreak{}0437 m}, RQ3 \texttt{0.\allowbreak{}5421 < 0.\allowbreak{}6261 < 0.\allowbreak{}6454}, RQ4 스파이크 \texttt{16 $\rightarrow$ 0 (-\allowbreak{}100\%)}, 플립 \texttt{124 $\rightarrow$ 53 (-\allowbreak{}57.\allowbreak{}26\%)}.
 \end{itemize}
 \end{itemize}
+
+\subsubsection{6.3 \texttt{v4} 학습 동역학, PR·F1·혼동 행렬 심층 분석 및 적용 ML 기법}
+
+\href{https://github.com/Heisnotanimposter/Totalcare\_autonomous\_driving\_Yolov5/tree/main/results/v4\_road\_lane/detect\_outputs/outputs/train\_results}{\texttt{results/\allowbreak{}v4\_\allowbreak{}road\_\allowbreak{}lane/\allowbreak{}detect\_\allowbreak{}outputs/\allowbreak{}outputs/\allowbreak{}train\_\allowbreak{}results/\allowbreak{}}} 의 12종 학습·평가 산출물을 기반으로 한 학술적 정량 해석은 다음과 같습니다.
+
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{학습 손실 수렴 및 \texttt{Close-\allowbreak{}Mosaic} 상전이 (\texttt{results.\allowbreak{}csv}, \texttt{results.\allowbreak{}png})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \texttt{train/\allowbreak{}box\_\allowbreak{}loss} (\texttt{1.\allowbreak{}12833 $\rightarrow$ 0.\allowbreak{}53388}), \texttt{train/\allowbreak{}cls\_\allowbreak{}loss} (\texttt{0.\allowbreak{}86791 $\rightarrow$ 0.\allowbreak{}29695}), \texttt{train/\allowbreak{}dfl\_\allowbreak{}loss} (\texttt{1.\allowbreak{}19982 $\rightarrow$ 0.\allowbreak{}89416}) 가 24 Epoch 동안 단조 감소했습니다. 특히 \textbf{\texttt{Epoch 19}} 에서 \texttt{close\_\allowbreak{}mosaic=7} 이 작동해 4분할 Mosaic 합성이 종료되고 자연 KITTI 영상 분포로 정렬되면서 \texttt{box\_\allowbreak{}loss} (\texttt{0.\allowbreak{}6653 $\rightarrow$ 0.\allowbreak{}60687}) 와 \texttt{cls\_\allowbreak{}loss} (\texttt{0.\allowbreak{}4043 $\rightarrow$ 0.\allowbreak{}34428}) 가 계단식으로 추가 하락했습니다.
+\item \texttt{val/\allowbreak{}box\_\allowbreak{}loss} 는 \texttt{1.\allowbreak{}60946 $\rightarrow$ 1.\allowbreak{}29238} 로 과적합 없이 지속 감소했고, \texttt{Epoch 14} 에서 Val \texttt{Precision = 0.\allowbreak{}92008}·\texttt{mAP@0.\allowbreak{}5 = 0.\allowbreak{}71385} 정점, \textbf{\texttt{Epoch 15}} 에서 \texttt{mAP@0.\allowbreak{}5:\allowbreak{}0.\allowbreak{}95 = 0.\allowbreak{}4236}·\texttt{Recall = 0.\allowbreak{}59069} 최고치를 기록하여 Best Checkpoint(\texttt{best.\allowbreak{}pt})로 선정되었습니다.
+\end{itemize}
+\end{enumerate}
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{Precision--Recall 및 F1--Confidence 곡선 해석 (Val vs Held-Out Test)}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{Validation (\texttt{BoxPR\_\allowbreak{}curve.\allowbreak{}png}, \texttt{BoxF1\_\allowbreak{}curve.\allowbreak{}png}, \texttt{BoxP\_\allowbreak{}curve.\allowbreak{}png}, \texttt{BoxR\_\allowbreak{}curve.\allowbreak{}png})}: TTA 기준 \texttt{all classes mAP@0.\allowbreak{}5 = 0.\allowbreak{}740} (\texttt{Car 0.\allowbreak{}848 /\allowbreak{} Pedestrian 0.\allowbreak{}771 /\allowbreak{} Cyclist 0.\allowbreak{}601}), 최고 F1 \textbf{\texttt{0.\allowbreak{}71 at conf = 0.\allowbreak{}217}}, \texttt{Precision 1.\allowbreak{}00 at conf = 0.\allowbreak{}872}, 최대 \texttt{Recall 0.\allowbreak{}84 at conf = 0.\allowbreak{}000} 을 보였습니다. \texttt{Car} 는 \texttt{conf 0.\allowbreak{}25--0.\allowbreak{}70} 구간에서 F1 \texttt{\textasciitilde{}0.\allowbreak{}84} 평탄대를 유지합니다.
+\item \textbf{Held-Out Test (\texttt{test\_\allowbreak{}BoxPR\_\allowbreak{}curve.\allowbreak{}png}, \texttt{test\_\allowbreak{}BoxF1\_\allowbreak{}curve.\allowbreak{}png}, \texttt{test\_\allowbreak{}BoxP\_\allowbreak{}curve.\allowbreak{}png}, \texttt{test\_\allowbreak{}BoxR\_\allowbreak{}curve.\allowbreak{}png})}: 완전히 미학습된 시퀀스(\texttt{0013,\allowbreak{} 0016,\allowbreak{} 0019})에서도 \texttt{all classes mAP@0.\allowbreak{}5 = 0.\allowbreak{}670} (\texttt{Car 0.\allowbreak{}780 /\allowbreak{} Pedestrian 0.\allowbreak{}644 /\allowbreak{} Cyclist 0.\allowbreak{}587}), 최고 F1 \textbf{\texttt{0.\allowbreak{}68 at conf = 0.\allowbreak{}568}}, \texttt{Precision 1.\allowbreak{}00 at conf = 0.\allowbreak{}941}, 최대 \texttt{Recall 0.\allowbreak{}83 at conf = 0.\allowbreak{}000} 을 달성했습니다. 특히 \texttt{Cyclist} AP50 이 Val \texttt{0.\allowbreak{}601} $\rightarrow$ Test \texttt{0.\allowbreak{}587} (\texttt{-\allowbreak{}0.\allowbreak{}014}) 로 일반화 손실이 극히 작고, Test 피크 신뢰도(\texttt{0.\allowbreak{}568})가 높아 확률 보정(Calibration)이 견고함을 입증합니다.
+\end{itemize}
+\end{enumerate}
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{정규화 혼동 행렬 기반 오차 분해 (\texttt{confusion\_\allowbreak{}matrix\_\allowbreak{}normalized.\allowbreak{}png})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item 대각 정분류율은 \texttt{Car 0.\allowbreak{}90}, \texttt{Pedestrian 0.\allowbreak{}87}, \texttt{Cyclist 0.\allowbreak{}55} 이며, 미검출(\texttt{background} 행)은 \texttt{Car 0.\allowbreak{}10}, \texttt{Pedestrian 0.\allowbreak{}08}, \texttt{Cyclist 0.\allowbreak{}16} 으로 억제되었습니다.
+\item \texttt{Cyclist} 오차의 핵심 원인은 \texttt{0.\allowbreak{}26} 이 \textbf{\texttt{Pedestrian} 으로 교차 오분류}되는 의미적 중첩(이륜차 탑승자의 보행자 유사 외형)과 배경 False Positive(\texttt{Car 0.\allowbreak{}40}, \texttt{Pedestrian 0.\allowbreak{}42}, \texttt{Cyclist 0.\allowbreak{}18} --- 저신뢰 구간·미주석 원거리 객체)입니다.
+\end{itemize}
+\end{enumerate}
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{지표 개선을 위해 적용한 핵심 머신러닝 기법}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \textbf{시퀀스 격리 누수 차단 + 해시 중복 제거 데이터 확장}: \texttt{kitti-\allowbreak{}stereo-\allowbreak{}image} \texttt{7,\allowbreak{}481}장 중 Val/Test 와 MD5/dHash 일치 \texttt{595}장을 엄격 제거하고 \texttt{6,\allowbreak{}886}장만 병합(\texttt{14,\allowbreak{}371} 학습 엔트리)해 분포 다양성과 일반화를 동시에 확보했습니다.
+\item \textbf{표현력·해상도 동시 상향 (\texttt{YOLO11l @ 1280px})}: \texttt{C3k2} CSP 병목, \texttt{SPPF} 다중 수용 영역, \texttt{C2PSA} 공간 어텐션과 \texttt{1280px} 입력(소형 객체 P3/8 특징 맵 2배 정밀화)을 결합해 원거리 보행자·자전거 재현율을 끌어올렸습니다.
+\item \textbf{DFL + CIoU + Task-Aligned Assigner + Cosine LR / Close-Mosaic}: 회귀 분기 분포 학습(\texttt{DFL,\allowbreak{} reg\_\allowbreak{}max=16})과 정렬 기반 동적 양성 할당(\texttt{TAL}), \texttt{3 epoch} 워밍업 + 코사인 감쇠(\texttt{lrf=0.\allowbreak{}01}), \texttt{close\_\allowbreak{}mosaic=7} 로 정밀도와 경계 박스 IoU를 극대화했습니다.
+\item \textbf{클래스 불균형·오경사 제어 (\texttt{Rare-\allowbreak{}Class Oversampling} + \texttt{114 Gray Masking})}: \texttt{Cyclist}/\texttt{Pedestrian} 가중 샘플링과 \texttt{DontCare}/\texttt{Van}/\texttt{Person\_\allowbreak{}sitting} 중립 회색 마스킹으로 False-Negative 경사 오염을 차단했습니다.
+\item \textbf{추론 시 다중 스케일 TTA (\texttt{augment=True})}: 좌우 반전·다중 스케일 앙상블 추론으로 Val \texttt{mAP@0.\allowbreak{}5} 를 \texttt{0.\allowbreak{}6889 $\rightarrow$ 0.\allowbreak{}7400} (\texttt{+0.\allowbreak{}0511}) 로 추가 향상시켰습니다.
+\end{itemize}
+\end{enumerate}
+
+\par\noindent\rule{\textwidth}{0.4pt}\par\medskip
+
+\subsection{7. 결론 및 과제 수행 과정에서 경험한 기술적 시행착오와 회고}
+
+본 과제를 \texttt{v1 $\rightarrow$ v2 $\rightarrow$ v3 $\rightarrow$ v4} 4단계로 고도화하며 겪은 핵심 시행착오, 한계 인식 및 학습 경험은 다음과 같습니다.
+
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{데이터 누수(Data Leakage) 경계와 시퀀스 비독립 분할의 중요성}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item 초기에는 프레임 단위 무작위 분할이 \texttt{mAP} 수치를 높게 보이게 하지만, 연속된 \texttt{10 Hz} 시퀀스에서는 인접 프레임 암기(Temporal Leakage)로 인해 실제 일반화 성능을 왜곡한다는 점을 확인했습니다.
+\item 이를 바로잡기 위해 \texttt{14 /\allowbreak{} 4 /\allowbreak{} 3} 시퀀스 비독립 분할을 엄수했고, \texttt{v4} 에서 \texttt{kitti-\allowbreak{}stereo-\allowbreak{}image} \texttt{7,\allowbreak{}481}장을 추가 병합할 때도 Val/Test 시퀀스와 MD5/dHash 가 일치하는 \texttt{595}장을 전수 색출·제외함으로써 Held-out Test (\texttt{0013,\allowbreak{} 0016,\allowbreak{} 0019}) 평가의 학술적 신뢰성을 지킬 수 있었습니다.
+\end{itemize}
+\end{enumerate}
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{\texttt{v4} 디렉터리 탐색 버그 디버깅 (\texttt{testing/\allowbreak{}image\_\allowbreak{}02} vs \texttt{training/\allowbreak{}image\_\allowbreak{}02})}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item \texttt{v4} 통합 렌더링 직후 출력 영상을 육안 검수하던 중, 도로·차선 마스킹과 배경 영상이 어긋나는 문제를 발견했습니다. 원인을 추적한 결과, \texttt{rglob('image\_\allowbreak{}02')} 가 \texttt{training/\allowbreak{}image\_\allowbreak{}02}(\texttt{0015}: \texttt{376}f, \texttt{0019}: \texttt{1,\allowbreak{}059}f) 대신 \texttt{testing/\allowbreak{}image\_\allowbreak{}02}(\texttt{0015}: \texttt{701}f, \texttt{0019}: \texttt{404}f) 를 우선 매칭한 것이 원인이었습니다.
+\item \texttt{'training' in path.\allowbreak{}parts} 제약과 프레임 수(\texttt{376}/\texttt{1,\allowbreak{}059}) 검증을 추가해 재실행·해결하면서, 정량 로그뿐 아니라 \textbf{프레임 단위 시각 검수(Visual Sanity Check)} 가 자율주행 파이프라인에서 필수적임을 체감했습니다.
+\end{itemize}
+\end{enumerate}
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{소수 클래스(\texttt{Cyclist}) 오분류 및 멀티 GPU(\texttt{2$\times$ T4}) 수렴 튜닝}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item 혼동 행렬 분석에서 \texttt{Cyclist} 의 \texttt{0.\allowbreak{}26} 이 \texttt{Pedestrian} 으로 오분류되는 한계를 확인했고, 단순 Epoch 증가만으로는 해결되지 않음을 경험했습니다. 이에 \texttt{Van}/\texttt{Person\_\allowbreak{}sitting} 114 그레이 마스킹, Train 전용 희소 클래스 오버샘플링, \texttt{1280px} 해상도 상향, \texttt{close\_\allowbreak{}mosaic=7} 전환을 결합해 Test Easy \texttt{mAP@0.\allowbreak{}5 = 0.\allowbreak{}8966} (\texttt{Cyclist Test Easy 0.\allowbreak{}7899}) 까지 끌어올렸습니다.
+\end{itemize}
+\end{enumerate}
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{BEV World Model 오경보·타원 왜곡 해결}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item 초기 \texttt{v2} BEV 화면에서는 종방향 깊이 불확실성이 횡방향 차로 폭보다 2배 이상 크게 그려져 인접 보도 보행자에도 잦은 \texttt{Emergency Intervention} 오경보가 발생했습니다. 야코비안 투영($J=\text{diag}(s_x,-s_y)$)으로 타원 종횡비를 물리 스케일에 맞추고, \texttt{approach\_\allowbreak{}w} 접근 속도 게이팅과 \texttt{CollisionRiskSmoother} 슬루율 제한(\texttt{1.\allowbreak{}10/\allowbreak{}s})·히스테리시스(\texttt{0.\allowbreak{}04})를 설계하여 \texttt{>1.\allowbreak{}5/\allowbreak{}s} 스파이크를 \texttt{100\%} 제거하고 오경보 위험도를 \texttt{-\allowbreak{}57.\allowbreak{}0\%}(\texttt{0015}) 감소시켰습니다.
+\end{itemize}
+\end{enumerate}
+
+\begin{enumerate}[leftmargin=1.8em,itemsep=2pt]
+\item \textbf{한계점 및 향후 과제}:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt]
+\item 단일 전방 카메라 기반 평면 지면 가정(\texttt{h\_\allowbreak{}cam = 1.\allowbreak{}65m})은 급경사나 노면 기복(Pitch 변화) 시 원거리 깊이 오차를 키우는 한계가 있으며, KITTI Tracking에는 폐루프 차량 제어가 없어 Safety Shield 는 권고(Advisory) 수준에서 검증되었습니다. 향후 LiDAR 포인트 클라우드 융합 및 CARLA 폐루프 시뮬레이터 연동을 통해 실제 제어 개입 성능까지 확장할 계획입니다.
+\end{itemize}
+\end{enumerate}
 \newpage
 \section{머신러닝·딥러닝 모델 Layer별 기술설명서 및 참고자료}
 
@@ -1228,6 +1315,26 @@ Colab 워크플로우(\href{https://github.com/Heisnotanimposter/Totalcare\_auto
 \begin{figure}[htbp]\centering
 \includegraphics[width=0.92\textwidth]{/Users/seungwonlee/Documents/GitHub/Totalcare_autonomous_driving_Yolov5/results/v4_road_lane/detect_outputs/outputs/train_results/results.png}
 \caption{v4 YOLO11l @ 1280 (중복 제거 KITTI-Det 병합) 학습 손실 및 Val mAP 수렴 곡선}
+\end{figure}
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.92\textwidth]{/Users/seungwonlee/Documents/GitHub/Totalcare_autonomous_driving_Yolov5/results/v4_road_lane/detect_outputs/outputs/train_results/BoxPR_curve.png}
+\caption{v4 Val Precision-Recall 곡선 (TTA all classes mAP@0.5 = 0.740)}
+\end{figure}
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.92\textwidth]{/Users/seungwonlee/Documents/GitHub/Totalcare_autonomous_driving_Yolov5/results/v4_road_lane/detect_outputs/outputs/train_results/BoxF1_curve.png}
+\caption{v4 Val F1-Confidence 곡선 (all classes 0.71 at conf 0.217)}
+\end{figure}
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.92\textwidth]{/Users/seungwonlee/Documents/GitHub/Totalcare_autonomous_driving_Yolov5/results/v4_road_lane/detect_outputs/outputs/train_results/confusion_matrix_normalized.png}
+\caption{v4 정규화 혼동 행렬 (Car 0.90 / Pedestrian 0.87 / Cyclist 0.55)}
+\end{figure}
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.92\textwidth]{/Users/seungwonlee/Documents/GitHub/Totalcare_autonomous_driving_Yolov5/results/v4_road_lane/detect_outputs/outputs/train_results/test_BoxPR_curve.png}
+\caption{v4 Held-Out Test Precision-Recall 곡선 (TTA all classes mAP@0.5 = 0.670)}
+\end{figure}
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.92\textwidth]{/Users/seungwonlee/Documents/GitHub/Totalcare_autonomous_driving_Yolov5/results/v4_road_lane/detect_outputs/outputs/train_results/test_BoxF1_curve.png}
+\caption{v4 Held-Out Test F1-Confidence 곡선 (all classes 0.68 at conf 0.568)}
 \end{figure}
 \begin{figure}[htbp]\centering
 \includegraphics[width=0.92\textwidth]{/Users/seungwonlee/Documents/GitHub/Totalcare_autonomous_driving_Yolov5/results/v4_road_lane/road_outputs/road_lane_outputs/road_lane_preview_0015_f0045.png}

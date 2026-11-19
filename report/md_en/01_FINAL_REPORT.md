@@ -1,8 +1,10 @@
 # Final Project Report: Camera-Centric Temporal Ego-centric World Model
 
-**GitHub Repository:** https://github.com/Heisnotanimposter/Totalcare_autonomous_driving_Yolov5  
-**Dataset:** KITTI Object Tracking (`training/image_02`, `training/label_02`, `calib`, `oxts`)  
+**GitHub Repository:** https://github.com/Heisnotanimposter/Totalcare_autonomous_driving_Yolov5 *(retains the initial repository name while the internal codebase is built on the Ultralytics **YOLOv8 / YOLO11** pipeline)*  
+**Dataset:** KITTI Object Tracking (`training/image_02`, `training/label_02`, `calib`, `oxts`) + `data_road` + deduped `kitti-stereo-image`  
 **Execution Environment:** Kaggle CLI GPU (`2× Nvidia Tesla T4`, `Ultralytics 8.4.212`, `PyTorch 2.11.0+cu130`) + Google Colab CLI Integration
+
+> **[Framework & Object Counting Note]** Following the course specification, this project first established a **`YOLOv8s` (`v1` Baseline)** and then scaled within the **same Ultralytics `train()` / `track()` pipeline** to **`YOLO11m` (`v2`)** and **`YOLO11l` (`v4`)** (`C3k2`, `C2PSA`). Per-frame active track counts (`Tracks: Observed=...` HUD, `trajectories.csv`, `road_context_stats.json`) also fulfill real-time object counting.
 
 ---
 
@@ -10,9 +12,9 @@
 
 | Evaluation Criterion | Status | Evidence & Repository Location |
 |---|:---:|---|
-| **1. Data Collection (3+ classes, 100+ images)** | **Met** | `KITTI Tracking` 21 sequences (`0000`–`0020`), **`8,008` RGB images**, **`3` classes** (`Car`, `Pedestrian`, `Cyclist`). [`dataset_audit.md`](./dataset_audit.md) |
-| **2. 5s+ Detection & Tracking Demo Video** | **Met** | Split-screen World Model demos (`0015` staged `8.0s` / full **`37.6s`**, `0019` staged `8.0s` / full **`105.9s`**) + 2D ByteTrack & SAM tracking videos. [`world_model_demo_0015.mp4`](./results/v3_bev_fixed/world_outputs/world_model_0015_full/world_model_demo_0015.mp4) |
-| **3. Trained Model & Demo Videos Published on GitHub** | **Ready for Push** | Trained weights [`best.pt`](./results/v2_improved/outputs/weights/best.pt) (`38.62 MB`), v4 [`best.pt`](./results/v4_road_lane/detect_outputs/outputs/weights/best.pt) (`49 MB`), and demo MP4s kept within GitHub's 100MB limit via `.gitignore`. |
+| **1. Data Collection (3+ classes, 100+ images)** | **Met** | `KITTI Tracking` 21 sequences (`0000`–`0020`), **`8,008` RGB images** (`14,371` train entries in `v4`), **`3` classes** (`Car`, `Pedestrian`, `Cyclist`). [`dataset_audit.md`](./dataset_audit.md) |
+| **2. 5s+ Detection & Tracking Demo Video** | **Met** | Split-screen World Model demos (`0015` staged `8.0s` / full **`37.6s`**, `0019` staged `8.0s` / full **`105.9s`**) + 2D ByteTrack & SAM tracking videos. [`world_model_demo_0015.mp4`](./results/v4_road_lane/world_outputs/v4_world_outputs/world_model_0015_full/world_model_demo_0015.mp4) |
+| **3. Trained Model & Demo Videos Published on GitHub** | **Packaged (Push Pending)** | Trained weights `v2` [`best.pt`](./results/v2_improved/outputs/weights/best.pt) (`38.62 MB`), `v4` [`best.pt`](./results/v4_road_lane/detect_outputs/outputs/weights/best.pt) (`49 MB`), and demo MP4s kept within GitHub's 100MB limit via `.gitignore` (run final `git push` before submission). |
 | **4. Contents Included in Final Report** | **Met** | This report (Sections 1–6) covers data curation, detection/segmentation/tracking, road/lane perception, and World Model safety evaluation. |
 | **5. Training Process & Performance Benchmarks Included** | **Met** | Sections 2, 3, and 6 document `v1 → v2 → v3 → v4` hyperparameters, per-epoch convergence (`results.csv`), Detection/Tracking/Depth/Prediction/Road-Lane/RQ1–RQ4 benchmarks. |
 | **6. GitHub Link & Description Included** | **Met** | Header and Section 4 specify repository URL, directory layout, reproduction kernels, and direct artifact paths. |
@@ -139,3 +141,47 @@ Following the `v3_bev_fixed` release, three dedicated Kaggle kernels (`test013/t
 - **v4 World Model Integration & RQ1–RQ4 Verification**:
   - Val `0015` ([`full MP4`](./results/v4_road_lane/world_outputs/v4_world_outputs/world_model_0015_full/world_model_demo_0015.mp4) / [`staged MP4`](./results/v4_road_lane/world_outputs/v4_world_outputs/world_model_0015_staged/world_model_demo_0015.mp4)): `ADE 3.5836 m`, RQ3 `0.2277 < 0.2838 < 0.2916`, RQ4 spikes `8 → 0 (-100%)`.
   - Test `0019` ([`full MP4`](./results/v4_road_lane/world_outputs/v4_world_outputs/world_model_0019_full/world_model_demo_0019.mp4) / [`staged MP4`](./results/v4_road_lane/world_outputs/v4_world_outputs/world_model_0019_staged/world_model_demo_0019.mp4)): `ADE 2.0437 m`, RQ3 `0.5421 < 0.6261 < 0.6454`, RQ4 spikes `16 → 0 (-100%)`, flips `124 → 53 (-57.26%)`.
+
+### 6.3 `v4` Training Dynamics, PR/F1/Confusion Matrix Analysis & Applied ML Techniques
+
+Academic quantitative interpretation of the 12 training and evaluation artifacts in [`results/v4_road_lane/detect_outputs/outputs/train_results/`](./results/v4_road_lane/detect_outputs/outputs/train_results):
+
+1. **Loss Convergence & `Close-Mosaic` Phase Transition (`results.csv`, `results.png`)**:
+   - `train/box_loss` (`1.12833 → 0.53388`), `train/cls_loss` (`0.86791 → 0.29695`), and `train/dfl_loss` (`1.19982 → 0.89416`) decrease monotonically across 24 epochs. At **`Epoch 19`**, `close_mosaic=7` disables 4-tile Mosaic augmentation to align training with natural KITTI image statistics, producing a sharp step-drop in `box_loss` (`0.6653 → 0.60687`) and `cls_loss` (`0.4043 → 0.34428`).
+   - `val/box_loss` decreases steadily (`1.60946 → 1.29238`) without localization overfitting; `Epoch 14` peaks in `Precision = 0.92008` and `mAP@0.5 = 0.71385`, while **`Epoch 15`** achieves peak `mAP@0.5:0.95 = 0.4236` and `Recall = 0.59069` (`best.pt`).
+
+2. **Precision–Recall & F1–Confidence Curves (Val vs Held-Out Test)**:
+   - **Validation (`BoxPR_curve.png`, `BoxF1_curve.png`, `BoxP_curve.png`, `BoxR_curve.png`)**: Under TTA, `all classes mAP@0.5 = 0.740` (`Car 0.848 / Pedestrian 0.771 / Cyclist 0.601`), peak F1 **`0.71 at conf = 0.217`**, `Precision 1.00 at conf = 0.872`, max `Recall 0.84 at conf = 0.000`. `Car` sustains an F1 plateau near `0.84` across `conf 0.25–0.70`.
+   - **Held-Out Test (`test_BoxPR_curve.png`, `test_BoxF1_curve.png`, `test_BoxP_curve.png`, `test_BoxR_curve.png`)**: On completely unseen sequences (`0013, 0016, 0019`), `all classes mAP@0.5 = 0.670` (`Car 0.780 / Pedestrian 0.644 / Cyclist 0.587`), peak F1 **`0.68 at conf = 0.568`**, `Precision 1.00 at conf = 0.941`, max `Recall 0.83 at conf = 0.000`. Notably, `Cyclist` AP50 drops only `-0.014` (`0.601 → 0.587`), and the high optimal Test confidence (`0.568`) confirms strong probability calibration.
+
+3. **Error Decomposition via Normalized Confusion Matrix (`confusion_matrix_normalized.png`)**:
+   - Diagonal true-positive rates reach `Car 0.90`, `Pedestrian 0.87`, and `Cyclist 0.55`, with low background miss rates (`Car 0.10`, `Pedestrian 0.08`, `Cyclist 0.16`).
+   - The dominant `Cyclist` error mode is semantic confusion with `Pedestrian` (`0.26` of `Cyclist` GT predicted as `Pedestrian`) due to rider appearance overlap, alongside background false positives (`Car 0.40`, `Pedestrian 0.42`, `Cyclist 0.18`) from unlabeled distant/distractor instances at low confidence.
+
+4. **Machine Learning Techniques Leveraged for Metric Improvement**:
+   - **Leak-Free Hash-Deduped Dataset Expansion**: Strictly excluded `595` MD5/dHash matches against Val/Test from `kitti-stereo-image` (`7,481` images) and merged `6,886` unique images (`14,371` total train entries).
+   - **Capacity & Resolution Scaling (`YOLO11l @ 1280px`)**: Combines `C3k2` CSP bottlenecks, `SPPF`, and `C2PSA` spatial attention with `1280px` input (doubling P3/8 small-object feature resolution).
+   - **DFL + CIoU + Task-Aligned Assigner + Cosine LR / Close-Mosaic**: Distributional box-edge regression (`DFL, reg_max=16`), dynamic alignment-based label assignment (`TAL`), 3-epoch warmup with cosine decay (`lrf=0.01`), and `close_mosaic=7`.
+   - **Imbalance & Gradient Hygiene (`Rare-Class Oversampling` + `114 Gray Masking`)**: Weighted sampling for `Cyclist`/`Pedestrian` and neutral gray (`114`) masking over `DontCare`/`Van`/`Person_sitting` to eliminate spurious false-negative gradients.
+   - **Multi-Scale Test-Time Augmentation (`augment=True`)**: Flip and multi-scale inference ensembling boosts Val `mAP@0.5` from `0.6889 → 0.7400` (`+0.0511`).
+
+---
+
+## 7. Conclusions, Technical Challenges, and Reflections
+
+Key engineering lessons, debugging experiences, and limitations encountered while iterating from `v1 → v2 → v3 → v4`:
+
+1. **Guarding Against Temporal Data Leakage via Sequence-Disjoint Splits**:
+   - Random frame-level splits inflate `mAP` on `10 Hz` driving video because adjacent frames are nearly identical. Enforcing a strict `14 / 4 / 3` sequence-disjoint split—and excluding `595` MD5/dHash-matched frames when merging `kitti-stereo-image` (`7,481` images)—kept Held-out Test (`0013, 0016, 0019`) evaluation scientifically valid.
+
+2. **Debugging the `testing/image_02` vs `training/image_02` Path Mismatch in `v4`**:
+   - Visual inspection of early `v4` outputs revealed misaligned road/lane masks against the camera frames. Root-cause analysis showed `rglob('image_02')` matched `testing/image_02` (`0015`: `701`f, `0019`: `404`f) instead of `training/image_02` (`0015`: `376`f, `0019`: `1,059`f). Adding an explicit `'training' in path.parts` guard and re-running fixed the 1:1 alignment, underscoring that visual sanity checks are indispensable alongside scalar metrics.
+
+3. **Mitigating `Cyclist` vs `Pedestrian` Confusion and `2× T4` DDP Tuning**:
+   - The normalized confusion matrix revealed `0.26` of `Cyclist` ground truths were misclassified as `Pedestrian`. Combining `Van`/`Person_sitting` `114`-gray masking, train-only rare-class oversampling, `1280px` scaling, `close_mosaic=7`, and TTA raised Test Easy `mAP@0.5` to `0.8966` (`Cyclist Test Easy 0.7899`).
+
+4. **Resolving BEV Uncertainty Distortion & False-Alarm Spikes**:
+   - Early `v2` BEV plots stretched longitudinal depth uncertainty laterally across adjacent lanes, triggering false `Emergency Intervention` alerts on sidewalk pedestrians. Jacobian projection ($J=\text{diag}(s_x,-s_y)$), approach-speed gating (`approach_w`), and `CollisionRiskSmoother` (`1.10/s` slew-rate clamp + `0.04` hysteresis) eliminated `>1.5/s` spikes by `100%` and cut `0015` false-alarm risk by `-57.0%`.
+
+5. **Limitations & Future Work**:
+   - Monocular flat-ground projection (`h_cam = 1.65m`) remains sensitive to road pitch variations at long range, and KITTI Tracking lacks closed-loop vehicle dynamics, restricting Safety Shield validation to offline advisory evaluation. Future work will fuse stereo/LiDAR depth and validate closed-loop control inside CARLA.

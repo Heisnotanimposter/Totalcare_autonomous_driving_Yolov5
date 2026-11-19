@@ -447,6 +447,11 @@ def build_language_bundle(lang: str) -> pathlib.Path:
             (ROOT / "results/v3_bev_fixed/world_outputs/world_model_0015_staged/keyframes/seq_0015_frame_000045_stage5.png", "v3 시퀀스 0015 Frame 45: BEV 타원 종횡비·오경보 수정 후 정상 주행(Caution 0.25)"),
             (ROOT / "results/v3_bev_fixed/world_outputs/world_model_0019_staged/keyframes/seq_0019_frame_000055_stage5.png", "v3 시퀀스 0019 Frame 55: 우측 보도 보행자 비경보 유지 및 정면 접근 차량 Braking(0.72)"),
             (ROOT / "results/v4_road_lane/detect_outputs/outputs/train_results/results.png", "v4 YOLO11l @ 1280 (중복 제거 KITTI-Det 병합) 학습 손실 및 Val mAP 수렴 곡선"),
+            (ROOT / "results/v4_road_lane/detect_outputs/outputs/train_results/BoxPR_curve.png", "v4 Val Precision-Recall 곡선 (TTA all classes mAP@0.5 = 0.740)"),
+            (ROOT / "results/v4_road_lane/detect_outputs/outputs/train_results/BoxF1_curve.png", "v4 Val F1-Confidence 곡선 (all classes 0.71 at conf 0.217)"),
+            (ROOT / "results/v4_road_lane/detect_outputs/outputs/train_results/confusion_matrix_normalized.png", "v4 정규화 혼동 행렬 (Car 0.90 / Pedestrian 0.87 / Cyclist 0.55)"),
+            (ROOT / "results/v4_road_lane/detect_outputs/outputs/train_results/test_BoxPR_curve.png", "v4 Held-Out Test Precision-Recall 곡선 (TTA all classes mAP@0.5 = 0.670)"),
+            (ROOT / "results/v4_road_lane/detect_outputs/outputs/train_results/test_BoxF1_curve.png", "v4 Held-Out Test F1-Confidence 곡선 (all classes 0.68 at conf 0.568)"),
             (ROOT / "results/v4_road_lane/road_outputs/road_lane_outputs/road_lane_preview_0015_f0045.png", "v4 SegFormer-B2 도로·비도로·자차로 세그멘테이션 및 2차 다항식 차선 프리뷰 (0015 f0045)"),
             (ROOT / "results/v4_road_lane/world_outputs/v4_world_outputs/world_model_0015_staged/keyframes/seq_0015_frame_000045_stage5.png", "v4 시퀀스 0015 Frame 45: 도로·차선 마스킹 및 BEV 도로 폴리곤·곡률 차선 통합 출력"),
             (ROOT / "results/v4_road_lane/world_outputs/v4_world_outputs/world_model_0019_staged/keyframes/seq_0019_frame_000055_stage5.png", "v4 시퀀스 0019 Frame 55: 비도로/차선 컨텍스트 배지([LANE]/[NON-RD]) 및 Safety Shield 통합 출력"),
@@ -461,6 +466,11 @@ def build_language_bundle(lang: str) -> pathlib.Path:
             (ROOT / "results/v3_bev_fixed/world_outputs/world_model_0015_staged/keyframes/seq_0015_frame_000045_stage5.png", "v3 Seq 0015 Frame 45: Aspect-Corrected BEV Ellipses & False-Alarm Suppression (Caution 0.25)"),
             (ROOT / "results/v3_bev_fixed/world_outputs/world_model_0019_staged/keyframes/seq_0019_frame_000055_stage5.png", "v3 Seq 0019 Frame 55: Sidewalk Pedestrian Non-Alert & Approaching Vehicle Braking (0.72)"),
             (ROOT / "results/v4_road_lane/detect_outputs/outputs/train_results/results.png", "v4 YOLO11l @ 1280 (Deduped KITTI-Det Merge) Training Losses and Validation mAP Convergence"),
+            (ROOT / "results/v4_road_lane/detect_outputs/outputs/train_results/BoxPR_curve.png", "v4 Val Precision-Recall Curve (TTA all classes mAP@0.5 = 0.740)"),
+            (ROOT / "results/v4_road_lane/detect_outputs/outputs/train_results/BoxF1_curve.png", "v4 Val F1-Confidence Curve (all classes 0.71 at conf 0.217)"),
+            (ROOT / "results/v4_road_lane/detect_outputs/outputs/train_results/confusion_matrix_normalized.png", "v4 Normalized Confusion Matrix (Car 0.90 / Pedestrian 0.87 / Cyclist 0.55)"),
+            (ROOT / "results/v4_road_lane/detect_outputs/outputs/train_results/test_BoxPR_curve.png", "v4 Held-Out Test Precision-Recall Curve (TTA all classes mAP@0.5 = 0.670)"),
+            (ROOT / "results/v4_road_lane/detect_outputs/outputs/train_results/test_BoxF1_curve.png", "v4 Held-Out Test F1-Confidence Curve (all classes 0.68 at conf 0.568)"),
             (ROOT / "results/v4_road_lane/road_outputs/road_lane_outputs/road_lane_preview_0015_f0045.png", "v4 SegFormer-B2 Road/Non-Road/Ego-Lane Segmentation & Quadratic Lane Preview (0015 f0045)"),
             (ROOT / "results/v4_road_lane/world_outputs/v4_world_outputs/world_model_0015_staged/keyframes/seq_0015_frame_000045_stage5.png", "v4 Seq 0015 Frame 45: Integrated Road/Lane Masking & BEV Road Polygon / Curvilinear Lanes"),
             (ROOT / "results/v4_road_lane/world_outputs/v4_world_outputs/world_model_0019_staged/keyframes/seq_0019_frame_000055_stage5.png", "v4 Seq 0019 Frame 55: Road/Lane Context Badges ([LANE]/[NON-RD]) & Safety Shield Integration"),
@@ -502,8 +512,14 @@ def main() -> None:
     MD_DIR.mkdir(parents=True, exist_ok=True)
     TEX_DIR.mkdir(parents=True, exist_ok=True)
     PDF_DIR.mkdir(parents=True, exist_ok=True)
-    build_language_bundle("ko")
-    build_language_bundle("en")
+    ko_pdf = build_language_bundle("ko")
+    en_pdf = build_language_bundle("en")
+
+    spec_dir = ROOT / "report to specific"
+    spec_dir.mkdir(parents=True, exist_ok=True)
+    for src_pdf in (ko_pdf, en_pdf):
+        shutil.copy2(src_pdf, spec_dir / src_pdf.name)
+        print(f"[COPY] {src_pdf.name} -> {spec_dir / src_pdf.name}")
 
 
 if __name__ == "__main__":
